@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Search empty state illustration -->
+  <circle cx="60" cy="60" r="58" fill="#F5F7FA"/>
+  <!-- Magnifying glass circle -->
+  <circle cx="52" cy="52" r="22" stroke="#D1D5DB" stroke-width="4" fill="none"/>
+  <!-- Handle -->
+  <line x1="68" y1="68" x2="86" y2="86" stroke="#D1D5DB" stroke-width="4" stroke-linecap="round"/>
+  <!-- Dashed cross inside -->
+  <line x1="42" y1="52" x2="62" y2="52" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <line x1="52" y1="42" x2="52" y2="62" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <!-- Question mark -->
+  <text x="52" y="58" font-family="'PingFang SC','Microsoft YaHei',Arial,sans-serif" font-size="14" font-weight="600" fill="#9CA3AF" text-anchor="middle">?</text>
+</svg>

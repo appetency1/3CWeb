@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" fill="none">
+  <!-- Default user avatar: 60x60 circle -->
+  <circle cx="30" cy="30" r="30" fill="#4F7CFF"/>
+  <!-- User silhouette -->
+  <!-- Head -->
+  <circle cx="30" cy="22" r="10" fill="rgba(255,255,255,0.9)"/>
+  <!-- Body/shoulders -->
+  <path d="M14 48 Q14 36 30 36 Q46 36 46 48 L46 52 L14 52 Z" fill="rgba(255,255,255,0.9)"/>
+</svg>

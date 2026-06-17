@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Empty package/box illustration -->
+  <circle cx="60" cy="60" r="58" fill="#F5F7FA"/>
+  <!-- Box body -->
+  <rect x="28" y="45" width="64" height="48" rx="4" stroke="#D1D5DB" stroke-width="3" fill="none"/>
+  <!-- Box lid -->
+  <path d="M22 45 L28 45 L30 38 L62 38 L64 45 L98 45" stroke="#D1D5DB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Ribbon horizontal -->
+  <line x1="28" y1="68" x2="92" y2="68" stroke="#4F7CFF" stroke-width="2" opacity="0.4"/>
+  <!-- Ribbon vertical -->
+  <line x1="60" y1="45" x2="60" y2="93" stroke="#4F7CFF" stroke-width="2" opacity="0.4"/>
+  <!-- Bow loops -->
+  <path d="M52 38 Q44 30 52 26 Q60 22 60 38" stroke="#4F7CFF" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+  <path d="M68 38 Q76 30 68 26 Q60 22 60 38" stroke="#4F7CFF" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+  <!-- Dashed content lines -->
+  <line x1="40" y1="56" x2="80" y2="56" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <line x1="43" y1="62" x2="77" y2="62" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+  <line x1="46" y1="76" x2="74" y2="76" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+</svg>

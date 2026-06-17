@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 600" preserveAspectRatio="xMidYMid slice">
+  <!-- Background: fresh mint to white -->
+  <defs>
+    <linearGradient id="mintGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E8F8F5"/>
+      <stop offset="100%" stop-color="#D0F0E8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="600" fill="url(#mintGrad)"/>
+  <!-- Large botanical shapes -->
+  <ellipse cx="1500" cy="100" rx="700" ry="500" fill="rgba(16,185,129,0.08)"/>
+  <ellipse cx="300" cy="550" rx="500" ry="350" fill="rgba(16,185,129,0.06)"/>
+  <!-- Leaf shapes -->
+  <g opacity="0.2" fill="#10B981">
+    <path d="M1700 50 Q1720 150 1700 250 Q1680 150 1700 50 Z"/>
+    <path d="M1750 100 Q1770 200 1750 300 Q1730 200 1750 100 Z"/>
+    <path d="M1650 80 Q1670 180 1650 280 Q1630 180 1650 80 Z"/>
+  </g>
+  <!-- Content -->
+  <rect x="80" y="140" width="520" height="320" rx="16" fill="rgba(255,255,255,0.75)" backdrop-filter="blur(8px)"/>
+  <!-- Tag -->
+  <rect x="120" y="175" width="80" height="26" rx="13" fill="#10B981"/>
+  <text x="160" y="193" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">∞¡
+</text>
+  <!-- Title -->
+  <text x="120" y="260" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="52" font-weight="800" fill="#1E2433">Í6</text>
+  <text x="120" y="330" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="36" font-weight="600" fill="#1E2433" opacity="0.7">;</text>
+  <!-- CTA -->
+  <rect x="120" y="380" width="160" height="48" rx="24" fill="#10B981"/>
+  <text x="200" y="410" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="700" fill="white" text-anchor="middle">ÂÊ≈</text>
+  <!-- Sub text -->
+  <text x="120" y="450" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="14" fill="#9CA3AF">…ªP(</text>
+</svg>

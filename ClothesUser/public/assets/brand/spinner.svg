@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Brand-colored loading spinner -->
+  <circle cx="24" cy="24" r="20" stroke="#E8F0FF" stroke-width="4" fill="none"/>
+  <path d="M24 4 A20 20 0 0 1 44 24" stroke="#4F7CFF" stroke-width="4" stroke-linecap="round" fill="none">
+    <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="0.8s" repeatCount="indefinite"/>
+  </path>
+</svg>

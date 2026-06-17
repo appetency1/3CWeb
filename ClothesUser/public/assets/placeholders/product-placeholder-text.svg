@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none">
+  <rect width="300" height="300" fill="#F5F7FA"/>
+  <path d="M150 60 Q150 40 165 40 Q180 40 180 55 L175 60" stroke="#D1D5DB" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M60 85 L150 55 L240 85" stroke="#D1D5DB" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M100 100 L85 130 L105 135 L110 115 L190 115 L195 135 L215 130 L200 100 L170 100 Q150 90 130 100 Z" fill="#E5E7EB"/>
+  <ellipse cx="150" cy="103" rx="25" ry="12" fill="#F5F7FA"/>
+  <text x="150" y="220" font-family="Arial,sans-serif" font-size="16" font-weight="600" fill="#9CA3AF" text-anchor="middle">NO IMAGE</text>
+  <text x="150" y="245" font-family="Arial,sans-serif" font-size="11" fill="#D1D5DB" text-anchor="middle">Product coming soon</text>
+</svg>

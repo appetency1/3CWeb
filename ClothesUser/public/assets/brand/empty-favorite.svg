@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Heart / favorites empty state -->
+  <circle cx="60" cy="60" r="58" fill="#F5F7FA"/>
+  <!-- Heart -->
+  <path d="M60 90 L30 62 Q18 50 30 38 Q42 26 60 42 Q78 26 90 38 Q102 50 90 62 Z" stroke="#D1D5DB" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <!-- Inner dashed heart -->
+  <path d="M60 82 L38 62 Q30 54 38 46 Q46 38 60 50 Q74 38 82 46 Q90 54 82 62 Z" stroke="#E5E7EB" stroke-width="1.5" fill="none" stroke-dasharray="3 2"/>
+</svg>

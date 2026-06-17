@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Bag / handbag icon -->
+  <rect width="48" height="48" rx="12" fill="#FEF9C3"/>
+  <!-- Bag body -->
+  <rect x="10" y="18" width="28" height="22" rx="5" fill="#CA8A04" opacity="0.85"/>
+  <!-- Bag flap -->
+  <path d="M10 18 Q24 14 38 18 L38 24 Q24 20 10 24 Z" fill="#A16207" opacity="0.7"/>
+  <!-- Handle -->
+  <path d="M17 18 Q17 10 24 10 Q31 10 31 18" stroke="#CA8A04" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Buckle -->
+  <rect x="21" y="22" width="6" height="5" rx="1.5" fill="#FEF9C3"/>
+  <line x1="24" y1="23" x2="24" y2="26" stroke="#CA8A04" stroke-width="1.2"/>
+  <!-- Clasp dot -->
+  <circle cx="24" cy="26" r="1.5" fill="#CA8A04"/>
+</svg>

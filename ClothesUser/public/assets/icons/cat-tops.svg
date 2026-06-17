@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- T-shirt icon, primary blue -->
+  <rect width="48" height="48" rx="12" fill="#EEF2FF"/>
+  <!-- T-shirt body -->
+  <path d="M14 16 L10 22 L14 24 L14 38 L34 38 L34 24 L38 22 L34 16 L29 16 Q24 12 19 16 Z" fill="#4F7CFF" opacity="0.9"/>
+  <!-- Collar -->
+  <path d="M19 16 Q24 13 29 16 Q27 18 24 19 Q21 18 19 16 Z" fill="#EEF2FF"/>
+  <!-- Stripe detail -->
+  <rect x="20" y="24" width="8" height="3" rx="1.5" fill="white" opacity="0.4"/>
+</svg>

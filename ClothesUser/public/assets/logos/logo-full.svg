@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 50" fill="none">
+  <!-- Icon -->
+  <rect width="50" height="50" rx="12" fill="#4F7CFF"/>
+  <path d="M14 10 L14 40 L22 40 L22 30 L26 34 L30 30 L30 40 L38 40 L38 10 L30 10 L30 22 L26 18 L22 22 L22 10 Z" fill="white" opacity="0.95"/>
+  <!-- Text -->
+  <text x="60" y="20" font-family="'PingFang SC','Microsoft YaHei',Arial,sans-serif" font-size="11" font-weight="400" letter-spacing="2" fill="#6B7280">FASHION</text>
+  <text x="60" y="38" font-family="'PingFang SC','Microsoft YaHei',Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="1" fill="#1E2433">STORE</text>
+</svg>

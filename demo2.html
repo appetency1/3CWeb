@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Store - 时尚商城</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #ffffff;
+            --bg-gray: #f5f5f5;
+            --bg-warm: #faf8f5;
+            --text: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --accent: #c41e3a;
+            --accent-light: #fef2f2;
+            --accent-hover: #9f1239;
+            --success: #16a34a;
+            --warning: #d97706;
+            --border: #e8e8e8;
+            --border-light: #f0f0f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.25s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== 顶部促销条 ========== */
+        .top-bar {
+            background: linear-gradient(90deg, #c41e3a, #dc2626);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .top-bar strong { font-weight: 700; }
+
+        /* ========== 头部 ========== */
+        .header {
+            background: var(--bg);
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 520px;
+            position: relative;
+        }
+        .search-bar input {
+            width: 100%;
+            height: 42px;
+            padding: 0 44px 0 18px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-gray);
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .search-bar input:focus {
+            border-color: var(--accent);
+            background: var(--bg);
+            box-shadow: 0 0 0 3px rgba(196,30,58,0.08);
+        }
+        .search-bar input::placeholder { color: var(--text-muted); }
+        .search-bar button {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .search-bar button:hover { background: var(--accent-hover); }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+        .header-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+        .header-btn:hover { color: var(--text); }
+        .header-btn .icon {
+            font-size: 20px;
+            position: relative;
+        }
+        .header-btn .badge {
+            position: absolute;
+            top: -4px;
+            right: -8px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ========== 分类导航 ========== */
+        .nav-categories {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            gap: 28px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .nav-categories::-webkit-scrollbar { display: none; }
+        .nav-categories a {
+            padding: 12px 0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+        }
+        .nav-categories a:hover {
+            color: var(--text);
+            border-bottom-color: var(--border);
+        }
+        .nav-categories a.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ========== Hero Banner ========== */
+        .hero {
+            max-width: 1280px;
+            margin: 24px auto;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            height: 380px;
+        }
+
+        .hero-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .hero-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-card-bg {
+            position: absolute;
+            inset: 0;
+        }
+        .hero-card-bg.women {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 40%, #fbcfe8 100%);
+        }
+        .hero-card-bg.men {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 40%, #bfdbfe 100%);
+        }
+
+        .hero-card-content {
+            position: relative;
+            z-index: 2;
+            padding: 36px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-card-tag {
+            display: inline-block;
+            padding: 5px 12px;
+            background: var(--accent);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            width: fit-content;
+        }
+
+        .hero-card-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .hero-card-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .hero-card-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--text);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: fit-content;
+            transition: var(--transition);
+        }
+        .hero-card-btn:hover {
+            background: var(--accent);
+            gap: 12px;
+        }
+
+        /* 右侧小图装饰 */
+        .hero-card-img {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            width: 160px;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+        .hero-card:hover .hero-card-img {
+            transform: scale(1.05) rotate(-3deg);
+            opacity: 0.8;
+        }
+
+        /* ========== 限时秒杀 ========== */
+        .flash-sale {
+            max-width: 1280px;
+            margin: 0 auto 32px;
+            padding: 0 24px;
+        }
+        .flash-bar {
+            background: linear-gradient(90deg, #fef2f2, #fff1f2);
+            border: 1.5px solid #fecdd3;
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .flash-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .flash-icon {
+            font-size: 20px;
+        }
+        .flash-bar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .flash-bar-tag {
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #fecdd3;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .flash-countdown {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .flash-countdown span {
+            padding: 5px 8px;
+            background: var(--accent);
+            color: white;
+            border-radius: 4px;
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+        }
+        .flash-countdown .sep {
+            color: var(--text-muted);
+            background: none;
+            padding: 0;
+        }
+
+        /* ========== 商品区块 ========== */
+        .section {
+            max-width: 1280px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .section-title-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .section-tags {
+            display: flex;
+            gap: 8px;
+        }
+        .section-tag {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            background: none;
+        }
+        .section-tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .section-tag.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .view-all:hover { color: var(--accent); }
+
+        /* ========== 商品网格 ========== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+
+        .product-card {
+            background: var(--bg);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--border-light);
+        }
+        .product-card:hover {
+            border-color: var(--border);
+            box-shadow: var(--shadow-md);
+        }
+
+        .product-img {
+            position: relative;
+            aspect-ratio: 3/4;
+            background: var(--bg-gray);
+            overflow: hidden;
+        }
+        .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        .product-card:hover .product-img img {
+            transform: scale(1.03);
+        }
+
+        .product-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 2;
+        }
+        .badge {
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .badge-sale { background: var(--accent); color: white; }
+        .badge-new { background: var(--success); color: white; }
+        .badge-hot { background: var(--warning); color: white; }
+
+        .product-wishlist {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 2;
+        }
+        .product-card:hover .product-wishlist { opacity: 1; }
+        .product-wishlist:hover { background: var(--accent); color: white; }
+
+        .product-colors {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            gap: 3px;
+            z-index: 2;
+        }
+        .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+
+        .product-info {
+            padding: 12px;
+        }
+        .product-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .product-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .product-original {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+        .product-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .product-add-cart {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .product-add-cart:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* ========== 品牌墙 ========== */
+        .brands-section {
+            background: var(--bg-warm);
+            padding: 32px 0;
+            margin: 40px 0;
+        }
+        .brands-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .brands-title {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        .brands-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .brand-item {
+            padding: 8px 20px;
+            background: white;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .brand-item:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ========== 服务保障 ========== */
+        .trust-section {
+            max-width: 1280px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .trust-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+        .trust-card:hover {
+            border-color: var(--border);
+            background: var(--bg-warm);
+        }
+        .trust-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .trust-text h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .trust-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== 页脚 ========== */
+        .footer {
+            background: var(--bg-warm);
+            border-top: 1px solid var(--border-light);
+            margin-top: 48px;
+        }
+        .footer-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 48px 24px 24px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        .footer-brand h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .footer-brand p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .footer-contact span {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .footer-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .footer-links {
+            list-style: none;
+        }
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: var(--transition);
+        }
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .footer-payments {
+            display: flex;
+            gap: 8px;
+        }
+        .pay-icon {
+            padding: 4px 8px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 1200px) {
+            .products-grid { grid-template-columns: repeat(4, 1fr); }
+            .trust-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .header-main { padding: 12px 16px; gap: 16px; }
+            .search-bar { display: none; }
+            .nav-categories { padding: 0 16px; gap: 20px; }
+            .hero { grid-template-columns: 1fr; height: auto; padding: 0 16px; }
+            .hero-card { height: 280px; }
+            .hero-card-img { width: 120px; height: 120px; font-size: 60px; }
+            .flash-bar { flex-direction: column; gap: 10px; text-align: center; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .section { padding: 0 16px; }
+            .section-tags { display: none; }
+            .trust-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+            .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部促销条 -->
+    <div class="top-bar">
+        🎉 新用户首单立减 <strong>¥50</strong> · 全场满 <strong>¥299</strong> 包邮 · 7天无理由退换
+    </div>
+
+    <!-- 头部 -->
+    <header class="header">
+        <div class="header-main">
+            <a href="#" class="logo">Fashion Store</a>
+            <div class="search-bar">
+                <input type="text" placeholder="搜索商品、品牌、分类...">
+                <button>🔍</button>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn">
+                    <span class="icon">👤</span>
+                    <span>我的</span>
+                </button>
+                <button class="header-btn">
+                    <span class="icon">❤️</span>
+                    <span>收藏</span>
+                </button>
+                <button class="header-btn">
+                    <span class="icon">🛒<<span class="badge">3</span></span>
+                    <span>购物车</span>
+                </button>
+            </div>
+        </div>
+        <nav class="nav-categories">
+            <a href="#" class="active">首页</a>
+            <a href="#">女装</a>
+            <a href="#">男装</a>
+            <a href="#">鞋靴</a>
+            <a href="#">包袋</a>
+            <a href="#">配饰</a>
+            <a href="#">美妆</a>
+            <a href="#">运动</a>
+            <a href="#">家居</a>
+            <a href="#">童装</a>
+        </nav>
+    </header>
+
+    <!-- Hero 分区 -->
+    <section class="hero">
+        <div class="hero-card">
+            <div class="hero-card-bg women"></div>
+            <div class="hero-card-content">
+                <span class="hero-card-tag">夏季新品 7折起</span>
+                <h2 class="hero-card-title">女装精选</h2>
+                <p class="hero-card-desc">连衣裙 · T恤 · 短裤 · 防晒衣</p>
+                <button class="hero-card-btn">立即选购 →</button>
+            </div>
+            <div class="hero-card-img">👗</div>
+        </div>
+        <div class="hero-card">
+            <div class="hero-card-bg men"></div>
+            <div class="hero-card-content">
+                <span class="hero-card-tag">型男必备</span>
+                <h2 class="hero-card-title">男装专区</h2>
+                <p class="hero-card-desc">衬衫 · POLO · 休闲裤 · 夹克</p>
+                <button class="hero-card-btn">立即选购 →</button>
+            </div>
+            <div class="hero-card-img">👔</div>
+        </div>
+    </section>
+
+    <!-- 限时秒杀 -->
+    <section class="flash-sale">
+        <div class="flash-bar">
+            <div class="flash-bar-left">
+                <span class="flash-icon">⚡</span>
+                <span class="flash-bar-title">限时秒杀</span>
+                <span class="flash-bar-tag">每日 10:00 / 14:00 / 20:00</span>
+            </div>
+            <div class="flash-countdown">
+                距离下场
+                <span>02</span><span class="sep">:</span><span>15</span><span class="sep">:</span><span>43</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 热门推荐 -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-title-group">
+                <h2 class="section-title">🔥 热门推荐</h2>
+                <div class="section-tags">
+                    <button class="section-tag active">全部</button>
+                    <button class="section-tag">女装</button>
+                    <button class="section-tag">男装</button>
+                    <button class="section-tag">鞋靴</button>
+                </div>
+            </div>
+            <a href="#" class="view-all">查看全部 →</a>
+        </div>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#fdf2f8,#fce7f3);display:flex;align-items:center;justify-content:center;font-size:50px;">👗</div>
+                    <div class="product-badges"><span class="badge badge-sale">-30%</span></div>
+                    <button class="product-wishlist">♡</button>
+                    <div class="product-colors">
+                        <span class="color-dot" style="background:#fce7f3;"></span>
+                        <span class="color-dot" style="background:#dbeafe;"></span>
+                        <span class="color-dot" style="background:#fef3c7;"></span>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">法式碎花连衣裙 2026夏季新款 收腰显瘦</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥199</span>
+                        <span class="product-original">¥299</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.9</span>
+                        <span class="product-sold">已售 1.2万</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#eff6ff,#dbeafe);display:flex;align-items:center;justify-content:center;font-size:50px;">👔</div>
+                    <div class="product-badges"><span class="badge badge-hot">HOT</span></div>
+                    <button class="product-wishlist">♡</button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">商务休闲衬衫 免烫抗皱 纯棉长袖</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥159</span>
+                        <span class="product-original">¥259</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.8</span>
+                        <span class="product-sold">已售 8.5k</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center;font-size:50px;">👟</div>
+                    <div class="product-badges"><span class="badge badge-new">新品</span></div>
+                    <button class="product-wishlist">♡</button>
+                    <div class="product-colors">
+                        <span class="color-dot" style="background:#fef3c7;"></span>
+                        <span class="color-dot" style="background:#1f2937;"></span>
+                        <span class="color-dot" style="background:#ffffff;"></span>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">复古运动休闲鞋 厚底增高 透气网面</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥299</span>
+                        <span class="product-original">¥399</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.7</span>
+                        <span class="product-sold">已售 5.3k</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);display:flex;align-items:center;justify-content:center;font-size:50px;">👜</div>
+                    <button class="product-wishlist">♡</button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">真皮单肩包 大容量 通勤百搭</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥359</span>
+                        <span class="product-original">¥599</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.9</span>
+                        <span class="product-sold">已售 3.2k</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#fce7f3,#fbcfe8);display:flex;align-items:center;justify-content:center;font-size:50px;">🧥</div>
+                    <div class="product-badges"><span class="badge badge-sale">-50%</span></div>
+                    <button class="product-wishlist">♡</button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">轻薄防晒衣 UPF50+ 透气防紫外线</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥89</span>
+                        <span class="product-original">¥179</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.6</span>
+                        <span class="product-sold">已售 2.1万</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 品牌墙 -->
+    <section class="brands-section">
+        <div class="brands-inner">
+            <h3 class="brands-title">热门品牌</h3>
+            <div class="brands-grid">
+                <div class="brand-item">ZARA</div>
+                <div class="brand-item">H&M</div>
+                <div class="brand-item">UNIQLO</div>
+                <div class="brand-item">NIKE</div>
+                <div class="brand-item">ADIDAS</div>
+                <div class="brand-item">GUCCI</div>
+                <div class="brand-item">PRADA</div>
+                <div class="brand-item">CK</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 新品上市 -->
+    <section class="section">
+        <div class="section-header">
+            <div class="section-title-group">
+                <h2 class="section-title">✨ 新品上市</h2>
+            </div>
+            <a href="#" class="view-all">查看全部 →</a>
+        </div>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#d1fae5,#a7f3d0);display:flex;align-items:center;justify-content:center;font-size:50px;">👖</div>
+                    <div class="product-badges"><span class="badge badge-new">NEW</span></div>
+                    <button class="product-wishlist">♡</button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">高腰阔腿牛仔裤 垂感显瘦 2026新款</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥229</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 5.0</span>
+                        <span class="product-sold">新品首发</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#ede9fe,#ddd6fe);display:flex;align-items:center;justify-content:center;font-size:50px;">🎀</div>
+                    <div class="product-badges"><span class="badge badge-new">NEW</span></div>
+                    <button class="product-wishlist">♡</button>
+                    <div class="product-colors">
+                        <span class="color-dot" style="background:#ede9fe;"></span>
+                        <span class="color-dot" style="background:#fce7f3;"></span>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">真丝发带套装 3件装 多色可选</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥69</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.8</span>
+                        <span class="product-sold">新品首发</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#fed7aa,#fdba74);display:flex;align-items:center;justify-content:center;font-size:50px;">🧢</div>
+                    <div class="product-badges"><span class="badge badge-new">NEW</span></div>
+                    <button class="product-wishlist">♡</button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">复古棒球帽 刺绣字母 可调节</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥99</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.7</span>
+                        <span class="product-sold">新品首发</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);display:flex;align-items:center;justify-content:center;font-size:50px;">👟</div>
+                    <div class="product-badges"><span class="badge badge-new">NEW</span></div>
+                    <button class="product-wishlist">♡</button>
+                    <div class="product-colors">
+                        <span class="color-dot" style="background:#e0e7ff;"></span>
+                        <span class="color-dot" style="background:#ffffff;"></span>
+                        <span class="color-dot" style="background:#1f2937;"></span>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">透气网面跑步鞋 轻量缓震 2026夏款</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥329</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.9</span>
+                        <span class="product-sold">新品首发</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#fecaca,#fca5a5);display:flex;align-items:center;justify-content:center;font-size:50px;">👗</div>
+                    <div class="product-badges"><span class="badge badge-new">NEW</span></div>
+                    <button class="product-wishlist">♡</button>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">吊带连衣裙 纯欲风 海边度假</h3>
+                    <div class="product-price-row">
+                        <span class="product-price">¥189</span>
+                    </div>
+                    <div class="product-meta">
+                        <span class="product-rating">⭐ 4.8</span>
+                        <span class="product-sold">新品首发</span>
+                    </div>
+                    <button class="product-add-cart">🛒 加入购物车</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 服务保障 -->
+    <section class="trust-section">
+        <div class="trust-grid">
+            <div class="trust-card">
+                <div class="trust-icon">🚚</div>
+                <div class="trust-text">
+                    <h4>全场包邮</h4>
+                    <p>满 ¥299 免运费，极速发货</p>
+                </div>
+            </div>
+            <div class="trust-card">
+                <div class="trust-icon">🔄</div>
+                <div class="trust-text">
+                    <h4>7天无理由</h4>
+                    <p>不满意随时退，运费险保障</p>
+                </div>
+            </div>
+            <div class="trust-card">
+                <div class="trust-icon">🛡️</div>
+                <div class="trust-text">
+                    <h4>正品保障</h4>
+                    <p>品牌授权，假一赔十</p>
+                </div>
+            </div>
+            <div class="trust-card">
+                <div class="trust-icon">💬</div>
+                <div class="trust-text">
+                    <h4>专属客服</h4>
+                    <p>24小时在线，秒级响应</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>Fashion Store</h3>
+                    <p>探索全球时尚，定义独特风格。精选优质设计师品牌，为你带来独一无二的穿搭体验。</p>
+                    <div class="footer-contact">
+                        <span>📞 客服热线：400-888-9999</span>
+                        <span>📧 邮箱：service@fashionstore.com</span>
+                        <span>📍 工作时间：9:00-22:00</span>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="footer-title">购物指南</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">购物流程</a></li>
+                        <li><a href="#">会员介绍</a></li>
+                        <li><a href="#">常见问题</a></li>
+                        <li><a href="#">联系客服</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="footer-title">配送与售后</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">配送方式</a></li>
+                        <li><a href="#">运费标准</a></li>
+                        <li><a href="#">退换货政策</a></li>
+                        <li><a href="#">退款说明</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="footer-title">关于我们</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">品牌故事</a></li>
+                        <li><a href="#">加入我们</a></li>
+                        <li><a href="#">商务合作</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>Fashion Store © 2026 版权所有 京ICP备XXXXXXXX号</span>
+                <div class="footer-payments">
+                    <div class="pay-icon">支付宝</div>
+                    <div class="pay-icon">微信</div>
+                    <div class="pay-icon">银联</div>
+                    <div class="pay-icon">Visa</div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
