@@ -13,7 +13,7 @@ import java.util.Set;
 public class GoodsDao {
 
     private static final Set<String> ALLOWED_SORT = Set.of(
-        "create_time", "price", "sales", "view_count");
+        "created_at", "price", "sales", "view_count");
 
     public Map<String, Object> findById(Long id) throws SQLException {
         List<Map<String, Object>> rows = JdbcUtils.query(
@@ -58,7 +58,7 @@ public class GoodsDao {
     }
 
     public List<Map<String, Object>> listNew(int limit) throws SQLException {
-        return JdbcUtils.query("SELECT * FROM goods WHERE status=1 AND is_new=1 ORDER BY create_time DESC LIMIT ?", limit);
+        return JdbcUtils.query("SELECT * FROM goods WHERE status=1 AND is_new=1 ORDER BY created_at DESC LIMIT ?", limit);
     }
 
     public List<Map<String, Object>> listAdmin(Long categoryId, String keyword, Integer status,
@@ -121,12 +121,13 @@ public class GoodsDao {
     }
 
     private String buildOrderBy(String sort) {
-        if (sort == null || sort.isBlank()) return "create_time DESC, id DESC";
+        String dflt = "created_at DESC, id DESC";
+        if (sort == null || sort.isBlank()) return dflt;
         String[] parts = sort.split("_");
-        if (parts.length < 2) return "create_time DESC, id DESC";
+        if (parts.length < 2) return dflt;
         String field = parts[0];
         String dir = parts[parts.length - 1].equalsIgnoreCase("asc") ? "ASC" : "DESC";
-        if (!ALLOWED_SORT.contains(field)) return "create_time DESC, id DESC";
+        if (!ALLOWED_SORT.contains(field)) return dflt;
         return field + " " + dir + ", id DESC";
     }
 }

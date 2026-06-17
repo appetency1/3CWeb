@@ -19,7 +19,10 @@ const userAvatar = computed(() => {
 const cartCount = computed(() => cartStore.totalCount)
 
 function goHome() { router.push('/') }
-function goCategory() { router.push('/category') }
+function goCategory(id?: number) {
+  if (id) router.push(`/category/${id}`)
+  else router.push('/category')
+}
 function goCart() {
   if (!userStore.isLoggedIn) { router.push({ name: 'login', query: { redirect: '/cart' } }); return }
   router.push('/cart')
@@ -43,6 +46,10 @@ function onSearch() {
 function isActive(name: string) {
   return route.name === name || route.path.includes('/' + name)
 }
+function isCategoryActive(id: number) {
+  const catId = Number(route.params.id)
+  return (route.name === 'category' || route.name === 'categoryGoods') && catId === id
+}
 </script>
 
 <template>
@@ -59,12 +66,10 @@ function isActive(name: string) {
         <!-- 主导航 -->
         <nav class="cl-nav">
           <a :class="['cl-nav-item', isActive('home') ? 'active' : '']" @click="goHome">首页</a>
-          <a :class="['cl-nav-item', isActive('category') ? 'active' : '']" @click="goCategory">全部分类</a>
-          <a class="cl-nav-item" @click="$router.push('/category/1')">女装</a>
-          <a class="cl-nav-item" @click="$router.push('/category/2')">男装</a>
-          <a class="cl-nav-item" @click="$router.push('/category/3')">鞋履</a>
-          <a class="cl-nav-item" @click="$router.push('/category/4')">包袋</a>
-          <a class="cl-nav-item" @click="$router.push('/category/6')">配饰</a>
+          <a :class="['cl-nav-item', isCategoryActive(2) ? 'active' : '']" @click="goCategory(2)">女装</a>
+          <a :class="['cl-nav-item', isCategoryActive(1) ? 'active' : '']" @click="goCategory(1)">男装</a>
+          <a :class="['cl-nav-item', isCategoryActive(3) ? 'active' : '']" @click="goCategory(3)">鞋靴</a>
+          <a :class="['cl-nav-item', isCategoryActive(4) ? 'active' : '']" @click="goCategory(4)">配饰</a>
         </nav>
 
         <!-- 搜索框 -->

@@ -14,6 +14,15 @@ public class EncodingFilter implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         req.setCharacterEncoding("UTF-8");
         res.setCharacterEncoding("UTF-8");
+        // Tomcat 10 默认 Content-Type 是 text/plain;charset=ISO-8859-1，导致前端 axios 当 latin1 解码
+        // 显式声明 application/json;charset=UTF-8
+        if (res instanceof jakarta.servlet.http.HttpServletResponse hres) {
+            if (hres.getContentType() == null) {
+                hres.setContentType("application/json;charset=UTF-8");
+            } else if (!hres.getContentType().toLowerCase().contains("charset")) {
+                hres.setContentType(hres.getContentType() + ";charset=UTF-8");
+            }
+        }
         chain.doFilter(req, res);
     }
 }

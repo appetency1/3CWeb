@@ -1,0 +1,2 @@
+id	cover	detail_head
+4	/assets/products/goods-4-hei-se-ku-tong-chang.jpg	<div class="goods-detail"><div class="detail-banner"><img src="/assets/products/goods-4-hei-se-ku-tong-chang.jpg" alt="" style="width:100%;max-width:750px;display:block;margin:0 auto"/></div><h2>黑色酷炫宽

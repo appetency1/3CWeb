@@ -31,6 +31,20 @@ instance.interceptors.response.use(
     return res.data as any
   },
   (err) => {
+    const status = err?.response?.status
+    // 后端 AuthInterceptor 写的是 HTTP 401 + 业务 message="未登录"/"token失效"
+    // 拦截器会同时清 token,后续请求就不会再带坏 token
+    if (status === 401) {
+      const serverMsg = err?.response?.data?.message
+      localStorage.removeItem('token')
+      showToast(serverMsg === 'token失效' ? '登录已失效,请重新登录' : '请先登录')
+      // 跳登录页(只在非登录页时跳)
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+        window.location.href = `/login?redirect=${redirect}`
+      }
+      return Promise.reject(err)
+    }
     const msg = err?.response?.data?.message || err.message || '网络异常'
     showFailToast(msg)
     return Promise.reject(err)
