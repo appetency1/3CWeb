@@ -58,6 +58,7 @@ const currentTitle = computed(() => {
   }
   return currentTop.value?.name || '全部分类'
 })
+const isSpecificCategory = computed(() => Number(route.params.id || 0) > 0)
 
 const breadcrumb = computed(() => {
   const top = currentTop.value?.name || ''
@@ -127,7 +128,8 @@ async function fetchGoods() {
   loading.value = true
   try {
     const sort = sortType.value === 'default' ? undefined : sortType.value
-    const catId = activeSubId.value || activeTopId.value
+    // 优先用 route.params.id（从导航栏来的），否则用 activeTopId（从 tab 点击来的）
+    const catId = Number(route.params.id) || activeSubId.value || activeTopId.value || undefined
     const data: any = await publicApi.goodsList({
       categoryId: catId,
       page: page.value,
@@ -183,7 +185,7 @@ onMounted(async () => {
     <section class="cat-hero">
       <div class="cat-hero-inner">
         <div class="cat-hero-text">
-          <span class="ch-tag">CATEGORY</span>
+          <span class="ch-tag">{{ isSpecificCategory ? currentTop?.name || '分类' : 'CATEGORY' }}</span>
           <h1>{{ currentTitle }}</h1>
           <p>共 {{ total }} 件商品 · {{ breadcrumb }}</p>
         </div>
@@ -191,8 +193,8 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 一级分类 tab -->
-    <section class="cat-tabs">
+    <!-- 一级分类 tab (从导航栏跳转时不展示，直接用左侧子分类) -->
+    <section v-if="!isSpecificCategory" class="cat-tabs">
       <div class="cat-tabs-inner">
         <div
           v-for="c in topCategories"

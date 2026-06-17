@@ -9,6 +9,7 @@ import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 const router = useRouter()
 
 const banners = ref<any[]>([])
+const bannersLoaded = ref(false)
 const activeBanner = ref(0)
 const categories = ref<any[]>([])         // 一级 + children
 const hotGoods = ref<any[]>([])
@@ -44,7 +45,21 @@ async function loadBanners() {
   try {
     const data: any = await publicApi.banners()
     banners.value = data || []
+    // 等所有 SVG 图片加载完成后再显示轮播，避免闪一下空图
+    if (banners.value.length > 0) {
+      await Promise.all(
+        banners.value.map(
+          (b: any) => new Promise<void>((resolve) => {
+            const img = new Image()
+            img.onload = () => resolve()
+            img.onerror = () => resolve()
+            img.src = fullImgUrl(b.image)
+          })
+        )
+      )
+    }
   } catch { /* silent */ }
+  bannersLoaded.value = true
 }
 async function loadCategories() {
   try {
@@ -126,29 +141,31 @@ onMounted(async () => {
     <section class="hero">
       <div class="hero-slider">
         <div class="hero-main">
-          <van-swipe
-            v-if="banners.length"
-            :autoplay="4500"
-            :initial-swipe="activeBanner"
-            class="hero-swipe"
-            @change="activeBanner = $event"
-          >
-            <van-swipe-item v-for="b in banners" :key="b.id">
-              <img :src="fullImgUrl(b.image)" class="hero-img" @click="b.link && router.push(b.link)" />
-            </van-swipe-item>
-            <template #indicator>
-              <div class="hero-dots">
-                <span v-for="(_, i) in banners" :key="i" class="dot" :class="{ on: i === activeBanner }" />
-              </div>
-            </template>
-          </van-swipe>
-          <div v-else class="hero-placeholder">
+          <Transition name="banner-fade">
+            <van-swipe
+              v-if="bannersLoaded"
+              :autoplay="4500"
+              :initial-swipe="activeBanner"
+              class="hero-swipe"
+              @change="activeBanner = $event"
+            >
+              <van-swipe-item v-for="b in banners" :key="b.id">
+                <img :src="fullImgUrl(b.image)" class="hero-img" @click="b.link && router.push(b.link)" />
+              </van-swipe-item>
+              <template #indicator>
+                <div class="hero-dots">
+                  <span v-for="(_, i) in banners" :key="i" class="dot" :class="{ on: i === activeBanner }" />
+                </div>
+              </template>
+            </van-swipe>
+            <div v-else class="hero-placeholder">
             <div class="hp-tag">夏季新品</div>
             <h2>轻盈夏日<br />优雅出行</h2>
             <p>精选棉麻材质 · 邂逅法式浪漫</p>
             <a class="hp-btn" @click="goCategory()">立即选购 →</a>
             <span class="hp-emoji">👗</span>
           </div>
+          </Transition>
         </div>
 
         <div class="hero-side">
@@ -384,6 +401,16 @@ onMounted(async () => {
 .hero-placeholder {
   position: absolute; inset: 0; padding: 48px;
   display: flex; flex-direction: column; justify-content: center; max-width: 480px;
+}
+
+/* 轮播图加载过渡动画 */
+.banner-fade-enter-active,
+.banner-fade-leave-active {
+  transition: opacity 0.35s ease;
+}
+.banner-fade-enter-from,
+.banner-fade-leave-to {
+  opacity: 0;
 }
 .hp-tag {
   display: inline-block; padding: 6px 14px; background: #c45c4a; color: #fff;

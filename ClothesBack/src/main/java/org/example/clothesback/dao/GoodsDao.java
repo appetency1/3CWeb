@@ -31,8 +31,8 @@ public class GoodsDao {
         StringBuilder sql = new StringBuilder("SELECT * FROM goods WHERE status=1");
         List<Object> params = new ArrayList<>();
         if (categoryId != null) {
-            sql.append(" AND category_id=?");
-            params.add(categoryId);
+            List<Long> catIds = expandCategoryIds(categoryId);
+            sql.append(" AND").append(buildCategoryClause(catIds, params));
         }
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND name LIKE ?");
@@ -48,7 +48,10 @@ public class GoodsDao {
     public long countPublic(Long categoryId, String keyword) throws SQLException {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM goods WHERE status=1");
         List<Object> params = new ArrayList<>();
-        if (categoryId != null) { sql.append(" AND category_id=?"); params.add(categoryId); }
+        if (categoryId != null) {
+            List<Long> catIds = expandCategoryIds(categoryId);
+            sql.append(" AND").append(buildCategoryClause(catIds, params));
+        }
         if (keyword != null && !keyword.isBlank()) { sql.append(" AND name LIKE ?"); params.add("%" + keyword + "%"); }
         return JdbcUtils.queryLong(sql.toString(), params.toArray());
     }
@@ -118,6 +121,33 @@ public class GoodsDao {
         return JdbcUtils.update(conn,
             "UPDATE goods g SET g.stock=(SELECT COALESCE(SUM(stock),0) FROM sku WHERE goods_id=g.id), " +
             "g.sales=(SELECT COALESCE(SUM(sales),0) FROM sku WHERE goods_id=g.id) WHERE g.id=?", id);
+    }
+
+    /**
+     * 展开分类ID：如果是父分类，返回其所有子分类ID + 自身ID；
+     * 如果是叶子分类，返回仅包含自身的列表。
+     */
+    private List<Long> expandCategoryIds(Long categoryId) throws SQLException {
+        List<Long> ids = new ArrayList<>();
+        ids.add(categoryId);
+        List<Map<String, Object>> children = JdbcUtils.query(
+            "SELECT id FROM category WHERE parent_id=?", categoryId);
+        for (Map<String, Object> row : children) {
+            ids.add(((Number) row.get("id")).longValue());
+        }
+        return ids;
+    }
+
+    /** 构建 "category_id IN (?,?,?)" 片段，返回SQL片段并收集参数 */
+    private String buildCategoryClause(List<Long> catIds, List<Object> params) {
+        StringBuilder clause = new StringBuilder(" category_id IN (");
+        for (int i = 0; i < catIds.size(); i++) {
+            if (i > 0) clause.append(",");
+            clause.append("?");
+            params.add(catIds.get(i));
+        }
+        clause.append(")");
+        return clause.toString();
     }
 
     private String buildOrderBy(String sort) {
