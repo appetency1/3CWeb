@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { publicApi } from '@/api/public'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 import { showFailToast } from 'vant'
 import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
@@ -132,6 +132,7 @@ onMounted(async () => {
   buildBrands()
   startCountdown()
 })
+onUnmounted(() => { clearInterval(countdownTimer) })
 </script>
 
 <template>
@@ -141,7 +142,7 @@ onMounted(async () => {
     <section class="hero">
       <div class="hero-slider">
         <div class="hero-main">
-          <Transition name="banner-fade">
+          <Transition name="banner-fade" appear>
             <van-swipe
               v-if="bannersLoaded"
               :autoplay="4500"
@@ -150,7 +151,7 @@ onMounted(async () => {
               @change="activeBanner = $event"
             >
               <van-swipe-item v-for="b in banners" :key="b.id">
-                <img :src="fullImgUrl(b.image)" class="hero-img" @click="b.link && router.push(b.link)" />
+                <img :src="fullImgUrl(b.image)" class="hero-img" @click="b.link && router.push(b.link)" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
               </van-swipe-item>
               <template #indicator>
                 <div class="hero-dots">
@@ -201,7 +202,7 @@ onMounted(async () => {
         <div class="flash-row">
           <div v-for="g in flashGoods" :key="g.id" class="flash-item" @click="goGoods(g.id)">
             <div class="flash-img-wrap">
-              <img :src="cover(g)" class="flash-img" loading="lazy" />
+              <img :src="cover(g)" class="flash-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
               <span v-if="pct(g.originalPrice, g.price) > 0" class="discount">
                 -{{ pct(g.originalPrice, g.price) }}%
               </span>
@@ -219,7 +220,7 @@ onMounted(async () => {
       <div class="cat-grid">
         <div v-for="c in categories" :key="c.id" class="cat-item" @click="goCategory(c.id)">
           <div class="cat-icon-wrap">
-            <img v-if="c.icon" :src="fullImgUrl(c.icon)" class="cat-icon" />
+            <img v-if="c.icon" :src="fullImgUrl(c.icon)" class="cat-icon" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
             <span v-else class="cat-emoji">🛍️</span>
           </div>
           <div class="cat-name">{{ c.name }}</div>
@@ -239,7 +240,7 @@ onMounted(async () => {
       <div class="grid-5">
         <div v-for="g in hotGoods.slice(0, 10)" :key="g.id" class="card" @click="goGoods(g.id)">
           <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" />
+            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
             <div class="card-badges">
               <span v-if="g.isHot" class="badge badge-hot">热卖</span>
               <span v-if="pct(g.originalPrice, g.price) > 0" class="badge badge-discount">
@@ -274,7 +275,7 @@ onMounted(async () => {
       <div class="grid-4">
         <div v-for="g in b.items" :key="g.id" class="card" @click="goGoods(g.id)">
           <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" />
+            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
           </div>
           <div class="card-info">
             <div class="card-name">{{ g.name }}</div>
@@ -318,7 +319,7 @@ onMounted(async () => {
       <div class="grid-5">
         <div v-for="g in newGoods.slice(0, 10)" :key="g.id" class="card" @click="goGoods(g.id)">
           <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" />
+            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
             <div class="card-badges">
               <span v-if="g.isNew" class="badge badge-new">新品</span>
             </div>

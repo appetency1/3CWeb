@@ -29,7 +29,8 @@ public class CartServlet extends BaseServlet {
             }
         }
         if ("/select-all".equals(path) && "PUT".equalsIgnoreCase(method)) {
-            int selected = parseInt(req.getParameter("selected"), 1);
+            JSONObject b = readJson(req);
+            int selected = b.getIntValue("selected", 1);
             service.selectAll(userId, selected);
             writeOk(resp, "操作成功", null); return;
         }
@@ -43,7 +44,8 @@ public class CartServlet extends BaseServlet {
             if (id > 0) {
                 if (segs.length == 1) {
                     if ("PUT".equalsIgnoreCase(method)) {
-                        int qty = parseInt(req.getParameter("quantity"), 1);
+                        JSONObject b = readJson(req);
+                        int qty = b.getIntValue("quantity", 1);
                         service.updateQuantity(userId, id, qty);
                         writeOk(resp, "修改成功", null); return;
                     }
@@ -53,7 +55,8 @@ public class CartServlet extends BaseServlet {
                     }
                 }
                 if (segs.length == 2 && "/select".equals("/" + segs[1]) && "PUT".equalsIgnoreCase(method)) {
-                    int selected = parseInt(req.getParameter("selected"), 1);
+                    JSONObject b = readJson(req);
+                    int selected = b.getIntValue("selected", 1);
                     service.toggleSelect(userId, id, selected);
                     writeOk(resp, "操作成功", null); return;
                 }

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showLoadingToast, showFailToast, showToast } from 'vant'
 import { orderApi } from '@/api/order'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 
 const route = useRoute()
 const router = useRouter()
@@ -112,7 +112,7 @@ onMounted(fetchDetail)
           style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #f8f8f8;cursor:pointer"
           @click="router.push(`/goods/${item.goodsId}`)"
         >
-          <img :src="fullImgUrl(item.goodsCover)" style="width:64px;height:64px;border-radius:6px;object-fit:cover;background:#f5f5f5;flex-shrink:0" />
+          <img :src="fullImgUrl(item.goodsCover)" style="width:64px;height:64px;border-radius:6px;object-fit:cover;background:#f5f5f5;flex-shrink:0" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;color:#333;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ item.goodsName }}</div>
             <div style="font-size:12px;color:#bbb;margin-top:4px">{{ item.spec || '默认规格' }} × {{ item.quantity }}</div>

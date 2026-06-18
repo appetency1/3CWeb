@@ -5,7 +5,7 @@ import { showToast } from 'vant'
 import { cartApi } from '@/api/cart'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 
 const router = useRouter()
 const cartStore = useCartStore()
@@ -104,7 +104,7 @@ onMounted(refreshCart)
               </div>
             </div>
 
-            <img :src="fullImgUrl(item.image)" class="desktop-cart-img" @click="router.push(`/goods/${item.goodsId}`)" />
+            <img :src="fullImgUrl(item.image)" class="desktop-cart-img" @click="router.push(`/goods/${item.goodsId}`)" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
 
             <div class="desktop-cart-info" @click="router.push(`/goods/${item.goodsId}`)">
               <p class="desktop-cart-name">{{ item.name }}</p>

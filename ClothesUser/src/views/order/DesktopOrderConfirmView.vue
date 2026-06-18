@@ -83,7 +83,7 @@ onMounted(loadAddresses)
         :key="`${item.goodsId}-${item.sku}`"
         style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #f8f8f8"
       >
-        <img :src="item.image" style="width:64px;height:64px;border-radius:6px;object-fit:cover;background:#f5f5f5;flex-shrink:0" />
+        <img :src="item.image" style="width:64px;height:64px;border-radius:6px;object-fit:cover;background:#f5f5f5;flex-shrink:0" @error="($event.target as HTMLImageElement).src = '/assets/placeholders/product-placeholder.svg'" />
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;color:#333;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ item.name }}</div>
           <div style="font-size:12px;color:#bbb;margin-top:4px">{{ item.sku || '默认规格' }}</div>

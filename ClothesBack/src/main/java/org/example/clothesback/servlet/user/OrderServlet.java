@@ -66,7 +66,7 @@ public class OrderServlet extends BaseServlet {
         List<Long> cartIds = new ArrayList<>();
         if (arr != null) for (int i = 0; i < arr.size(); i++) cartIds.add(arr.getLong(i));
         CreateOrderDTO dto = new CreateOrderDTO(b.getLong("addressId"), cartIds, b.getString("remark"));
-        String orderNo = service.create(userId, dto);
-        writeOk(resp, "下单成功", java.util.Map.of("orderNo", orderNo));
+        Map<String, Object> result = service.create(userId, dto);
+        writeOk(resp, "下单成功", result);
     }
 }

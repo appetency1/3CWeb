@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { publicApi } from '@/api/public'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 import { showFailToast } from 'vant'
 import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
@@ -280,7 +280,7 @@ onMounted(async () => {
             @click="goGoods(g.id)"
           >
             <div class="card-img-wrap">
-              <img :src="fullImgUrl(g.cover)" class="card-img" loading="lazy" />
+              <img :src="fullImgUrl(g.cover)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
               <div class="card-badges">
                 <span v-if="g.isHot" class="badge badge-hot">热卖</span>
                 <span v-if="g.isNew" class="badge badge-new">新品</span>

@@ -28,7 +28,7 @@ public class OrderService {
     private final GoodsDao goodsDao = new GoodsDao();
     private final AddressDao addressDao = new AddressDao();
 
-    public String create(Long userId, CreateOrderDTO dto) {
+    public Map<String, Object> create(Long userId, CreateOrderDTO dto) {
         if (dto.addressId() == null) throw new BizException(400, "请选择收货地址");
         if (dto.cartIds() == null || dto.cartIds().isEmpty()) throw new BizException(400, "请选择要结算的商品");
         try {
@@ -38,7 +38,7 @@ public class OrderService {
         }
     }
 
-    private String doCreate(Connection conn, Long userId, CreateOrderDTO dto) throws SQLException {
+    private Map<String, Object> doCreate(Connection conn, Long userId, CreateOrderDTO dto) throws SQLException {
         // 1. 验证地址
         Map<String, Object> addr = addressDao.findById(dto.addressId());
         if (addr == null || ((Number) addr.get("user_id")).longValue() != userId) {
@@ -124,7 +124,7 @@ public class OrderService {
         }
         cartDao.deleteByIds(conn, userId, cartIds);
 
-        return orderNo;
+        return java.util.Map.of("orderNo", orderNo, "orderId", orderId);
     }
 
     public PageResult<Map<String, Object>> listByUser(Long userId, Integer status, int page, int size) {

@@ -75,7 +75,9 @@ public class UserService {
         try {
             Map<String, Object> row = userDao.findById(userId);
             if (row == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
-            return BeanUtils.mapToBean(row, User.class);
+            User user = BeanUtils.mapToBean(row, User.class);
+            user.setPassword(null); // 不返回密码
+            return user;
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "查询失败");
         }

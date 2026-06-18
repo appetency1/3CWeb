@@ -14,5 +14,6 @@ export function getGoodsDetail(id: number) {
 
 /** 搜索商品 */
 export function searchGoods(keyword: string) {
-  return http<GoodsItem[]>('/public/goods', { keyword, size: 50 })
+  // 后端始终返回分页结构 PageResult
+  return http<PageResult<GoodsItem>>('/public/goods', { keyword, size: 50 })
 }

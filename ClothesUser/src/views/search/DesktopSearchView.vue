@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast } from 'vant'
 import { publicApi } from '@/api/public'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 
 const router = useRouter()
 const searchValue = ref((router.currentRoute.value.query.keyword as string) || '')
@@ -123,7 +123,7 @@ onMounted(() => {
             href="#"
             @click.prevent="goGoods(item.id)"
           >
-            <img :src="fullImgUrl(item.cover)" class="desktop-goods-img" loading="lazy" />
+            <img :src="fullImgUrl(item.cover)" class="desktop-goods-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
             <div class="desktop-goods-body">
               <p class="desktop-goods-name">{{ item.name }}</p>
               <div class="desktop-goods-price">

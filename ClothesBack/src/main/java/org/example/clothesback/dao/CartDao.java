@@ -11,7 +11,13 @@ public class CartDao {
 
     public List<Map<String, Object>> listByUser(Long userId) throws SQLException {
         return JdbcUtils.query(
-            "SELECT * FROM cart WHERE user_id=? ORDER BY id DESC", userId);
+            "SELECT c.id, c.goods_id, c.sku_id, c.quantity, c.selected," +
+            " g.name AS goods_name, g.cover AS goods_cover," +
+            " s.spec, s.price, s.stock" +
+            " FROM cart c" +
+            " LEFT JOIN goods g ON c.goods_id = g.id" +
+            " LEFT JOIN sku s ON c.sku_id = s.id" +
+            " WHERE c.user_id=? ORDER BY c.id DESC", userId);
     }
 
     public Map<String, Object> findById(Long id) throws SQLException {

@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast } from 'vant'
 import { orderApi } from '@/api/order'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 
 const router = useRouter()
 const active = ref(0)
@@ -84,7 +84,7 @@ onMounted(fetchOrders)
           class="desktop-order-item-row"
           @click="router.push(`/order/${order.id}`)"
         >
-          <img :src="fullImgUrl(item.goodsCover)" class="desktop-order-img" />
+          <img :src="fullImgUrl(item.goodsCover)" class="desktop-order-img" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
           <div class="desktop-order-item-info">
             <p class="desktop-order-item-name">{{ item.goodsName }}</p>
             <p class="desktop-order-item-sku">{{ item.spec || '默认规格' }} × {{ item.quantity }}</p>

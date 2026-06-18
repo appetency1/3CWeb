@@ -11,7 +11,10 @@ public class FavoriteDao {
 
     public List<Map<String, Object>> listByUser(Long userId, int offset, int size) throws SQLException {
         return JdbcUtils.query(
-            "SELECT * FROM favorite WHERE user_id=? ORDER BY id DESC LIMIT ? OFFSET ?",
+            "SELECT f.id, f.goods_id, f.created_at, g.name, g.cover, g.price" +
+            " FROM favorite f" +
+            " LEFT JOIN goods g ON f.goods_id = g.id" +
+            " WHERE f.user_id=? ORDER BY f.id DESC LIMIT ? OFFSET ?",
             userId, size, offset);
     }
 

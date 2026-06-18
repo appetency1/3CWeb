@@ -10,6 +10,7 @@ import org.example.clothesback.common.BizException;
 import org.example.clothesback.common.Result;
 import org.example.clothesback.entity.Admin;
 import org.example.clothesback.entity.User;
+import org.example.clothesback.util.MapKeyConverter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -71,7 +72,11 @@ public abstract class BaseServlet extends HttpServlet {
 
     protected void writeJson(HttpServletResponse resp, Object data) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
-        resp.getWriter().write(JSON.toJSONString(data));
+        // 两阶段: 序列化 → 解析 → 转换 snake_case → 再序列化
+        // 确保 POJO(Result/PageResult/VO)内部嵌套的 Map key 也被转换
+        String json = JSON.toJSONString(data);
+        Object parsed = JSON.parse(json);
+        resp.getWriter().write(JSON.toJSONString(MapKeyConverter.toCamelCase(parsed)));
     }
 
     protected void writeJson(HttpServletResponse resp, int code, String message) throws IOException {

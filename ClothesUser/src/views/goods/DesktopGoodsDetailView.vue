@@ -6,7 +6,7 @@ import { publicApi } from '@/api/public'
 import { cartApi } from '@/api/cart'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
-import { fullImgUrl } from '@/utils/img'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 import { http } from '@/utils/request'
 import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
@@ -251,7 +251,7 @@ onMounted(async () => {
       <!-- 左侧 -->
       <div class="gallery-col">
         <div class="gallery">
-          <img v-if="allImages.length" :src="allImages[activeImage]" class="gallery-main-img" />
+          <img v-if="allImages.length" :src="allImages[activeImage]" class="gallery-main-img" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
           <div v-else class="gallery-empty">暂无图片</div>
           <div v-if="allImages.length > 1" class="thumbs">
             <div
@@ -260,7 +260,7 @@ onMounted(async () => {
               class="thumb"
               :class="{ active: i === activeImage }"
               @click="activeImage = i"
-            ><img :src="img" /></div>
+            ><img :src="img" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
           </div>
         </div>
 
@@ -270,7 +270,7 @@ onMounted(async () => {
           <div class="related-row">
             <div v-for="g in related" :key="g.id" class="rel-card" @click="goGoods(g.id)">
               <div class="rel-img-wrap">
-                <img :src="fullImgUrl(g.cover)" class="rel-img" loading="lazy" />
+                <img :src="fullImgUrl(g.cover)" class="rel-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
               </div>
               <p class="rel-name">{{ g.name }}</p>
               <p class="rel-price">¥{{ priceFmt(g.price) }}</p>
@@ -405,7 +405,7 @@ onMounted(async () => {
             </div>
             <p class="c-content">{{ c.content }}</p>
             <div v-if="parseImgs(c.images).length" class="c-imgs">
-              <img v-for="(img, i) in parseImgs(c.images)" :key="i" :src="fullImgUrl(img)" class="c-img" />
+              <img v-for="(img, i) in parseImgs(c.images)" :key="i" :src="fullImgUrl(img)" class="c-img" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
             </div>
           </div>
 

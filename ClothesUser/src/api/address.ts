@@ -5,7 +5,7 @@ export const addressApi = {
   list: () => http<Address[]>('/user/address'),
 
   add: (data: Omit<Address, 'id' | 'userId' | 'isDefault'> & { isDefault?: number }) =>
-    http<Address>('/user/address', data, { method: 'POST' }),
+    http<{ id: number }>('/user/address', data, { method: 'POST' }),
 
   update: (id: number, data: Partial<Address>) =>
     http<void>(`/user/address/${id}`, data, { method: 'PUT' }),
