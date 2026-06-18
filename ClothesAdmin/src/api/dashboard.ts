@@ -1,10 +1,5 @@
-import { get } from '@/utils/request'
+import { get, unwrap } from '@/utils/request'
 
 export function getDashboardStats() {
-  return get<{
-    orderCount: number
-    goodsCount: number
-    userCount: number
-    revenue: number
-  }>('/admin/dashboard/stats')
+  return get<any>('/admin/dashboard').then(unwrap)
 }

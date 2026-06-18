@@ -32,7 +32,9 @@ public class BannerService {
 
     public void update(Long id, BannerDTO dto) {
         try {
-            int n = dao.update(id, dto.title(), dto.image(), dto.link(), dto.sort(), dto.status());
+            int n = dao.update(id, dto.title(), dto.image(), dto.link(),
+                dto.sort() == null ? 0 : dto.sort(),
+                dto.status() == null ? 1 : dto.status());
             if (n == 0) throw new BizException(ResultCode.NOT_FOUND, "轮播图不存在");
         } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "更新失败"); }
     }

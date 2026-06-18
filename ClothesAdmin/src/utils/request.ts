@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080/ClothesBack'
+const BASE_URL = 'http://localhost:8080/ClothesBack_war/api'
 
 interface ApiResponse<T = any> {
   code: number
@@ -16,11 +16,22 @@ async function request<T = any>(
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>)
   }
-  if (token) headers['Authorization'] = token
+  if (token) headers['Authorization'] = 'Bearer ' + token
 
   const res = await fetch(`${BASE_URL}${url}`, { ...options, headers })
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
   return res.json()
+}
+
+/**
+ * 从 ApiResponse 中解出 data，供 view 层直接使用。
+ * 后端所有响应格式：{ code, message, data }
+ */
+export function unwrap<T>(resp: ApiResponse<T>): T {
+  if (resp.code !== 0 && resp.code !== 200) {
+    throw new Error(resp.message || `请求失败(code=${resp.code})`)
+  }
+  return resp.data
 }
 
 export function get<T = any>(url: string, params?: Record<string, any>) {

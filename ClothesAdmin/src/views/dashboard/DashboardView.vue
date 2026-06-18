@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { getDashboardStats } from '@/api/dashboard'
+import { getOrderList } from '@/api/order'
 
 const stats = ref({
   orderCount: 0,
@@ -9,6 +11,17 @@ const stats = ref({
 })
 
 const orderList = ref<any[]>([])
+
+onMounted(async () => {
+  try {
+    const s = await getDashboardStats()
+    if (s) stats.value = s
+  } catch { /* silent */ }
+  try {
+    const res = await getOrderList({ page: 1, size: 5 })
+    orderList.value = res?.list || res || []
+  } catch { /* silent */ }
+})
 </script>
 
 <template>

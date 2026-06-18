@@ -3,6 +3,7 @@ package org.example.clothesback.service;
 import org.example.clothesback.common.BizException;
 import org.example.clothesback.common.ResultCode;
 import org.example.clothesback.dao.SkuDao;
+import java.sql.Connection;
 import org.example.clothesback.dto.SkuDTO;
 import org.example.clothesback.util.JdbcUtils;
 
@@ -45,7 +46,10 @@ public class SkuService {
     }
 
     public void delete(Long id) {
-        try { skuDao.delete(JdbcUtils.getConnection(), id); }
-        catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "删除失败"); }
+        try (Connection conn = JdbcUtils.getConnection()) {
+            skuDao.delete(conn, id);
+        } catch (SQLException e) {
+            throw new BizException(ResultCode.SERVER_ERROR, "删除失败");
+        }
     }
 }

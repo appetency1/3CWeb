@@ -11,6 +11,9 @@ const router = useRouter()
 const banners = ref<any[]>([])
 const bannersLoaded = ref(false)
 const activeBanner = ref(0)
+const swipeRef = ref<any>(null)            // 手动切换轮播
+function prevSlide() { swipeRef.value?.swipeTo(activeBanner.value - 1) }
+function nextSlide() { swipeRef.value?.swipeTo(activeBanner.value + 1) }
 const categories = ref<any[]>([])         // 一级 + children
 const hotGoods = ref<any[]>([])
 const newGoods = ref<any[]>([])
@@ -66,7 +69,7 @@ async function loadCategories() {
     const data: any = await publicApi.categories()
     // 树结构:取一级
     const top = (data || []).filter((c: any) => Number(c.parentId) === 0)
-    categories.value = top.slice(0, 8) // 8 个一级
+    categories.value = top.filter((c: any) => c.id !== 501 && c.id !== 502).slice(0, 8) // 8 个一级
   } catch { /* silent */ }
 }
 async function loadHot() {
@@ -142,12 +145,13 @@ onUnmounted(() => { clearInterval(countdownTimer) })
     <section class="hero">
       <div class="hero-slider">
         <div class="hero-main">
-          <Transition name="banner-fade" appear>
+          <template v-if="bannersLoaded">
             <van-swipe
-              v-if="bannersLoaded"
+              ref="swipeRef"
               :autoplay="4500"
               :initial-swipe="activeBanner"
               class="hero-swipe"
+              :loop="true"
               @change="activeBanner = $event"
             >
               <van-swipe-item v-for="b in banners" :key="b.id">
@@ -159,14 +163,16 @@ onUnmounted(() => { clearInterval(countdownTimer) })
                 </div>
               </template>
             </van-swipe>
-            <div v-else class="hero-placeholder">
+            <button class="hero-arrow hero-arrow-prev" @click="prevSlide" aria-label="上一张">‹</button>
+            <button class="hero-arrow hero-arrow-next" @click="nextSlide" aria-label="下一张">›</button>
+          </template>
+          <div v-else class="hero-placeholder">
             <div class="hp-tag">夏季新品</div>
             <h2>轻盈夏日<br />优雅出行</h2>
             <p>精选棉麻材质 · 邂逅法式浪漫</p>
             <a class="hp-btn" @click="goCategory()">立即选购 →</a>
             <span class="hp-emoji">👗</span>
           </div>
-          </Transition>
         </div>
 
         <div class="hero-side">
@@ -263,51 +269,7 @@ onUnmounted(() => { clearInterval(countdownTimer) })
       </div>
     </section>
 
-    <!-- 6. 分类专区 -->
-    <section v-for="b in categoryBlocks" :key="b.id" class="section">
-      <div class="section-head">
-        <div class="section-title">
-          <span class="emoji">🛍️</span>
-          <h2>{{ b.name }}专区</h2>
-        </div>
-        <a class="section-more" @click="goCategory(b.id)">查看全部 →</a>
-      </div>
-      <div class="grid-4">
-        <div v-for="g in b.items" :key="g.id" class="card" @click="goGoods(g.id)">
-          <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-          </div>
-          <div class="card-info">
-            <div class="card-name">{{ g.name }}</div>
-            <div class="card-price-row">
-              <span class="card-price">¥{{ priceFmt(g.price) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. 促销横幅 -->
-    <section class="promo-banners">
-      <div class="promo-banner p-dark" @click="goCategory(1)">
-        <div class="pb-content">
-          <h3>男装专区</h3>
-          <p>商务休闲 · 简约不简单</p>
-          <span class="pb-tag">限时 8 折</span>
-        </div>
-        <span class="pb-emoji">👔</span>
-      </div>
-      <div class="promo-banner p-light" @click="goCategory(4)">
-        <div class="pb-content">
-          <h3>配饰专场</h3>
-          <p>点睛之笔 · 精致生活</p>
-          <span class="pb-tag pb-tag-dark">满 199 减 30</span>
-        </div>
-        <span class="pb-emoji">⌚</span>
-      </div>
-    </section>
-
-    <!-- 8. 新品上市 -->
+    <!-- 6. 新品上市 -->
     <section v-if="newGoods.length" class="section">
       <div class="section-head">
         <div class="section-title">
@@ -333,6 +295,50 @@ onUnmounted(() => { clearInterval(countdownTimer) })
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- 7. 分类专区 -->
+    <section v-for="b in categoryBlocks" :key="b.id" class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <span class="emoji">🛍️</span>
+          <h2>{{ b.name }}专区</h2>
+        </div>
+        <a class="section-more" @click="goCategory(b.id)">查看全部 →</a>
+      </div>
+      <div class="grid-4">
+        <div v-for="g in b.items" :key="g.id" class="card" @click="goGoods(g.id)">
+          <div class="card-img-wrap">
+            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+          </div>
+          <div class="card-info">
+            <div class="card-name">{{ g.name }}</div>
+            <div class="card-price-row">
+              <span class="card-price">¥{{ priceFmt(g.price) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. 促销横幅 -->
+    <section class="promo-banners">
+      <div class="promo-banner p-dark" @click="goCategory(1)">
+        <div class="pb-content">
+          <h3>男装专区</h3>
+          <p>商务休闲 · 简约不简单</p>
+          <span class="pb-tag">限时 8 折</span>
+        </div>
+        <span class="pb-emoji">👔</span>
+      </div>
+      <div class="promo-banner p-light" @click="goCategory(4)">
+        <div class="pb-content">
+          <h3>配饰专场</h3>
+          <p>点睛之笔 · 精致生活</p>
+          <span class="pb-tag pb-tag-dark">满 199 减 30</span>
+        </div>
+        <span class="pb-emoji">⌚</span>
       </div>
     </section>
 
@@ -399,20 +405,25 @@ onUnmounted(() => { clearInterval(countdownTimer) })
 .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); transition: all 0.3s; }
 .dot.on { width: 24px; border-radius: 4px; background: #fff; }
 
+/* 轮播左右箭头 */
+.hero-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 40px; height: 40px; border: none; border-radius: 50%;
+  background: rgba(0,0,0,0.25); color: #fff; font-size: 28px; line-height: 1;
+  cursor: pointer; opacity: 0; transition: all 0.25s; display: flex;
+  align-items: center; justify-content: center; padding-bottom: 4px;
+}
+.hero-main:hover .hero-arrow { opacity: 0.7; }
+.hero-arrow:hover { opacity: 1 !important; background: rgba(0,0,0,0.5); }
+.hero-arrow-prev { left: 12px; }
+.hero-arrow-next { right: 12px; }
+
 .hero-placeholder {
   position: absolute; inset: 0; padding: 48px;
   display: flex; flex-direction: column; justify-content: center; max-width: 480px;
 }
 
-/* 轮播图加载过渡动画 */
-.banner-fade-enter-active,
-.banner-fade-leave-active {
-  transition: opacity 0.35s ease;
-}
-.banner-fade-enter-from,
-.banner-fade-leave-to {
-  opacity: 0;
-}
+
 .hp-tag {
   display: inline-block; padding: 6px 14px; background: #c45c4a; color: #fff;
   font-size: 11px; font-weight: 700; letter-spacing: 1px; border-radius: 4px; margin-bottom: 16px;

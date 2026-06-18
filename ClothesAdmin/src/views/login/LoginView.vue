@@ -1,24 +1,40 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import { showToast, showLoadingToast, showFailToast } from 'vant'
 import { useAdminStore } from '@/stores/admin'
+import { post, unwrap } from '@/utils/request'
 
 const router = useRouter()
 const adminStore = useAdminStore()
 
 const username = ref('')
 const password = ref('')
+const loading = ref(false)
 
-function onLogin() {
+async function onLogin() {
   if (!username.value || !password.value) {
     showToast('请输入管理员账号和密码')
     return
   }
-  // TODO: 调用管理员登录 API
-  adminStore.setToken('mock-token')
-  adminStore.setAdminInfo({ username: username.value })
-  router.replace('/dashboard')
+  loading.value = true
+  const t = showLoadingToast({ message: '登录中...', forbidClick: true })
+  try {
+    const res = await post<any>('/admin/login', {
+      username: username.value,
+      password: password.value,
+    })
+    const data = unwrap(res)  // { token, userInfo }
+    adminStore.setToken(data.token)
+    adminStore.setAdminInfo(data.userInfo)
+    t.close()
+    router.replace('/dashboard')
+  } catch (e: any) {
+    t.close()
+    showFailToast(e?.message || '登录失败')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

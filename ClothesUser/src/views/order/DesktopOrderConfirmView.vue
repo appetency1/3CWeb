@@ -89,7 +89,7 @@ onMounted(loadAddresses)
           <div style="font-size:12px;color:#bbb;margin-top:4px">{{ item.sku || '默认规格' }}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:15px;font-weight:700;color:#c9a96e">¥{{ item.price }}</div>
+          <div style="font-size:15px;font-weight:700;color:#c45c4a">¥{{ item.price }}</div>
           <div style="font-size:12px;color:#bbb">×{{ item.count }}</div>
         </div>
       </div>
@@ -105,7 +105,7 @@ onMounted(loadAddresses)
     <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <span style="font-size:14px;color:#888">共 {{ checkedItems.length }} 件商品</span>
-        <div style="font-size:14px;color:#888">合计: <span style="font-size:24px;font-weight:800;color:#c9a96e;font-family:Georgia,serif;margin-left:4px">¥{{ totalPrice.toFixed(2) }}</span></div>
+        <div style="font-size:14px;color:#888">合计: <span style="font-size:24px;font-weight:800;color:#c45c4a;margin-left:4px">¥{{ totalPrice.toFixed(2) }}</span></div>
       </div>
       <button
         class="desktop-checkout-btn"

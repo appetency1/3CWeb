@@ -132,7 +132,7 @@ onMounted(fetchDetail)
         <div style="display:flex;justify-content:space-between;font-size:13px;color:#888;padding:6px 0">
           <span>运费</span><span>{{ order.freightAmount > 0 ? `¥${order.freightAmount}` : '免运费' }}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;padding:12px 0 0;border-top:1px solid #f0f0f0;margin-top:4px;color:#c9a96e">
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;padding:12px 0 0;border-top:1px solid #f0f0f0;margin-top:4px;color:#c45c4a">
           <span>实付款</span><span>¥{{ order.payAmount || order.totalAmount }}</span>
         </div>
         <div style="font-size:12px;color:#bbb;margin-top:8px">订单号: {{ order.orderNo }}</div>

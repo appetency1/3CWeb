@@ -1,13 +1,17 @@
-import { get, post } from '@/utils/request'
+import { get, post, unwrap } from '@/utils/request'
 
-export function getOrderList(params?: { page?: number; status?: number }) {
-  return get<{ list: any[]; total: number }>('/admin/order/list', params)
+export function getOrderList(params?: { page?: number; status?: number; keyword?: string }) {
+  return get<any>('/admin/order', params).then(unwrap)
 }
 
 export function getOrderDetail(id: number) {
-  return get(`/admin/order/detail`, { id })
+  return get<any>(`/admin/order/${id}`).then(unwrap)
 }
 
-export function updateOrderStatus(id: number, status: number) {
-  return post('/admin/order/updateStatus', { id, status })
+export function shipOrder(id: number) {
+  return post(`/admin/order/${id}/ship`).then(unwrap)
+}
+
+export function refundOrder(id: number) {
+  return post(`/admin/order/${id}/refund`).then(unwrap)
 }

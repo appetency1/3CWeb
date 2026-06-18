@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { favoriteApi, type FavoriteItem } from '@/api/favorite'
 import { showToast, showConfirmDialog } from 'vant'
+import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
+import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -15,9 +17,9 @@ async function onLoad() {
   loading.value = true
   try {
     const res: any = await favoriteApi.list(page.value)
-    const items = res.list || []
+    const items = res?.list || res || []
     list.value.push(...items)
-    if (list.value.length >= res.total) {
+    if (list.value.length >= (res?.total || 0)) {
       finished.value = true
     }
     page.value++
@@ -45,102 +47,102 @@ onMounted(onLoad)
 </script>
 
 <template>
-  <div class="favorites-page">
-    <van-nav-bar title="我的收藏" left-arrow @click-left="router.back()" />
+  <DesktopLayout>
+    <div class="desktop-page-title">我的收藏</div>
 
-    <div v-if="list.length === 0 && !loading" class="empty">
-      <van-icon name="like-o" size="64" color="#c8c9cc" />
+    <div v-if="list.length === 0 && !loading" class="desktop-empty">
+      <div class="empty-icon"><span>♡</span></div>
       <p>暂无收藏</p>
     </div>
 
-    <div v-else class="goods-grid">
-      <div v-for="(item, idx) in list" :key="item.id" class="goods-card" @click="goDetail(item.goodsId)">
-        <div class="img-wrap">
-          <img :src="item.cover" :alt="item.name" @error="($event.target as HTMLImageElement).src='/assets/placeholders/product.jpg'" />
-          <button class="fav-btn" @click.stop="removeFav(item.goodsId, idx)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#ee0a24" stroke="#ee0a24" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-          </button>
+    <div v-else class="fav-grid">
+      <div v-for="(item, idx) in list" :key="item.id" class="fav-card" @click="goDetail(item.goodsId)">
+        <div class="fav-img-wrap">
+          <img :src="fullImgUrl(item.cover)" :alt="item.name" loading="lazy"
+               @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+          <button class="fav-remove" @click.stop="removeFav(item.goodsId, idx)" title="取消收藏">✕</button>
         </div>
-        <div class="info">
-          <p class="name van-multi-ellipsis--l2">{{ item.name }}</p>
-          <p class="price">¥{{ item.price }}</p>
+        <div class="fav-info">
+          <p class="fav-name">{{ item.name }}</p>
+          <p class="fav-price">¥{{ item.price }}</p>
         </div>
       </div>
     </div>
 
-    <div v-if="loading" class="loading-more">
-      <van-loading size="20">加载中...</van-loading>
-    </div>
-  </div>
+    <div v-if="loading" style="text-align:center;padding:40px;color:#999">加载中...</div>
+  </DesktopLayout>
 </template>
 
 <style scoped>
-.favorites-page {
-  min-height: 100vh;
-  background: #f7f8fa;
-}
-.goods-grid {
+.fav-grid {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px 40px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  padding: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
 }
-.goods-card {
+.fav-card {
   background: #fff;
-  border-radius: 8px;
+  border: 1px solid #e8e5e0;
+  border-radius: 10px;
   overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
 }
-.img-wrap {
+.fav-card:hover {
+  border-color: #c45c4a;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.fav-img-wrap {
   position: relative;
-  width: 100%;
-  aspect-ratio: 0.8;
-  background: #f5f5f5;
+  aspect-ratio: 1;
+  background: #f5f3f0;
 }
-.img-wrap img {
+.fav-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.fav-btn {
+.fav-remove {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 32px;
-  height: 32px;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
   border: none;
-  background: rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.info {
-  padding: 8px 10px 10px;
-}
-.name {
   font-size: 13px;
-  line-height: 1.4;
-  color: #323233;
-  margin: 0 0 4px;
-}
-.price {
-  font-size: 15px;
-  font-weight: 600;
-  color: #ee0a24;
-  margin: 0;
-}
-.empty {
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
-  color: #969799;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
-.empty p { margin-top: 12px; font-size: 14px; }
-.loading-more {
-  text-align: center;
-  padding: 16px;
+.fav-card:hover .fav-remove {
+  opacity: 1;
+}
+.fav-info {
+  padding: 12px 14px 14px;
+}
+.fav-name {
+  font-size: 13px;
+  color: #1a1a1a;
+  line-height: 1.4;
+  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fav-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #c45c4a;
+  margin: 0;
 }
 </style>

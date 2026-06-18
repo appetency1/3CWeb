@@ -1,13 +1,16 @@
-import { get, post, put, del } from '@/utils/request'
+import { get, post, put, del, unwrap } from '@/utils/request'
 
 export function getBannerList() {
-  return get<any[]>('/admin/banner/list')
+  return get<any>('/admin/banner').then(unwrap)
 }
 
 export function saveBanner(data: any) {
-  return data.id ? put('/admin/banner/update', data) : post('/admin/banner/add', data)
+  if (data.id) {
+    return put<any>(`/admin/banner/${data.id}`, data).then(unwrap)
+  }
+  return post<any>('/admin/banner', data).then(unwrap)
 }
 
 export function deleteBanner(id: number) {
-  return del(`/admin/banner/delete?id=${id}`)
+  return del(`/admin/banner/${id}`).then(unwrap)
 }
