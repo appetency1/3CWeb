@@ -185,6 +185,7 @@
             display: grid;
             grid-template-columns: 1fr 420px;
             gap: 40px;
+            align-items: start;
         }
 
         /* ========== 左侧：购物车商品 ========== */
@@ -193,6 +194,9 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 32px;
+            position: sticky;
+            top: 88px;
+            align-self: start;
         }
         .cart-header {
             display: flex;
@@ -584,6 +588,9 @@
             .checkout-page {
                 grid-template-columns: 1fr;
                 padding: 0 20px 40px;
+            }
+            .cart-section {
+                position: static;
             }
             .nav-categories { display: none; }
             .footer-grid {

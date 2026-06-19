@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAISON - 个人中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* ========== 顶部导航（复用首页） ========== */
+        .top-nav {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 48px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: #b85450;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: 3px;
+        }
+        .main-nav {
+            display: flex;
+            gap: 36px;
+            list-style: none;
+        }
+        .main-nav a {
+            text-decoration: none;
+            color: #666;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 8px 0;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .main-nav a:hover { color: #b85450; }
+        .main-nav a.active {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        .main-nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 2.5px;
+            background: #b85450;
+            border-radius: 2px;
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .action-icon {
+            position: relative;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s;
+        }
+        .action-icon:hover { color: #b85450; }
+        .action-icon svg { width: 22px; height: 22px; }
+        .cart-badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            background: #b85450;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .user-avatar-nav {
+            width: 32px; height: 32px;
+            background: #b85450;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* ========== 主内容区 ========== */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 40px;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 24px;
+        }
+
+        /* ========== 左侧边栏 ========== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 用户信息卡片 */
+        .user-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid #f0f0f0;
+        }
+        .user-avatar-large {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, #b85450, #d4736f);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 auto 12px;
+            position: relative;
+        }
+        .user-avatar-large::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 2px solid #b85450;
+            opacity: 0.3;
+        }
+        .user-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .user-level {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #f5e6c8, #f0d9a8);
+            color: #8b6914;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .user-stats-mini {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f5f5f5;
+        }
+        .user-stat-mini {
+            text-align: center;
+        }
+        .user-stat-mini .num {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .user-stat-mini .label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* 菜单 */
+        .menu-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 8px;
+            border: 1px solid #f0f0f0;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #555;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .menu-item:hover {
+            background: #faf8f6;
+            color: #b85450;
+        }
+        .menu-item.active {
+            background: #fdf6f5;
+            color: #b85450;
+            font-weight: 600;
+        }
+        .menu-icon {
+            width: 20px; height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .menu-arrow {
+            margin-left: auto;
+            font-size: 12px;
+            color: #ccc;
+        }
+        .menu-divider {
+            height: 1px;
+            background: #f5f5f5;
+            margin: 4px 12px;
+        }
+        .menu-item.logout {
+            color: #b85450;
+        }
+
+        /* ========== 右侧内容区 ========== */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 订单快捷入口 */
+        .orders-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #f0f0f0;
+        }
+        .section-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .section-more {
+            color: #999;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.3s;
+        }
+        .section-more:hover { color: #b85450; }
+
+        .order-status-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        .order-status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 24px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+        }
+        .order-status-item:hover {
+            background: #faf8f6;
+        }
+        .status-icon-wrap {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+        }
+        .status-icon-wrap.all { background: #fdf2f2; }
+        .status-icon-wrap.pay { background: #fff8e6; }
+        .status-icon-wrap.ship { background: #e8f5e9; }
+        .status-icon-wrap.review { background: #e3f2fd; }
+        .status-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            min-width: 18px; height: 18px;
+            background: #b85450;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        .status-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* 资产卡片 */
+        .assets-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .asset-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .asset-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        .asset-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .asset-card.coupon::before { background: #b85450; }
+        .asset-card.points::before { background: #e6a23c; }
+        .asset-card.balance::before { background: #4caf50; }
+        .asset-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .asset-label {
+            font-size: 13px;
+            color: #999;
+            font-weight: 500;
+        }
+        .asset-icon {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .asset-card.coupon .asset-icon { background: #fdf2f2; }
+        .asset-card.points .asset-icon { background: #fff8e6; }
+        .asset-card.balance .asset-icon { background: #e8f5e9; }
+        .asset-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        .asset-value span {
+            font-size: 14px;
+            font-weight: 500;
+            color: #999;
+            margin-left: 2px;
+        }
+        .asset-desc {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        /* 账户信息 */
+        .profile-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #f0f0f0;
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .profile-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .progress-bar-wrap {
+            width: 120px;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, #b85450, #e6a23c);
+            border-radius: 3px;
+        }
+        .progress-text {
+            font-size: 12px;
+            color: #b85450;
+            font-weight: 600;
+        }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .profile-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .profile-item:hover {
+            border-color: #f0e0de;
+            background: #fdf8f7;
+        }
+        .profile-item-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .profile-label {
+            font-size: 12px;
+            color: #999;
+        }
+        .profile-value {
+            font-size: 15px;
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+        .profile-value.empty {
+            color: #ccc;
+        }
+        .profile-action {
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .profile-action.bind {
+            background: #fdf2f2;
+            color: #b85450;
+        }
+        .profile-action.bind:hover {
+            background: #b85450;
+            color: #fff;
+        }
+        .profile-action.set {
+            background: #f5f5f5;
+            color: #666;
+        }
+        .profile-action.set:hover {
+            background: #e0e0e0;
+        }
+
+        /* 最近浏览 */
+        .recent-section {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #f0f0f0;
+        }
+        .recent-grid {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .recent-item {
+            width: 140px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .recent-item:hover {
+            transform: translateY(-4px);
+        }
+        .recent-img {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #f0e8e0, #e5dbd2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+        .recent-name {
+            font-size: 13px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .recent-price {
+            font-size: 14px;
+            font-weight: 700;
+            color: #b85450;
+            margin-top: 2px;
+        }
+
+        /* ========== 页脚 ========== */
+        .footer {
+            background: #1a1a1a;
+            color: #888;
+            padding: 40px;
+            text-align: center;
+            font-size: 13px;
+            margin-top: 40px;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+            .sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            .user-card { min-width: 260px; }
+            .menu-card { display: none; }
+            .assets-section { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .assets-section { grid-template-columns: 1fr; }
+            .profile-grid { grid-template-columns: 1fr; }
+            .order-status-bar { gap: 8px; }
+            .order-status-item { padding: 8px 12px; }
+            .recent-grid { overflow-x: auto; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="logo-section">
+                <a href="#" class="logo">
+                    <div class="logo-icon">M</div>
+                    <span class="logo-text">MAISON</span>
+                </a>
+                <ul class="main-nav">
+                    <li><a href="#">首页</a></li>
+                    <li><a href="#">女装</a></li>
+                    <li><a href="#">男装</a></li>
+                    <li><a href="#">鞋靴</a></li>
+                    <li><a href="#">配饰</a></li>
+                </ul>
+            </div>
+            <div class="nav-actions">
+                <div class="action-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                    <span class="cart-badge">3</span>
+                </div>
+                <div class="action-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </div>
+                <div class="user-avatar-nav">R</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="main-content">
+        <!-- 左侧边栏 -->
+        <aside class="sidebar">
+            <div class="user-card">
+                <div class="user-avatar-large">R</div>
+                <div class="user-name">rafa</div>
+                <div class="user-level">👑 黄金会员</div>
+                <div class="user-stats-mini">
+                    <div class="user-stat-mini">
+                        <div class="num">12</div>
+                        <div class="label">关注</div>
+                    </div>
+                    <div class="user-stat-mini">
+                        <div class="num">48</div>
+                        <div class="label">粉丝</div>
+                    </div>
+                    <div class="user-stat-mini">
+                        <div class="num">156</div>
+                        <div class="label">获赞</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <a href="#" class="menu-item active">
+                    <span class="menu-icon">📋</span>
+                    <span>我的订单</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="menu-icon">📍</span>
+                    <span>收货地址</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="menu-icon">♡</span>
+                    <span>我的收藏</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="menu-icon">👤</span>
+                    <span>个人资料</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="menu-icon">🔒</span>
+                    <span>账号安全</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="#" class="menu-item">
+                    <span class="menu-icon">💬</span>
+                    <span>联系客服</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <div class="menu-divider"></div>
+                <a href="#" class="menu-item logout">
+                    <span class="menu-icon">↪</span>
+                    <span>退出登录</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- 右侧内容 -->
+        <div class="content-area">
+            <!-- 订单状态 -->
+            <div class="orders-section">
+                <div class="section-header-row">
+                    <h2 class="section-title">我的订单</h2>
+                    <a href="#" class="section-more">查看全部 ›</a>
+                </div>
+                <div class="order-status-bar">
+                    <a href="#" class="order-status-item">
+                        <div class="status-icon-wrap all">
+                            📦
+                        </div>
+                        <span class="status-label">全部订单</span>
+                    </a>
+                    <a href="#" class="order-status-item">
+                        <div class="status-icon-wrap pay">
+                            💳
+                            <span class="status-badge">2</span>
+                        </div>
+                        <span class="status-label">待付款</span>
+                    </a>
+                    <a href="#" class="order-status-item">
+                        <div class="status-icon-wrap ship">
+                            🚚
+                            <span class="status-badge">1</span>
+                        </div>
+                        <span class="status-label">待收货</span>
+                    </a>
+                    <a href="#" class="order-status-item">
+                        <div class="status-icon-wrap review">
+                            ⭐
+                        </div>
+                        <span class="status-label">待评价</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 资产卡片 -->
+            <div class="assets-section">
+                <div class="asset-card coupon">
+                    <div class="asset-header">
+                        <span class="asset-label">优惠券</span>
+                        <div class="asset-icon">🎫</div>
+                    </div>
+                    <div class="asset-value">3<span>张</span></div>
+                    <div class="asset-desc">2张即将过期</div>
+                </div>
+                <div class="asset-card points">
+                    <div class="asset-header">
+                        <span class="asset-label">积分</span>
+                        <div class="asset-icon">✨</div>
+                    </div>
+                    <div class="asset-value">1,280<span>分</span></div>
+                    <div class="asset-desc">可抵 ¥12.80</div>
+                </div>
+                <div class="asset-card balance">
+                    <div class="asset-header">
+                        <span class="asset-label">余额</span>
+                        <div class="asset-icon">💰</div>
+                    </div>
+                    <div class="asset-value">0.00<span>元</span></div>
+                    <div class="asset-desc">充值享优惠</div>
+                </div>
+            </div>
+
+            <!-- 账户信息 -->
+            <div class="profile-section">
+                <div class="profile-header">
+                    <h2 class="section-title">账户信息</h2>
+                    <div class="profile-progress">
+                        <div class="progress-bar-wrap">
+                            <div class="progress-bar-fill"></div>
+                        </div>
+                        <span class="progress-text">资料完善度 50%</span>
+                    </div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-item">
+                        <div class="profile-item-left">
+                            <span class="profile-label">用户名</span>
+                            <span class="profile-value">rafa</span>
+                        </div>
+                        <button class="profile-action set">修改</button>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-item-left">
+                            <span class="profile-label">昵称</span>
+                            <span class="profile-value empty">未设置</span>
+                        </div>
+                        <button class="profile-action bind">去设置</button>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-item-left">
+                            <span class="profile-label">手机号</span>
+                            <span class="profile-value empty">未绑定</span>
+                        </div>
+                        <button class="profile-action bind">去绑定</button>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-item-left">
+                            <span class="profile-label">邮箱</span>
+                            <span class="profile-value empty">未绑定</span>
+                        </div>
+                        <button class="profile-action bind">去绑定</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近浏览 -->
+            <div class="recent-section">
+                <div class="section-header-row">
+                    <h2 class="section-title">最近浏览</h2>
+                    <a href="#" class="section-more">查看全部 ›</a>
+                </div>
+                <div class="recent-grid">
+                    <div class="recent-item">
+                        <div class="recent-img">👜</div>
+                        <div class="recent-name">通勤手提单肩包</div>
+                        <div class="recent-price">¥229</div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-img">👟</div>
+                        <div class="recent-name">复古运动跑步鞋</div>
+                        <div class="recent-price">¥459</div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-img">👕</div>
+                        <div class="recent-name">230G重磅纯棉T恤</div>
+                        <div class="recent-price">¥89</div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-img">🧥</div>
+                        <div class="recent-name">宽松慵懒风针织衫</div>
+                        <div class="recent-price">¥179</div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-img">👗</div>
+                        <div class="recent-name">法式复古连衣裙</div>
+                        <div class="recent-price">¥299</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2026 MAISON 时尚电商 · 保留所有权利
+    </div>
+</body>
+</html>
