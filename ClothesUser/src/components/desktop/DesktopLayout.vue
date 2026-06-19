@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
@@ -57,38 +57,57 @@ function isCategoryActive(id: number) {
     <!-- 顶部全宽导航栏 -->
     <header class="cl-header">
       <div class="cl-header-inner">
-        <!-- Logo -->
-        <div class="cl-logo" @click="goHome">
-          <div class="cl-logo-icon">M</div>
-          <span class="cl-logo-text">MAISON</span>
-        </div>
+        <div class="logo-section">
+          <!-- Logo -->
+          <div class="cl-logo" @click="goHome">
+            <div class="cl-logo-icon">M</div>
+            <span class="cl-logo-text">MAISON</span>
+          </div>
 
-        <!-- 主导航 -->
-        <nav class="cl-nav">
-          <a :class="['cl-nav-item', isActive('home') ? 'active' : '']" @click="goHome">首页</a>
-          <a :class="['cl-nav-item', isCategoryActive(2) ? 'active' : '']" @click="goCategory(2)">女装</a>
-          <a :class="['cl-nav-item', isCategoryActive(1) ? 'active' : '']" @click="goCategory(1)">男装</a>
-          <a :class="['cl-nav-item', isCategoryActive(3) ? 'active' : '']" @click="goCategory(3)">鞋靴</a>
-          <a :class="['cl-nav-item', isCategoryActive(4) ? 'active' : '']" @click="goCategory(4)">配饰</a>
-        </nav>
+          <!-- 主导航 -->
+          <nav class="cl-nav">
+            <a :class="['cl-nav-item', isActive('home') ? 'active' : '']" @click="goHome">首页</a>
+            <a :class="['cl-nav-item', isCategoryActive(2) ? 'active' : '']" @click="goCategory(2)">女装</a>
+            <a :class="['cl-nav-item', isCategoryActive(1) ? 'active' : '']" @click="goCategory(1)">男装</a>
+            <a :class="['cl-nav-item', isCategoryActive(3) ? 'active' : '']" @click="goCategory(3)">鞋靴</a>
+            <a :class="['cl-nav-item', isCategoryActive(4) ? 'active' : '']" @click="goCategory(4)">配饰</a>
+          </nav>
+        </div>
 
         <!-- 搜索框 -->
         <div class="cl-search">
           <input v-model="searchValue" placeholder="搜索商品、品牌..." @keyup.enter="onSearch" />
-          <button @click="onSearch">🔍</button>
+          <button @click="onSearch">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
         </div>
 
         <!-- 右侧操作区 -->
         <div class="cl-actions">
           <button class="cl-icon-btn" @click="goCart" title="购物车">
-            🛒
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
             <span v-if="cartCount > 0" class="cl-badge">{{ cartCount }}</span>
           </button>
           <button class="cl-icon-btn" @click="goOrder" title="我的订单">
-            📋
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
           </button>
           <button class="cl-icon-btn" @click="goUser" title="个人中心">
-            👤
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
           </button>
           <div v-if="userStore.isLoggedIn" class="cl-user-chip" @click="goUser">
             <div class="cl-user-avatar">{{ userAvatar }}</div>
@@ -167,10 +186,16 @@ function isCategoryActive(id: number) {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 40px;
-  height: 72px;
+  height: 64px;
   display: flex;
   align-items: center;
-  gap: 32px;
+  justify-content: space-between;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 48px;
 }
 
 .cl-logo {
@@ -204,55 +229,58 @@ function isCategoryActive(id: number) {
 
 .cl-nav {
   display: flex;
-  gap: 28px;
-  flex-shrink: 0;
+  gap: 36px;
+  list-style: none;
 }
 
 .cl-nav-item {
-  font-size: 14px;
-  font-weight: 500;
+  text-decoration: none;
   color: var(--text-secondary);
-  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
   padding: 8px 0;
   position: relative;
-  transition: color 0.2s ease;
-  text-decoration: none;
+  transition: color 0.3s;
 }
 
 .cl-nav-item:hover {
-  color: var(--text-primary);
+  color: var(--accent);
 }
 
 .cl-nav-item.active {
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .cl-nav-item.active::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 2.5px;
   background: var(--accent);
+  border-radius: 2px;
 }
+
 
 .cl-search {
   flex: 1;
-  max-width: 320px;
+  max-width: 480px;
+  margin: 0 40px;
   position: relative;
 }
 
 .cl-search input {
   width: 100%;
-  height: 40px;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  padding: 0 48px 0 18px;
-  font-size: 13px;
+  height: 42px;
+  border: 1px solid transparent;
+  border-radius: 24px;
+  padding: 0 48px 0 20px;
+  font-size: 14px;
   outline: none;
   background: var(--bg-secondary);
-  transition: all 0.2s ease;
+  transition: all 0.3s;
   box-sizing: border-box;
   color: var(--text-primary);
 }
@@ -260,6 +288,7 @@ function isCategoryActive(id: number) {
 .cl-search input:focus {
   border-color: var(--accent);
   background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(196, 92, 74, 0.1);
 }
 
 .cl-search input::placeholder {
@@ -268,7 +297,7 @@ function isCategoryActive(id: number) {
 
 .cl-search button {
   position: absolute;
-  right: 4px;
+  right: 5px;
   top: 50%;
   transform: translateY(-50%);
   width: 32px;
@@ -278,11 +307,10 @@ function isCategoryActive(id: number) {
   color: white;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  transition: background 0.3s;
 }
 
 .cl-search button:hover {
@@ -366,19 +394,22 @@ function isCategoryActive(id: number) {
 }
 
 .cl-login-btn {
-  padding: 8px 18px;
+  padding: 8px 24px;
   background: var(--accent);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 600;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s;
+  margin-left: 8px;
 }
 
 .cl-login-btn:hover {
   background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(196, 92, 74, 0.3);
 }
 
 /* ── 促销条 ── */

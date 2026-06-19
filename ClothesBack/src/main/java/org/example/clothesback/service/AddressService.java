@@ -18,15 +18,16 @@ public class AddressService {
         catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败"); }
     }
 
-    public Long create(Long userId, AddressDTO dto) {
+    public Map<String, Object> create(Long userId, AddressDTO dto) {
         validate(dto);
         try {
-            return JdbcUtils.transactionResult(conn -> {
+            Long id = JdbcUtils.transactionResult(conn -> {
                 int isDefault = (dao.countByUser(userId) == 0) ? 1 : 0;
                 dao.insert(conn, userId, dto.receiver().trim(), dto.phone().trim(),
                     dto.province(), dto.city(), dto.district(), dto.detail(), isDefault);
                 return JdbcUtils.queryLong(conn, "SELECT LAST_INSERT_ID()");
             });
+            return dao.findById(id);
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "新增失败");
         }

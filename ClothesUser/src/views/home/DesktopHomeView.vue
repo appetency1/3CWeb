@@ -2,11 +2,13 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { publicApi } from '@/api/public'
+import { favoriteApi } from '@/api/favorite'
 import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
-import { showFailToast } from 'vant'
+import { useUserStore } from '@/stores/user'
 import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const banners = ref<any[]>([])
 const bannersLoaded = ref(false)
@@ -23,11 +25,67 @@ const brands = ref<string[]>([])          // 品牌矩阵
 const countdown = ref({ h: '02', m: '15', s: '43' })
 let countdownTimer: any = null
 
+// 收藏状态
+const wishlistSet = ref(new Set<number>())
+
+async function loadWishlist() {
+  if (!userStore.isLoggedIn) return
+  try {
+    const data: any = await favoriteApi.list(1, 100)
+    const ids = (data?.list || []).map((x: any) => Number(x.goodsId))
+    wishlistSet.value = new Set(ids)
+  } catch { /* silent */ }
+}
+async function toggleWishlist(g: any) {
+  if (!userStore.isLoggedIn) { router.push({ name: 'login', query: { redirect: '/user/favorites' } }); return }
+  const id = Number(g.id)
+  const s = new Set(wishlistSet.value)
+  if (s.has(id)) { await favoriteApi.remove(id); s.delete(id) }
+  else { await favoriteApi.add(id); s.add(id) }
+  wishlistSet.value = s
+}
+
+// 秒杀自动轮转
+const flashOffset = ref(0)
+let flashScrollTimer: any = null
+let flashItemStep = 0
+
+function calcFlashStep() {
+  setTimeout(() => {
+    const el = document.querySelector('.flash-item') as HTMLElement | null
+    if (el) flashItemStep = el.offsetWidth + 16
+  }, 100)
+}
+
+function startFlashScroll() {
+  if (!flashGoods.value.length || flashGoods.value.length <= 5) return
+  stopFlashScroll()
+  stopFlashScroll()
+  calcFlashStep()
+  flashScrollTimer = setInterval(() => {
+    const total = flashGoods.value.length
+    if (!flashItemStep) calcFlashStep()
+    if (!flashItemStep) return
+    flashOffset.value += flashItemStep
+    if (flashOffset.value >= total * flashItemStep) flashOffset.value = 0
+  }, 4000)
+}
+function stopFlashScroll() { if (flashScrollTimer) { clearInterval(flashScrollTimer); flashScrollTimer = null } }
+function pauseFlashScroll() { stopFlashScroll() }
+function resumeFlashScroll() { startFlashScroll() }
+
 function priceFmt(p: any) { return Number(p || 0).toFixed(2) }
 function pct(orig: any, cur: any) {
   const o = Number(orig), c = Number(cur)
   if (!o || o <= c) return 0
   return Math.round((1 - c / o) * 100)
+}
+function stockRatio(g: any): number {
+  const stock = Number(g.stock || 0)
+  const sales = Number(g.sales || 0)
+  const total = stock + sales
+  if (!total) return 50
+  return Math.min(95, Math.round((stock / total) * 100))
 }
 function cover(g: any) { return fullImgUrl(g.cover) }
 
@@ -36,14 +94,6 @@ function goCategory(id?: number) {
   if (id) router.push({ name: 'categoryGoods', params: { id } })
   else router.push({ name: 'category' })
 }
-function goSub(parentId: number, subId?: number) {
-  if (subId) router.push({ name: 'categoryGoods', params: { id: subId } })
-  else router.push({ name: 'categoryGoods', params: { id: parentId } })
-}
-function onSearch() {
-  router.push({ name: 'search' })
-}
-
 async function loadBanners() {
   try {
     const data: any = await publicApi.banners()
@@ -134,6 +184,8 @@ onMounted(async () => {
   buildFlash()
   buildBrands()
   startCountdown()
+  loadWishlist()
+  startFlashScroll()
 })
 onUnmounted(() => { clearInterval(countdownTimer) })
 </script>
@@ -154,8 +206,20 @@ onUnmounted(() => { clearInterval(countdownTimer) })
               :loop="true"
               @change="activeBanner = $event"
             >
-              <van-swipe-item v-for="b in banners" :key="b.id">
-                <img :src="fullImgUrl(b.image)" class="hero-img" @click="b.link && router.push(b.link)" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+              <van-swipe-item v-for="b in banners" :key="b.id" class="hero-slide-item">
+                <div class="hero-slide-bg" :style="{ backgroundImage: `url(${fullImgUrl(b.image)})` }">
+                  <div class="hero-slide-overlay">
+                    <span class="slide-tag">{{ b.title || '新品推荐' }}</span>
+                    <h2 class="slide-title">{{ b.title || '精选好物' }}</h2>
+                    <p class="slide-desc">探索全球时尚，定义独特风格</p>
+                    <a class="slide-btn" @click="b.link && router.push(b.link)">
+                      立即查看
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
               </van-swipe-item>
               <template #indicator>
                 <div class="hero-dots">
@@ -166,12 +230,19 @@ onUnmounted(() => { clearInterval(countdownTimer) })
             <button class="hero-arrow hero-arrow-prev" @click="prevSlide" aria-label="上一张">‹</button>
             <button class="hero-arrow hero-arrow-next" @click="nextSlide" aria-label="下一张">›</button>
           </template>
-          <div v-else class="hero-placeholder">
-            <div class="hp-tag">夏季新品</div>
-            <h2>轻盈夏日<br />优雅出行</h2>
-            <p>精选棉麻材质 · 邂逅法式浪漫</p>
-            <a class="hp-btn" @click="goCategory()">立即选购 →</a>
-            <span class="hp-emoji">👗</span>
+          <div v-else class="hero-placeholder slide-1">
+            <div class="slide-content">
+              <span class="slide-tag">夏季新品</span>
+              <h2 class="slide-title">轻盈夏日<br />焕新衣橱</h2>
+              <p class="slide-desc">精选透气面料，打造舒适夏日穿搭体验</p>
+              <a class="slide-btn" @click="goCategory()">
+                立即选购
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+            <div class="slide-image"></div>
           </div>
         </div>
 
@@ -193,44 +264,100 @@ onUnmounted(() => { clearInterval(countdownTimer) })
     </section>
 
     <!-- 3. 限时秒杀 -->
-    <section v-if="flashGoods.length" class="flash">
-      <div class="flash-card">
-        <div class="flash-head">
-          <div class="flash-title">
-            <span class="flash-icon">⚡</span>
-            <h3>限时秒杀</h3>
-            <div class="countdown">
-              距结束 <span>{{ countdown.h }}</span>:<span>{{ countdown.m }}</span>:<span>{{ countdown.s }}</span>
+    <section v-if="flashGoods.length" class="flash-sale">
+      <div class="flash-header">
+        <div class="flash-title-group">
+          <span class="flash-icon">⚡</span>
+          <h3 class="flash-title">限时秒杀</h3>
+          <div class="countdown">
+            <span class="countdown-label">距结束</span>
+            <span class="countdown-box">{{ countdown.h }}</span>
+            <span class="countdown-sep">:</span>
+            <span class="countdown-box">{{ countdown.m }}</span>
+            <span class="countdown-sep">:</span>
+            <span class="countdown-box">{{ countdown.s }}</span>
+          </div>
+        </div>
+        <a class="flash-more" @click="goCategory()">更多秒杀 →</a>
+      </div>
+      <div class="flash-carousel" @mouseenter="pauseFlashScroll" @mouseleave="resumeFlashScroll">
+        <div class="flash-track" :style="{ transform: `translateX(-${flashOffset}px)` }">
+          <div v-for="g in flashGoods" :key="g.id" class="flash-item" @click="goGoods(g.id)">
+            <div class="new-card">
+              <div class="new-img-wrapper">
+                <img :src="cover(g)" class="flash-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+                <div class="new-img-overlay"></div>
+                <div class="new-tag-combo">
+                  <span v-if="g.isHot" class="new-tag-hot">热卖</span>
+                  <span v-if="pct(g.originalPrice, g.price) > 0" class="new-tag-discount">
+                    -{{ pct(g.originalPrice, g.price) }}%
+                  </span>
+                </div>
+                <button class="new-fav-btn" :class="{ liked: wishlistSet.has(Number(g.id)) }" @click.stop="toggleWishlist(g)">{{ wishlistSet.has(Number(g.id)) ? '♥' : '♡' }}</button>
+              </div>
+              <div class="new-info">
+                <div v-if="g.brand" class="new-brand-row">
+                  <span class="new-brand">{{ g.brand }}</span>
+                </div>
+                <div class="new-name">{{ g.name }}</div>
+                <div class="new-price-block">
+                  <span class="new-price">{{ priceFmt(g.price) }}</span>
+                  <span v-if="g.originalPrice" class="new-original">¥{{ priceFmt(g.originalPrice) }}</span>
+                </div>
+                <div v-if="g.sales" class="new-sold">
+                  <span class="new-sold-fire">🔥</span>
+                  已售 <span class="new-sold-num">{{ g.sales > 999 ? (g.sales/1000).toFixed(1) + 'k' : g.sales }}</span>
+                </div>
+                <div class="new-stock-bar">
+                  <div class="new-stock-fill" :style="{ width: stockRatio(g) + '%' }"></div>
+                </div>
+                <div v-if="g.stock && stockRatio(g) < 20" class="new-stock-text">库存紧张</div>
+              </div>
             </div>
           </div>
-          <button class="flash-more" @click="goCategory()">更多秒杀 →</button>
-        </div>
-        <div class="flash-row">
-          <div v-for="g in flashGoods" :key="g.id" class="flash-item" @click="goGoods(g.id)">
-            <div class="flash-img-wrap">
-              <img :src="cover(g)" class="flash-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-              <span v-if="pct(g.originalPrice, g.price) > 0" class="discount">
-                -{{ pct(g.originalPrice, g.price) }}%
-              </span>
+          <!-- 克隆首批 5 个用于无缝循环 -->
+          <div v-for="g in flashGoods.slice(0, 5)" :key="'c' + g.id" class="flash-item" @click="goGoods(g.id)">
+            <div class="new-card">
+              <div class="new-img-wrapper">
+                <img :src="cover(g)" class="flash-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+                <div class="new-img-overlay"></div>
+                <div class="new-tag-combo">
+                  <span v-if="g.isHot" class="new-tag-hot">热卖</span>
+                  <span v-if="pct(g.originalPrice, g.price) > 0" class="new-tag-discount">
+                    -{{ pct(g.originalPrice, g.price) }}%
+                  </span>
+                </div>
+                <button class="new-fav-btn" :class="{ liked: wishlistSet.has(Number(g.id)) }" @click.stop="toggleWishlist(g)">{{ wishlistSet.has(Number(g.id)) ? '♥' : '♡' }}</button>
+              </div>
+              <div class="new-info">
+                <div v-if="g.brand" class="new-brand-row">
+                  <span class="new-brand">{{ g.brand }}</span>
+                </div>
+                <div class="new-name">{{ g.name }}</div>
+                <div class="new-price-block">
+                  <span class="new-price">{{ priceFmt(g.price) }}</span>
+                  <span v-if="g.originalPrice" class="new-original">¥{{ priceFmt(g.originalPrice) }}</span>
+                </div>
+                <div v-if="g.sales" class="new-sold">
+                  <span class="new-sold-fire">🔥</span>
+                  已售 <span class="new-sold-num">{{ g.sales > 999 ? (g.sales/1000).toFixed(1) + 'k' : g.sales }}</span>
+                </div>
+                <div class="new-stock-bar">
+                  <div class="new-stock-fill" :style="{ width: stockRatio(g) + '%' }"></div>
+                </div>
+                <div v-if="g.stock && stockRatio(g) < 20" class="new-stock-text">库存紧张</div>
+              </div>
             </div>
-            <div class="flash-price">¥{{ priceFmt(g.price) }}</div>
-            <div v-if="g.originalPrice" class="flash-orig">¥{{ priceFmt(g.originalPrice) }}</div>
-            <div class="flash-name">{{ g.name }}</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 4. 分类快捷入口 -->
-    <section v-if="categories.length" class="cat-nav">
-      <div class="cat-grid">
-        <div v-for="c in categories" :key="c.id" class="cat-item" @click="goCategory(c.id)">
-          <div class="cat-icon-wrap">
-            <img v-if="c.icon" :src="fullImgUrl(c.icon)" class="cat-icon" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-            <span v-else class="cat-emoji">🛍️</span>
-          </div>
-          <div class="cat-name">{{ c.name }}</div>
-        </div>
+    <!-- 4. 热门品牌（紧凑行） -->
+    <section v-if="brands.length" class="brand-strip">
+      <span class="bs-label">🏷️ 热门品牌</span>
+      <div class="bs-items">
+        <span v-for="b in brands" :key="b" class="bs-tag" @click="goCategory()">{{ b }}</span>
       </div>
     </section>
 
@@ -397,7 +524,7 @@ onUnmounted(() => { clearInterval(countdownTimer) })
 .hero-slider { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; height: 420px; }
 .hero-main {
   position: relative; border-radius: 12px; overflow: hidden;
-  background: linear-gradient(135deg, #f5e6d8 0%, #e8d4c4 100%);
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe4d6 50%, #ffd4c4 100%);
 }
 .hero-swipe { height: 100%; }
 .hero-img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
@@ -418,26 +545,90 @@ onUnmounted(() => { clearInterval(countdownTimer) })
 .hero-arrow-prev { left: 12px; }
 .hero-arrow-next { right: 12px; }
 
+/* 轮播文字覆盖层 */
+.hero-slide-item { position: relative; }
+.hero-slide-bg {
+  width: 100%; height: 100%;
+  background-size: cover; background-position: center;
+  position: relative;
+}
+.hero-slide-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(255,245,240,0.5) 50%, transparent 70%);
+  padding: 48px;
+  display: flex; flex-direction: column; justify-content: center;
+  max-width: 55%;
+}
+
+/* ===== Hero 占位（demo3 风格） ===== */
+.slide-1 {
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe4d6 50%, #ffd4c4 100%);
+  position: relative;
+}
+.slide-1::before {
+  content: '';
+  position: absolute;
+  right: -100px;
+  top: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(184,84,80,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.slide-1::after {
+  content: '';
+  position: absolute;
+  left: -50px;
+  bottom: -50px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(184,84,80,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
 .hero-placeholder {
-  position: absolute; inset: 0; padding: 48px;
-  display: flex; flex-direction: column; justify-content: center; max-width: 480px;
+  position: absolute; inset: 0; padding: 48px 60px;
+  display: flex; align-items: center;
 }
-
-
-.hp-tag {
-  display: inline-block; padding: 6px 14px; background: #c45c4a; color: #fff;
-  font-size: 11px; font-weight: 700; letter-spacing: 1px; border-radius: 4px; margin-bottom: 16px;
-  align-self: flex-start;
+.slide-content {
+  position: relative; z-index: 2; max-width: 50%;
 }
-.hero-placeholder h2 { font-size: 36px; font-weight: 600; line-height: 1.2; color: #1a1a1a; margin-bottom: 12px; }
-.hero-placeholder p { font-size: 14px; color: #666; margin-bottom: 24px; }
-.hp-btn {
-  display: inline-block; padding: 12px 28px; background: #1a1a1a; color: #fff;
-  font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; align-self: flex-start;
-  transition: background 0.25s;
+.slide-tag {
+  display: inline-block; background: var(--accent, #c45c4a); color: #fff;
+  padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  margin-bottom: 16px; letter-spacing: 1px;
 }
-.hp-btn:hover { background: #c45c4a; }
-.hp-emoji { position: absolute; right: 48px; bottom: 40px; font-size: 140px; opacity: 0.6; }
+.slide-title {
+  font-size: 42px; font-weight: 700; color: #1a1a1a;
+  line-height: 1.2; margin-bottom: 12px;
+}
+.slide-desc {
+  font-size: 16px; color: #666; margin-bottom: 28px; line-height: 1.6;
+}
+.slide-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; background: #1a1a1a; color: #fff;
+  text-decoration: none; border-radius: 30px; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.3s;
+}
+.slide-btn:hover {
+  background: var(--accent, #c45c4a); transform: translateX(4px);
+}
+.slide-image {
+  position: absolute; right: 60px; top: 50%;
+  transform: translateY(-50%);
+  width: 320px; height: 320px;
+  background: linear-gradient(145deg, #e8ddd6, #d4c4b8);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+.slide-image::after {
+  content: '👗';
+  font-size: 80px;
+  opacity: 0.3;
+}
 
 .hero-side { display: grid; grid-template-rows: 1fr 1fr; gap: 16px; }
 .side-card {
@@ -455,56 +646,277 @@ onUnmounted(() => { clearInterval(countdownTimer) })
 .sc-sub { font-size: 12px; opacity: 0.7; letter-spacing: 0.5px; }
 .sc-emoji { position: absolute; right: 20px; bottom: 16px; font-size: 64px; opacity: 0.5; }
 
-/* ===== 3. Flash Sale ===== */
-.flash { max-width: 1400px; margin: 32px auto 0; padding: 0 40px; }
-.flash-card { background: #fff; border: 1px solid #e8e5e0; border-radius: 12px; padding: 24px; }
-.flash-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.flash-title { display: flex; align-items: center; gap: 12px; }
-.flash-title h3 { font-size: 18px; font-weight: 600; }
+/* ===== 3. Flash Sale（demo3 风格 + 自动轮转） ===== */
+.flash-sale {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 1400px;
+  margin: 32px auto 0;
+  padding: 28px 32px;
+}
+.flash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.flash-title-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 .flash-icon { font-size: 24px; }
-.countdown { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #666; }
-.countdown span {
-  padding: 4px 8px; background: #1a1a1a; color: #fff; font-weight: 600; border-radius: 4px;
-  font-variant-numeric: tabular-nums; min-width: 26px; text-align: center;
+.flash-title { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.countdown-label {
+  font-size: 13px;
+  color: #999;
+  margin-right: 4px;
+}
+.countdown-box {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: center;
+}
+.countdown-sep {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 .flash-more {
-  padding: 8px 16px; background: #fdf5f3; color: #c45c4a; font-size: 12px; font-weight: 600;
-  border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  color: var(--accent, #c45c4a);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap 0.3s;
 }
-.flash-more:hover { background: #c45c4a; color: #fff; }
-.flash-row { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-.flash-row::-webkit-scrollbar { display: none; }
-.flash-item { flex-shrink: 0; width: 160px; cursor: pointer; }
-.flash-img-wrap {
-  position: relative; width: 160px; height: 160px; border-radius: 8px; background: #f5f3f0;
-  overflow: hidden; margin-bottom: 12px;
+.flash-more:hover { gap: 8px; }
+
+/* 商品网格 + 自动轮转 */
+.flash-carousel {
+  overflow: hidden;
 }
+.flash-track {
+  display: flex;
+  gap: 16px;
+  transition: transform 0.6s ease;
+}
+.flash-item { flex-shrink: 0; width: calc((100% - 64px) / 5); min-width: 200px; cursor: pointer; }
 .flash-img { width: 100%; height: 100%; object-fit: cover; }
-.discount {
-  position: absolute; top: 8px; left: 8px; padding: 4px 8px; background: #c45c4a; color: #fff;
-  font-size: 10px; font-weight: 700; border-radius: 3px;
+
+/* ===== 新版卡片（demo3 优化版） ===== */
+.new-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
-.flash-price { font-size: 16px; font-weight: 700; color: #c45c4a; }
-.flash-orig { font-size: 12px; color: #999; text-decoration: line-through; }
-.flash-name {
-  font-size: 13px; color: #1a1a1a; margin-top: 4px; line-height: 1.4;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+.new-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  border-color: transparent;
+}
+.new-img-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(145deg, #f0e8e0, #e5dbd2);
+  overflow: hidden;
+}
+.new-img-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to top, rgba(0,0,0,0.06), transparent);
+  pointer-events: none;
+}
+.new-tag-combo {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  background: var(--accent, #c45c4a);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(196,92,74,0.3);
+}
+.new-tag-hot {
+  background: #e6a23c;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.new-tag-discount {
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.new-fav-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+  color: #999;
+  font-size: 16px;
+}
+.new-card:hover .new-fav-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+.new-fav-btn:hover {
+  background: #fff;
+  color: var(--accent, #c45c4a);
+}
+.new-fav-btn.liked {
+  opacity: 1;
+  transform: scale(1);
+  color: var(--accent, #c45c4a);
+  background: rgba(255,255,255,0.95);
+}
+.new-info { padding: 14px; }
+.new-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.new-brand {
+  font-size: 12px;
+  color: var(--accent, #c45c4a);
+  font-weight: 600;
+}
+.new-name {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 42px;
+}
+.new-price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.new-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent, #c45c4a);
+  letter-spacing: -0.5px;
+}
+.new-price::before {
+  content: '¥';
+  font-size: 14px;
+  margin-right: 1px;
+}
+.new-original {
+  font-size: 12px;
+  color: #bbb;
+  text-decoration: line-through;
+}
+.new-sold {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+}
+.new-sold-fire { font-size: 11px; }
+.new-sold-num {
+  color: #e6a23c;
+  font-weight: 700;
+}
+.new-stock-bar {
+  margin-top: 10px;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.new-stock-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  background: linear-gradient(90deg, var(--accent, #c45c4a), #e6a23c);
+  border-radius: 2px;
+}
+.new-stock-text {
+  font-size: 11px;
+  color: var(--accent, #c45c4a);
+  margin-top: 4px;
+  font-weight: 500;
 }
 
-/* ===== 4. Cat Nav ===== */
-.cat-nav { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
-.cat-grid { display: flex; justify-content: space-between; gap: 8px; }
-.cat-item { flex: 1; text-align: center; cursor: pointer; }
-.cat-icon-wrap {
-  width: 80px; height: 80px; margin: 0 auto 10px; background: #fff; border: 1px solid #e8e5e0;
-  border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;
-  transition: all 0.25s;
+.price-current {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent, #c45c4a);
 }
-.cat-item:hover .cat-icon-wrap { border-color: #c45c4a; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-.cat-icon { width: 100%; height: 100%; object-fit: cover; }
-.cat-emoji { font-size: 36px; }
-.cat-name { font-size: 12px; color: #666; transition: color 0.2s; }
-.cat-item:hover .cat-name { color: #c45c4a; }
+.price-original {
+  font-size: 12px;
+  color: #999;
+  text-decoration: line-through;
+}
+
+/* ===== 4. 热门品牌（紧凑行） ===== */
+.brand-strip {
+  max-width: 1400px; margin: 28px auto 0; padding: 0 40px;
+  display: flex; align-items: center; gap: 16px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.brand-strip::-webkit-scrollbar { display: none; }
+.bs-label {
+  flex-shrink: 0; font-size: 13px; font-weight: 600; color: #1a1a1a; white-space: nowrap;
+}
+.bs-items {
+  display: flex; gap: 10px;
+}
+.bs-tag {
+  flex-shrink: 0; padding: 6px 16px; background: #fff; border: 1px solid #e8e5e0;
+  border-radius: 16px; font-size: 12px; font-weight: 600; color: #666;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.bs-tag:hover { border-color: var(--accent, #c45c4a); color: var(--accent, #c45c4a); background: #fdf5f3; }
 
 /* ===== Section 通用 ===== */
 .section { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
@@ -591,13 +1003,13 @@ onUnmounted(() => { clearInterval(countdownTimer) })
   .hero-side { flex-direction: row; }
   .side-card { flex: 1; }
   .grid-5 { grid-template-columns: repeat(4, 1fr); }
+  .flash-item { width: calc((100% - 48px) / 4); min-width: 160px; }
 }
 @media (max-width: 768px) {
-  .hero, .section, .flash, .cat-nav, .promo-banners, .service { padding-left: 16px; padding-right: 16px; }
+  .hero, .section, .flash-sale, .brand-strip, .promo-banners, .service { padding-left: 16px; padding-right: 16px; }
+  .flash-item { width: calc((100% - 32px) / 3); min-width: 130px; }
   .grid-5, .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .service-grid { grid-template-columns: repeat(2, 1fr); }
   .promo-banners { grid-template-columns: 1fr; }
-  .cat-grid { flex-wrap: wrap; }
-  .cat-item { flex: 0 0 25%; margin-bottom: 16px; }
 }
 </style>

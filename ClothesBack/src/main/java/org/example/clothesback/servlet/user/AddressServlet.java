@@ -43,8 +43,8 @@ public class AddressServlet extends BaseServlet {
         JSONObject b = readJson(req);
         AddressDTO dto = new AddressDTO(b.getString("receiver"), b.getString("phone"),
             b.getString("province"), b.getString("city"), b.getString("district"), b.getString("detail"));
-        Long id = service.create(userId, dto);
-        writeOk(resp, "新增成功", id == null ? null : java.util.Map.of("id", id));
+        java.util.Map<String, Object> address = service.create(userId, dto);
+        writeOk(resp, "新增成功", address);
     }
 
     private void update(Long userId, Long id, HttpServletRequest req, HttpServletResponse resp) throws Exception {

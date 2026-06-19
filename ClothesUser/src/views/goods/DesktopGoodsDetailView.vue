@@ -66,10 +66,7 @@ const ratingAvg = computed(() => {
   return Math.round((sum / comments.value.length) * 10) / 10
 })
 const ratingCount = computed(() => comments.value.length)
-const ratingRatio = computed(() => {
-  if (!commentsTotal.value) return 0
-  return Math.min(1, comments.value.length / commentsTotal.value)
-})
+
 const goodCount = computed(() => comments.value.filter((c: any) => Number(c.rating) >= 4).length)
 const midCount = computed(() => comments.value.filter((c: any) => Number(c.rating) === 3).length)
 const badCount = computed(() => comments.value.filter((c: any) => Number(c.rating) <= 2).length)
@@ -103,7 +100,7 @@ function parseImgs(json: any): string[] {
   }
   return []
 }
-function userInitial(c: any) {
+function userInitial(_c: any) {
   return 'U'
 }
 
@@ -259,7 +256,7 @@ onMounted(async () => {
               :key="i"
               class="thumb"
               :class="{ active: i === activeImage }"
-              @click="activeImage = i"
+              @click="activeImage = +i"
             ><img :src="img" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
           </div>
         </div>
