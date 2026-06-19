@@ -13,6 +13,18 @@ const form = ref({ nickname: '', phone: '', email: '', gender: 0 })
 const loading = ref(true)
 const saving = ref(false)
 const avatarUploading = ref(false)
+const showAvatarPicker = ref(false)
+
+const defaultAvatars = [
+  { id: 1, url: '/assets/avatars/avatar-1.svg', label: '陶土红' },
+  { id: 2, url: '/assets/avatars/avatar-2.svg', label: '石板蓝' },
+  { id: 3, url: '/assets/avatars/avatar-3.svg', label: '鼠尾草' },
+  { id: 4, url: '/assets/avatars/avatar-4.svg', label: '暖金色' },
+  { id: 5, url: '/assets/avatars/avatar-5.svg', label: '深紫色' },
+  { id: 6, url: '/assets/avatars/avatar-6.svg', label: '珊瑚红' },
+  { id: 7, url: '/assets/avatars/avatar-7.svg', label: '海洋蓝' },
+  { id: 8, url: '/assets/avatars/avatar-8.svg', label: '炭黑色' },
+]
 
 const userAvatar = computed(() => {
   const str = userStore.userInfo?.nickname || userStore.userInfo?.username || '?'
@@ -23,6 +35,8 @@ const avatarUrl = computed(() => {
   const a = userStore.userInfo?.avatar
   if (!a) return ''
   if (a.startsWith('http')) return a
+  // 默认头像从前端 public 提供
+  if (a.startsWith('/assets/avatars/')) return a
   const base = 'http://localhost:8080/ClothesBack_war'
   return base + a
 })
@@ -47,6 +61,21 @@ async function loadInfo() {
     }
   } catch { /* silent */ }
   finally { loading.value = false }
+}
+
+function openAvatarPicker() {
+  showAvatarPicker.value = true
+}
+
+async function selectDefaultAvatar(url: string) {
+  try {
+    await userApi.updateInfo({ avatar: url } as any)
+    userStore.setUserInfo({ ...userStore.userInfo, avatar: url })
+    showToast('头像已更新')
+    showAvatarPicker.value = false
+  } catch (e: any) {
+    showFailToast(e?.message || '设置失败')
+  }
 }
 
 async function onAvatarUpload(e: Event) {
@@ -117,9 +146,8 @@ onMounted(loadInfo)
       <div class="main-layout">
         <!-- Left Sidebar -->
         <aside class="profile-sidebar">
-          <div class="avatar-upload-wrap">
-            <input type="file" id="avatarInput" accept="image/*" style="display:none" @change="onAvatarUpload" />
-            <label for="avatarInput" class="avatar-preview">
+          <div class="avatar-upload-wrap" @click="openAvatarPicker">
+            <div class="avatar-preview" style="cursor:pointer">
               <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" />
               <div v-else class="avatar-placeholder">{{ userAvatar }}</div>
               <div class="avatar-overlay">
@@ -130,7 +158,7 @@ onMounted(loadInfo)
                 </svg>
                 <span>{{ avatarUploading ? '上传中...' : '更换头像' }}</span>
               </div>
-            </label>
+            </div>
           </div>
 
           <div class="profile-name">{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</div>
@@ -234,6 +262,53 @@ onMounted(loadInfo)
         </section>
       </div>
     </div>
+
+    <!-- Avatar Picker Modal -->
+    <teleport to="body">
+      <div v-if="showAvatarPicker" class="picker-overlay" @click.self="showAvatarPicker = false">
+        <div class="picker-modal">
+          <div class="picker-header">
+            <h3>更换头像</h3>
+            <button class="picker-close" @click="showAvatarPicker = false">✕</button>
+          </div>
+          <div class="picker-body">
+            <div class="picker-section">
+              <div class="picker-section-title">默认头像</div>
+              <div class="avatar-grid">
+                <div
+                  v-for="av in defaultAvatars"
+                  :key="av.id"
+                  class="avatar-option"
+                  :class="{ selected: userStore.userInfo?.avatar === av.url }"
+                  @click="selectDefaultAvatar(av.url)"
+                >
+                  <img :src="av.url" :alt="av.label" class="avatar-option-img" />
+                  <span class="avatar-option-label">{{ av.label }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="picker-divider">
+              <span>或</span>
+            </div>
+            <div class="picker-section">
+              <div class="picker-section-title">自定义上传</div>
+              <label class="upload-btn-label">
+                <input type="file" accept="image/*" style="display:none" @change="onAvatarUpload" />
+                <div class="upload-btn-content">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span>{{ avatarUploading ? '上传中...' : '从本地上传图片' }}</span>
+                </div>
+              </label>
+              <p class="upload-hint">支持 jpg/png/webp，最大 5MB</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </DesktopLayout>
 </template>
 
@@ -595,6 +670,140 @@ onMounted(loadInfo)
 
 @keyframes slideUp {
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Avatar Picker Modal ── */
+.picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+.picker-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 520px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.25);
+  animation: modalIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes modalIn {
+  from { opacity:0; transform:translateY(30px) scale(0.96) }
+  to { opacity:1; transform:translateY(0) scale(1) }
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 0;
+}
+.picker-header h3 { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+
+.picker-close {
+  width: 32px; height: 32px;
+  border: none; border-radius: 50%;
+  background: #f5f3f0; color: #999;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.picker-close:hover { background: #e8e5e0; color: #1a1a1a; }
+
+.picker-body { padding: 20px 28px 28px; }
+
+.picker-section { margin-bottom: 20px; }
+.picker-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 14px;
+  letter-spacing: 0.3px;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.avatar-option {
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.avatar-option:hover { background: #f5f3f0; }
+.avatar-option.selected {
+  border-color: #c45c4a;
+  background: #fdf5f3;
+}
+
+.avatar-option-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 6px;
+}
+
+.avatar-option-label {
+  font-size: 11px;
+  color: #999;
+  display: block;
+}
+
+.picker-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: #ccc;
+  font-size: 12px;
+}
+.picker-divider::before,
+.picker-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e8e5e0;
+}
+
+.upload-btn-label { display: block; cursor: pointer; }
+
+.upload-btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  border: 2px dashed #e8e5e0;
+  border-radius: 12px;
+  color: #666;
+  transition: all 0.25s;
+}
+.upload-btn-content:hover {
+  border-color: #c45c4a;
+  color: #c45c4a;
+  background: #fdf5f3;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 8px;
+  text-align: center;
 }
 
 /* ── Responsive ── */

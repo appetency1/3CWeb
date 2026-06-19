@@ -37,9 +37,19 @@ public class UserDao {
 
     public int updateProfile(Long id, String nickname, String avatar, String phone, String email,
                              Integer gender, java.time.LocalDate birthday) throws SQLException {
-        return JdbcUtils.update(
-            "UPDATE user SET nickname=?, avatar=?, phone=?, email=?, gender=?, birthday=? WHERE id=?",
-            nickname, avatar, phone, email, gender, birthday, id);
+        StringBuilder sql = new StringBuilder("UPDATE user SET ");
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        if (nickname != null) { sql.append("nickname=?,"); params.add(nickname); }
+        if (avatar != null) { sql.append("avatar=?,"); params.add(avatar); }
+        if (phone != null) { sql.append("phone=?,"); params.add(phone); }
+        if (email != null) { sql.append("email=?,"); params.add(email); }
+        if (gender != null) { sql.append("gender=?,"); params.add(gender); }
+        if (birthday != null) { sql.append("birthday=?,"); params.add(birthday); }
+        if (params.isEmpty()) return 0;
+        sql.setLength(sql.length() - 1);
+        sql.append(" WHERE id=?");
+        params.add(id);
+        return JdbcUtils.update(sql.toString(), params.toArray());
     }
 
     public int updatePassword(Long id, String newPassword) throws SQLException {

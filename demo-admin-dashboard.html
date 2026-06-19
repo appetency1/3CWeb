@@ -6,7 +6,7 @@
   <title>Clothes. 管理后台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700&family=Montserrat:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0d0c0b;
@@ -36,7 +36,7 @@
 
     html, body {
       width: 100%; height: 100%;
-      font-family: 'Montserrat', 'Noto Sans SC', -apple-system, sans-serif;
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
       color: var(--text);
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
@@ -345,12 +345,12 @@
     }
 
     .stat-card__value {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 38px;
-      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 34px;
+      font-weight: 500;
       color: var(--text);
       margin-bottom: 14px;
-      letter-spacing: -0.5px;
+      letter-spacing: -1px;
     }
 
     .stat-card__trend {
@@ -451,11 +451,12 @@
 
     .bar {
       width: 42px;
-      background: linear-gradient(180deg, var(--border-hover) 0%, var(--border) 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.18) 100%);
       border-radius: 6px 6px 0 0;
       position: relative;
       transition: all 0.5s var(--ease-out);
       cursor: pointer;
+      box-shadow: 0 0 20px rgba(255,255,255,0.04);
     }
 
     .bar::before {
@@ -467,11 +468,12 @@
       height: 3px;
       background: var(--accent);
       border-radius: 6px 6px 0 0;
-      opacity: 0.7;
+      opacity: 1;
+      box-shadow: 0 0 12px rgba(196,92,74,0.35);
     }
 
     .bar:hover {
-      background: linear-gradient(180deg, var(--accent-light) 0%, rgba(196,92,74,0.08) 100%);
+      background: linear-gradient(180deg, rgba(196,92,74,0.35) 0%, rgba(196,92,74,0.15) 100%);
       transform: scaleX(1.08);
     }
 
@@ -505,10 +507,10 @@
     .donut-chart::after {
       content: '';
       position: absolute;
-      inset: 48px;
+      inset: 54px;
       border-radius: 50%;
-      background: var(--surface);
-      box-shadow: inset var(--shadow-soft);
+      background: var(--bg);
+      box-shadow: inset 0 0 0 1px var(--border);
     }
 
     .donut-legend {
