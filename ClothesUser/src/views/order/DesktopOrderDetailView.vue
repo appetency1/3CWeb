@@ -85,9 +85,9 @@ onMounted(fetchDetail)
           </svg>
         </div>
         <div>
-          <div style="font-size:20px;font-weight:700;color:#fff;font-family:Georgia,serif">{{ STATUS_MAP[order.status]?.label }}</div>
+          <div style="font-size:20px;font-weight:700;color:#fff;font-family:Georgia,serif">{{ STATUS_MAP[Number(order.status)]?.label || '未知' }}</div>
           <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px">
-            {{ order.status === 0 ? '请尽快完成支付' : order.status === 1 ? '商家正在准备中' : order.status === 2 ? '包裹配送中' : order.status === 3 ? '交易已完成' : '订单已取消' }}
+            {{ Number(order.status) === 0 ? '请尽快完成支付' : Number(order.status) === 1 ? '商家正在准备中' : Number(order.status) === 2 ? '包裹配送中' : Number(order.status) === 3 ? '交易已完成' : '订单已取消' }}
           </div>
         </div>
       </div>

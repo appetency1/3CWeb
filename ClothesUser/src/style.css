@@ -234,3 +234,9 @@ body {
 .desktop-search-bar-large input { width: 100%; height: 44px; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 0 16px; font-size: 14px; outline: none; box-sizing: border-box; transition: var(--transition); }
 .desktop-search-bar-large input:focus { border-color: var(--accent); }
 .desktop-search-results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+/* ===== 全局滚动条美化 ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d0cbc4; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #b5afa8; }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showFailToast, showToast, showLoadingToast, showSuccessToast } from 'vant'
 import { publicApi } from '@/api/public'
@@ -15,7 +15,6 @@ const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
 
-const id = Number(route.params.id)
 const loading = ref(true)
 const goods = ref<any>(null)
 const skus = ref<any[]>([])
@@ -107,9 +106,11 @@ function userInitial(_c: any) {
 function selectSku(s: any) { selectedSku.value = s }
 
 async function fetchDetail() {
+  const gid = Number(route.params.id)
+  if (!gid) return
   loading.value = true
   try {
-    const data: any = await publicApi.goodsDetail(id)
+    const data: any = await publicApi.goodsDetail(gid)
     goods.value = data.goods
     skus.value = data.skus || []
     if (skus.value.length) selectedSku.value = skus.value[0]
@@ -122,7 +123,7 @@ async function fetchDetail() {
 async function fetchComments() {
   commentsLoading.value = true
   try {
-    const data: any = await publicApi.comments(id, { page: commentPage.value, size: commentSize })
+    const data: any = await publicApi.comments(Number(route.params.id), { page: commentPage.value, size: commentSize })
     const list = data?.list || data || []
     commentsTotal.value = data?.total || 0
     if (commentPage.value === 1) comments.value = list
@@ -138,7 +139,7 @@ async function fetchRelated() {
     const data: any = await publicApi.goodsList({
       categoryId: goods.value.categoryId, page: 1, size: 8, sort: 'sales_desc',
     })
-    related.value = (data?.list || data || []).filter((g: any) => g.id !== id).slice(0, 5)
+    related.value = (data?.list || data || []).filter((g: any) => Number(g.id) !== Number(route.params.id)).slice(0, 5)
   } catch { /* silent */ }
 }
 async function checkFavorite() {
@@ -146,7 +147,7 @@ async function checkFavorite() {
   try {
     const data: any = await http<{ list: any[]; total: number }>('/user/favorite', { page: 1, size: 100 })
     const ids = (data?.list || []).map((x: any) => Number(x.goodsId))
-    favorited.value = ids.includes(id)
+    favorited.value = ids.includes(Number(route.params.id))
   } catch { /* silent */ }
 }
 async function toggleFavorite() {
@@ -157,12 +158,13 @@ async function toggleFavorite() {
   if (favoriting.value) return
   favoriting.value = true
   try {
+    const gid = Number(route.params.id)
     if (favorited.value) {
-      await http(`/user/favorite/${id}`, undefined, { method: 'DELETE' })
+      await http(`/user/favorite/${gid}`, undefined, { method: 'DELETE' })
       favorited.value = false
       showSuccessToast('已取消收藏')
     } else {
-      await http('/user/favorite', { goodsId: id }, { method: 'POST' })
+      await http('/user/favorite', { goodsId: gid }, { method: 'POST' })
       favorited.value = true
       showSuccessToast('已加入收藏')
     }
@@ -219,18 +221,29 @@ function formatDate(s: string) {
   if (!s) return ''
   return s.replace('T', ' ').substring(0, 16)
 }
-function goGoods(gid: number) {
-  if (gid === id) return
-  router.push({ name: 'goodsDetail', params: { id: gid } })
-}
+
 function loadMoreComments() {
   if (!commentsFinished.value && !commentsLoading.value) fetchComments()
 }
 
-onMounted(async () => {
+async function loadAll() {
+  loading.value = true
+  goods.value = null
+  skus.value = []
+  related.value = []
+  comments.value = []
+  commentPage.value = 1
+  commentsFinished.value = false
+  activeImage.value = 0
+  selectedSku.value = null
+  favorited.value = false
   await fetchDetail()
   await Promise.all([fetchComments(), fetchRelated(), checkFavorite()])
-})
+}
+
+onMounted(loadAll)
+
+watch(() => route.params.id, () => { loadAll() })
 </script>
 
 <template>
@@ -265,13 +278,15 @@ onMounted(async () => {
         <div v-if="related.length" class="related">
           <h3 class="related-h">猜你喜欢</h3>
           <div class="related-row">
-            <div v-for="g in related" :key="g.id" class="rel-card" @click="goGoods(g.id)">
-              <div class="rel-img-wrap">
-                <img :src="fullImgUrl(g.cover)" class="rel-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+            <router-link v-for="g in related" :key="g.id" :to="'/goods/' + g.id" class="rc-card">
+              <div class="rc-img-wrap">
+                <img :src="fullImgUrl(g.cover)" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
               </div>
-              <p class="rel-name">{{ g.name }}</p>
-              <p class="rel-price">¥{{ priceFmt(g.price) }}</p>
-            </div>
+              <div class="rc-body">
+                <p class="rc-name">{{ g.name }}</p>
+                <p class="rc-price">¥{{ priceFmt(g.price) }}</p>
+              </div>
+            </router-link>
           </div>
         </div>
       </div>
@@ -444,16 +459,80 @@ onMounted(async () => {
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .thumb.active { border-color: #c45c4a; }
 
-/* === Related === */
-.related { margin-top: 20px; background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #f0ede8; }
-.related-h { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 14px; padding-left: 10px; border-left: 3px solid #c45c4a; }
-.related-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+/* === 猜你喜欢（简约卡片） === */
+.related {
+  margin-top: 20px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #f0ede8;
+}
+.related-h {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  padding-left: 10px;
+  border-left: 3px solid #c45c4a;
+}
+.related-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
 .related-row::-webkit-scrollbar { display: none; }
-.rel-card { flex-shrink: 0; width: 130px; cursor: pointer; }
-.rel-img-wrap { width: 130px; height: 130px; border-radius: 8px; overflow: hidden; background: #f5f3f0; }
-.rel-img { width: 100%; height: 100%; object-fit: cover; }
-.rel-name { font-size: 12px; color: #1a1a1a; margin-top: 8px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rel-price { font-size: 14px; font-weight: 700; color: #c45c4a; margin-top: 4px; }
+
+.rc-card {
+  flex-shrink: 0;
+  width: 150px;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+.rc-card:hover {
+  transform: translateY(-3px);
+}
+.rc-img-wrap {
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f5f3f0;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.rc-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.rc-card:hover .rc-img-wrap img {
+  transform: scale(1.06);
+}
+.rc-body {
+  padding: 0 2px;
+}
+.rc-name {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 36px;
+}
+.rc-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #c45c4a;
+}
 
 /* === Info === */
 .info-col { min-width: 0; }
