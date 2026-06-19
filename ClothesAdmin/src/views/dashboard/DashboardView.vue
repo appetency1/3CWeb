@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getDashboardStats } from '@/api/dashboard'
 import { getOrderList } from '@/api/order'
@@ -10,467 +10,745 @@ const stats = ref({ totalSales: 0, orderCount: 0, userCount: 0, goodsCount: 0 })
 const orderList = ref<any[]>([])
 const today = ref('')
 
-// 动画数字
-const animatedRevenue = ref(0)
-const animatedOrders = ref(0)
-const animatedUsers = ref(0)
-const animatedGoods = ref(0)
-
-// 销售数据（7天）
-const salesData = ref<{ day: string; value: number; pct: number }[]>([])
-const maxSale = ref(0)
-
-function animateTo(target: number, setter: (v: number) => void) {
-  let cur = 0
-  const step = Math.max(1, Math.floor(target / 60))
-  const timer = setInterval(() => {
-    cur += step
-    if (cur >= target) { cur = target; clearInterval(timer) }
-    setter(cur)
-  }, 16)
-}
+const barData = [
+  { label: '周一', value: 0 },
+  { label: '周二', value: 0 },
+  { label: '周三', value: 0 },
+  { label: '周四', value: 0 },
+  { label: '周五', value: 0 },
+  { label: '周六', value: 0 },
+  { label: '周日', value: 0 },
+]
 
 function goOrders() { router.push({ name: 'orders' }) }
 
 onMounted(async () => {
   const d = new Date()
-  today.value = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+  const days = ['周日','周一','周二','周三','周四','周五','周六']
+  const todayIdx = d.getDay()
+  // 生成最近7天标签
+  for (let i = 6; i >= 0; i--) {
+    const idx = (todayIdx - i + 7) % 7
+    barData[6 - i].label = days[idx]
+  }
 
+  let maxSale = 0
   try {
     const s = await getDashboardStats()
-    if (s) stats.value = s
+    if (s) {
+      stats.value = s
+      // 用真实销售额生成模拟趋势
+      const base = s.totalSales || s.todaySales || 5000
+      const vals = barData.map((_, i) => Math.round(base * (0.6 + Math.random() * 0.8)))
+      maxSale = Math.max(...vals)
+      vals.forEach((v, i) => { barData[i].value = v })
+    }
   } catch { /* silent */ }
 
-  animateTo(stats.value.totalSales || stats.value.revenue || 0, (v: number) => animatedRevenue.value = v)
-  animateTo(stats.value.orderCount, (v: number) => animatedOrders.value = v)
-  animateTo(stats.value.userCount, (v: number) => animatedUsers.value = v)
-  animateTo(stats.value.goodsCount, (v: number) => animatedGoods.value = v)
-
-  // 模拟7天销售数据
-  const days = ['周一','周二','周三','周四','周五','周六','周日']
-  const vals = [4200, 5800, 3900, 7200, 8800, 10500, 9300]
-  maxSale.value = Math.max(...vals)
-  salesData.value = days.map((day, i) => ({
-    day,
-    value: vals[i],
-    pct: (vals[i] / maxSale.value) * 100
-  }))
+  // 模拟数据兜底
+  if (!maxSale) {
+    const fallback = [4200, 5800, 3900, 7200, 8800, 10500, 9300]
+    maxSale = Math.max(...fallback)
+    fallback.forEach((v, i) => { barData[i].value = v })
+  }
 
   try {
     const res = await getOrderList({ page: 1, size: 5 })
     orderList.value = res?.list || res || []
   } catch { /* silent */ }
+
+  const fmt = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+  today.value = fmt
+
+  // 等 DOM 挂载后再初始化动画
+  await nextTick()
+  initAnimations(barData, maxSale)
 })
+
+function initAnimations(data: typeof barData, maxVal: number) {
+  // 柱状图
+  const bars = document.querySelectorAll('.bar')
+  bars.forEach((bar, i) => {
+    const v = data[i]?.value || 0
+    const pct = maxVal > 0 ? (v / maxVal) * 100 : 0
+    setTimeout(() => {
+      (bar as HTMLElement).style.height = pct + '%'
+    }, 300 + i * 80)
+  })
+
+  // 环形图
+  const donutSegments = document.querySelectorAll('.donut-segment') as NodeListOf<SVGCircleElement>
+  const radius = 70
+  const circumference = 2 * Math.PI * radius
+  donutSegments.forEach((seg, i) => {
+    const percent = parseFloat(seg.dataset.percent || '0')
+    const startPercent = parseFloat(seg.dataset.start || '0')
+    const length = (percent / 100) * circumference
+    const rotation = (startPercent / 100) * 360
+    seg.style.strokeDasharray = `${length} ${circumference - length}`
+    seg.style.strokeDashoffset = String(length)
+    seg.style.transform = `rotate(${rotation}deg)`
+    if (typeof gsap !== 'undefined') {
+      gsap.to(seg, {
+        strokeDashoffset: 0,
+        duration: 1.1,
+        delay: 0.7 + i * 0.18,
+        ease: 'power3.out'
+      })
+    }
+  })
+
+  // 中心文字
+  if (typeof gsap !== 'undefined') {
+    gsap.from('.donut-center', {
+      scale: 0.8,
+      opacity: 0,
+      duration: 0.6,
+      delay: 1.3,
+      ease: 'back.out(1.7)'
+    })
+  }
+
+  // Card 入场
+  if (typeof gsap !== 'undefined') {
+    gsap.from('[data-bento]', {
+      y: 30,
+      opacity: 0,
+      duration: 0.7,
+      stagger: 0.06,
+      ease: 'power3.out',
+      delay: 0.1
+    })
+  }
+
+  // MagicBento 效果
+  initCardEffects()
+}
+
+function initCardEffects() {
+  const cards = document.querySelectorAll<HTMLElement>('[data-bento]')
+  const grid = document.getElementById('bentoGrid')
+  if (!grid) return
+
+  cards.forEach(card => {
+    let isHovered = false
+    let particles: HTMLElement[] = []
+
+    function clearParticles() {
+      particles.forEach(p => {
+        if (typeof gsap !== 'undefined') {
+          gsap.to(p, {
+            scale: 0, opacity: 0, duration: 0.3,
+            ease: 'back.in(1.7)',
+            onComplete: () => { p.remove(); particles = particles.filter(x => x !== p) }
+          })
+        } else p.remove()
+      })
+    }
+
+    function spawnParticles() {
+      clearParticles()
+      const rect = card.getBoundingClientRect()
+      for (let i = 0; i < 6; i++) {
+        const x = Math.random() * rect.width
+        const y = Math.random() * rect.height
+        const p = document.createElement('div')
+        p.className = 'particle'
+        p.style.left = x + 'px'
+        p.style.top = y + 'px'
+        card.appendChild(p)
+        particles.push(p)
+        if (typeof gsap !== 'undefined') {
+          gsap.fromTo(p, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, delay: i * 0.04, ease: 'back.out(1.7)' })
+          gsap.to(p, {
+            x: (Math.random() - 0.5) * 60, y: (Math.random() - 0.5) * 60,
+            rotation: Math.random() * 360, duration: 2 + Math.random() * 2,
+            ease: 'none', repeat: -1, yoyo: true
+          })
+          gsap.to(p, { opacity: 0.35, duration: 1.2, ease: 'power2.inOut', repeat: -1, yoyo: true })
+        }
+      }
+    }
+
+    function updateGlow(mouseX: number, mouseY: number, intensity: number) {
+      const rect = card.getBoundingClientRect()
+      const x = ((mouseX - rect.left) / rect.width) * 100
+      const y = ((mouseY - rect.top) / rect.height) * 100
+      card.style.setProperty('--glow-x', x + '%')
+      card.style.setProperty('--glow-y', y + '%')
+      card.style.setProperty('--glow-intensity', intensity.toString())
+    }
+
+    card.addEventListener('mouseenter', () => {
+      isHovered = true
+      spawnParticles()
+      if (typeof gsap !== 'undefined') {
+        gsap.to(card, { scale: 1.015, duration: 0.4, ease: 'power2.out' })
+      }
+    })
+
+    card.addEventListener('mouseleave', () => {
+      isHovered = false
+      clearParticles()
+      if (typeof gsap !== 'undefined') {
+        gsap.to(card, { rotateX: 0, rotateY: 0, x: 0, y: 0, scale: 1, duration: 0.5, ease: 'power2.out' })
+      }
+      card.style.setProperty('--glow-intensity', '0')
+    })
+
+    card.addEventListener('mousemove', (e) => {
+      if (!isHovered) return
+      const rect = card.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const cx = rect.width / 2
+      const cy = rect.height / 2
+      const rotateX = ((y - cy) / cy) * -8
+      const rotateY = ((x - cx) / cx) * 8
+      const magnetX = (x - cx) * 0.04
+      const magnetY = (y - cy) * 0.04
+      if (typeof gsap !== 'undefined') {
+        gsap.to(card, { rotateX, rotateY, x: magnetX, y: magnetY, duration: 0.1, ease: 'power2.out', transformPerspective: 1200 })
+      }
+      updateGlow(e.clientX, e.clientY, 1)
+    })
+
+    card.addEventListener('click', (e) => {
+      const rect = card.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const maxDist = Math.max(Math.hypot(x, y), Math.hypot(x - rect.width, y), Math.hypot(x, y - rect.height), Math.hypot(x - rect.width, y - rect.height))
+      const ripple = document.createElement('div')
+      ripple.className = 'ripple'
+      ripple.style.cssText = `width:${maxDist*2}px;height:${maxDist*2}px;left:${x - maxDist}px;top:${y - maxDist}px;`
+      card.appendChild(ripple)
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(ripple, { scale: 0, opacity: 1 }, { scale: 1, opacity: 0, duration: 0.8, ease: 'power2.out', onComplete: () => ripple.remove() })
+      }
+    })
+  })
+
+  // 全局聚光灯
+  const spotlight = document.getElementById('spotlight')
+  if (spotlight) {
+    document.addEventListener('mousemove', (e) => {
+      const gridRect = grid.getBoundingClientRect()
+      const inside = e.clientX >= gridRect.left && e.clientX <= gridRect.right && e.clientY >= gridRect.top && e.clientY <= gridRect.bottom
+      if (!inside) {
+        if (typeof gsap !== 'undefined') gsap.to(spotlight, { opacity: 0, duration: 0.4 })
+        cards.forEach(c => c.style.setProperty('--glow-intensity', '0'))
+        return
+      }
+      if (typeof gsap !== 'undefined') gsap.to(spotlight, { left: e.clientX, top: e.clientY, opacity: 0.9, duration: 0.1 })
+    })
+    document.addEventListener('mouseleave', () => {
+      if (typeof gsap !== 'undefined') gsap.to(spotlight, { opacity: 0, duration: 0.4 })
+      cards.forEach(c => c.style.setProperty('--glow-intensity', '0'))
+    })
+  }
+}
 </script>
 
 <template>
-  <div class="page-content">
-    <div class="page-header">
-      <h1 class="page-title">数据概览</h1>
-      <p class="page-subtitle">{{ today }}，欢迎回来</p>
-    </div>
+  <div class="dashboard">
+    <div class="ambient"><div class="ambient__grain"></div></div>
+    <div class="global-spotlight" id="spotlight"></div>
 
-    <div class="stats-row">
-      <div class="stat-block">
-        <div class="stat-label">今日营收</div>
-        <div class="stat-value">¥{{ animatedRevenue.toLocaleString() }}</div>
-        <div class="stat-change up">+12.5% 较昨日</div>
+    <header class="header">
+      <div>
+        <h1 class="header__title">数据概览</h1>
+        <div class="header__subtitle">{{ today }}，欢迎回来</div>
       </div>
-      <div class="stat-block">
-        <div class="stat-label">订单数量</div>
-        <div class="stat-value">{{ animatedOrders.toLocaleString() }}</div>
-        <div class="stat-change up">+8.2% 较昨日</div>
-      </div>
-      <div class="stat-block">
-        <div class="stat-label">新增用户</div>
-        <div class="stat-value">{{ animatedUsers.toLocaleString() }}</div>
-        <div class="stat-change down">-2.1% 较昨日</div>
-      </div>
-      <div class="stat-block">
-        <div class="stat-label">商品总数</div>
-        <div class="stat-value">{{ animatedGoods.toLocaleString() }}</div>
-        <div class="stat-change up">+3 件上新</div>
-      </div>
-    </div>
+      <div class="header__date">今日实时</div>
+    </header>
 
-    <div class="dashboard-grid">
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">销售趋势</span>
-          <span class="panel-meta">最近 7 天</span>
+    <main class="bento-grid" id="bentoGrid">
+      <!-- 统计卡片 -->
+      <div class="bento-card" data-bento>
+        <div class="card__content">
+          <div class="card__label">今日营收</div>
+          <div class="card__value">¥{{ stats.totalSales?.toLocaleString() || '0' }}</div>
+          <div class="card__trend up">+12.5% 较昨日</div>
         </div>
-        <div class="panel-body">
-          <div class="chart-bars">
-            <div
-              v-for="(bar, i) in salesData"
-              :key="i"
-              class="chart-bar"
-              :style="{ height: bar.pct + '%' }"
-              :data-label="bar.day"
-            >
-              <div class="chart-tooltip">¥{{ bar.value.toLocaleString() }}</div>
+      </div>
+
+      <div class="bento-card" data-bento>
+        <div class="card__content">
+          <div class="card__label">订单数量</div>
+          <div class="card__value">{{ stats.orderCount || 0 }}</div>
+          <div class="card__trend up">+8.2% 较昨日</div>
+        </div>
+      </div>
+
+      <div class="bento-card" data-bento>
+        <div class="card__content">
+          <div class="card__label">新增用户</div>
+          <div class="card__value">{{ stats.userCount || 0 }}</div>
+          <div class="card__trend down">-2.1% 较昨日</div>
+        </div>
+      </div>
+
+      <div class="bento-card" data-bento>
+        <div class="card__content">
+          <div class="card__label">商品总数</div>
+          <div class="card__value">{{ stats.goodsCount || 0 }}</div>
+          <div class="card__trend neutral">+3 件上新</div>
+        </div>
+      </div>
+
+      <!-- 销售趋势 -->
+      <div class="bento-card bento-card--wide" data-bento>
+        <div class="card__content">
+          <div class="chart-header">
+            <div class="chart-title">销售趋势</div>
+            <div class="chart-period">最近 7 天</div>
+          </div>
+          <div class="bar-chart">
+            <div v-for="(item, i) in barData" :key="i" class="bar-group">
+              <div class="bar" :style="{ height: '0' }"></div>
+              <div class="bar-label">{{ item.label }}</div>
             </div>
           </div>
         </div>
       </div>
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">分类占比</span>
-        </div>
-        <div class="panel-body">
-          <div class="pie-chart"></div>
-          <div class="pie-legend">
-            <div class="pie-legend-item">
-              <div class="pie-legend-left">
-                <span class="pie-legend-dot" style="background: #c45c4a"></span>
-                <span>上装</span>
+
+      <!-- 分类占比 -->
+      <div class="bento-card bento-card--wide" data-bento>
+        <div class="card__content">
+          <div class="chart-header">
+            <div class="chart-title">分类占比</div>
+            <div class="chart-period">本周</div>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut-chart">
+              <svg viewBox="0 0 160 160">
+                <circle class="donut-track" cx="80" cy="80" r="70"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--accent)" data-start="0" data-percent="35"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--gold)" data-start="35" data-percent="25"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--green)" data-start="60" data-percent="20"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--border-hover)" data-start="80" data-percent="20"></circle>
+              </svg>
+              <div class="donut-center">
+                <div class="donut-center__label">Total</div>
+                <div class="donut-center__value">100%</div>
               </div>
-              <span class="pie-legend-pct">35%</span>
             </div>
-            <div class="pie-legend-item">
-              <div class="pie-legend-left">
-                <span class="pie-legend-dot" style="background: #b8963f"></span>
-                <span>裙装</span>
-              </div>
-              <span class="pie-legend-pct">25%</span>
-            </div>
-            <div class="pie-legend-item">
-              <div class="pie-legend-left">
-                <span class="pie-legend-dot" style="background: #2d8a5e"></span>
-                <span>裤装</span>
-              </div>
-              <span class="pie-legend-pct">20%</span>
-            </div>
-            <div class="pie-legend-item">
-              <div class="pie-legend-left">
-                <span class="pie-legend-dot" style="background: #f0eeeb"></span>
-                <span>其他</span>
-              </div>
-              <span class="pie-legend-pct">20%</span>
+            <div class="legend">
+              <div class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span><span>上装</span><span class="legend-pct">35%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span><span>裙装</span><span class="legend-pct">25%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span><span>裤装</span><span class="legend-pct">20%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--border-hover)"></span><span>配饰</span><span class="legend-pct">20%</span></div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">最近订单</span>
-        <span class="panel-more" @click="goOrders">查看全部 &rarr;</span>
+    <!-- 最近订单 -->
+    <div class="orders-section">
+      <div class="orders-header">
+        <h3>最近订单</h3>
+        <span class="orders-more" @click="goOrders">查看全部 &rarr;</span>
       </div>
-      <div class="panel-body" style="padding:0">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>订单号</th>
-              <th>商品</th>
-              <th>客户</th>
-              <th>金额</th>
-              <th>状态</th>
-              <th>时间</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="o in orderList" :key="o.id">
-              <td class="cell-mono">{{ o.orderNo || o.no }}</td>
-              <td>{{ o.goods }}</td>
-              <td>{{ o.customer }}</td>
-              <td class="cell-mono">¥{{ o.amount }}</td>
-              <td>
-                <span :class="['tag', o.statusClass || 'tag-muted']">{{ o.statusText || o.status }}</span>
-              </td>
-              <td class="cell-subtle">{{ o.createTime || o.time }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>订单号</th>
+            <th>商品</th>
+            <th>客户</th>
+            <th>金额</th>
+            <th>状态</th>
+            <th>时间</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="o in orderList" :key="o.id">
+            <td class="cell-mono">{{ o.orderNo || o.no }}</td>
+            <td>{{ o.goods }}</td>
+            <td>{{ o.customer }}</td>
+            <td class="cell-mono">¥{{ o.amount }}</td>
+            <td><span :class="['tag', o.statusClass || 'tag-muted']">{{ o.statusText || o.status }}</span></td>
+            <td class="cell-subtle">{{ o.createTime || o.time }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
 
 <style scoped>
-.page-content {
-  animation: fadeIn 0.4s ease;
+.dashboard {
+  position: relative;
+  z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 200px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ── Ambient ── */
+.ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.ambient__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
 }
 
-.page-header {
-  margin-bottom: 40px;
+.global-spotlight {
+  position: fixed;
+  width: 1000px; height: 1000px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(176,92,79,0.32) 0%, rgba(176,92,79,0.18) 14%, rgba(176,92,79,0.08) 26%, transparent 50%);
+  z-index: 1;
+  opacity: 0;
+  transform: translate(-50%, -50%);
 }
 
-.page-title {
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
-  font-size: 38px;
+/* ── Header ── */
+.header {
+  margin-bottom: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  position: relative;
+  z-index: 2;
+}
+.header__title {
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  font-size: 42px;
   font-weight: 600;
-  margin-bottom: 8px;
   letter-spacing: -0.5px;
-  line-height: 1.1;
-  color: #1a1a1a;
+  margin-bottom: 6px;
+  color: #1a1816;
 }
-
-.page-subtitle {
+.header__subtitle {
   font-size: 14px;
-  color: #666;
-  font-weight: 300;
+  color: #706a64;
+}
+.header__date {
+  font-size: 13px;
+  color: #a9a39d;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #e6e1dc;
+  border-radius: 100px;
 }
 
-/* ── Stats ── */
-.stats-row {
+/* ── Bento Grid ── */
+.bento-grid {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 36px;
+  grid-auto-rows: minmax(160px, auto);
+  gap: 24px;
 }
 
-.stat-block {
-  background: #ffffff;
-  border: 1px solid #e8e5e0;
-  padding: 32px;
-  transition: border-color 0.3s, box-shadow 0.3s;
+.bento-card {
   position: relative;
+  background: #ffffff;
+  border: 1px solid #e6e1dc;
+  border-top: 2px solid rgba(176,92,79,0.35);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 4px 24px rgba(26,24,22,0.04);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  cursor: default;
+  transform-style: preserve-3d;
+  transition: box-shadow 0.4s cubic-bezier(0.22,1,0.36,1), border-color 0.3s;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 280px;
 }
 
-.stat-block:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+.bento-card:hover {
+  border-color: rgba(176,92,79,0.55);
+  box-shadow: 0 20px 60px rgba(176,92,79,0.12);
 }
 
-.stat-block::after {
+.bento-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #b8963f, transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
+  inset: 0;
+  border-radius: 24px;
+  padding: 2px;
+  background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(176,92,79, calc(0.7 * var(--glow-intensity))),
+    rgba(176,92,79, calc(0.35 * var(--glow-intensity))) 35%,
+    rgba(176,92,79, calc(0.12 * var(--glow-intensity))) 55%,
+    transparent 75%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 3;
 }
 
-.stat-block:hover { border-color: #999; }
-.stat-block:hover::after { opacity: 0.3; }
+.bento-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(176,92,79, calc(0.1 * var(--glow-intensity))),
+    rgba(176,92,79, calc(0.04 * var(--glow-intensity))) 45%,
+    transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: var(--glow-intensity);
+  transition: opacity 0.2s;
+}
 
-.stat-label {
-  font-size: 10px;
+.bento-card--wide { grid-column: span 2; }
+
+.card__content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.35s, transform 0.35s;
+}
+.bento-card:hover .card__content {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.card__label {
+  font-size: 12px;
+  color: #a9a39d;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #666;
-  margin-bottom: 18px;
-  font-weight: 500;
+  margin-bottom: 12px;
 }
 
-.stat-value {
-  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+.card__value {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 34px;
   font-weight: 500;
-  color: #1a1a1a;
-  letter-spacing: -1.5px;
+  color: #1a1816;
   margin-bottom: 14px;
 }
 
-.stat-change {
+.card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
 }
+.card__trend.up { color: #4a7c59; background: rgba(74,124,89,0.08); }
+.card__trend.down { color: #b05c4f; background: rgba(176,92,79,0.08); }
+.card__trend.neutral { color: #c9a227; background: rgba(201,162,39,0.08); }
 
-.stat-change.up { color: #2d8a5e; }
-.stat-change.down { color: #c45c4a; }
-
-/* ── Dashboard Grid ── */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  margin-bottom: 36px;
-}
-
-.panel {
-  background: #ffffff;
-  border: 1px solid #e8e5e0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-
-.panel-header {
-  padding: 22px 28px;
-  border-bottom: 1px solid #e8e5e0;
+/* ── Chart ── */
+.chart-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 24px;
 }
-
-.panel-title {
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
-  font-size: 20px;
+.chart-title {
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  font-size: 22px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #1a1816;
+}
+.chart-period {
+  font-size: 12px;
+  color: #a9a39d;
+  padding: 4px 10px;
+  border: 1px solid #e6e1dc;
+  border-radius: 100px;
+  background: #faf8f6;
 }
 
-.panel-meta { font-size: 12px; color: #999; }
-
-.panel-more {
-  font-size:12px;
-  color:#c45c4a;
-  cursor:pointer;
-  font-weight:500;
-  letter-spacing:0.5px;
-  transition: opacity 0.2s;
-}
-
-.panel-more:hover { opacity: 0.7; }
-
-.panel-body { padding: 28px; }
-
-/* ── Chart Bars ── */
-.chart-bars {
+.bar-chart {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  height: 200px;
-  padding-bottom: 36px;
-  border-bottom: 1px solid #e8e5e0;
-  position: relative;
+  justify-content: space-between;
+  gap: 16px;
+  height: 160px;
+  padding-top: 20px;
 }
 
-.chart-bar {
+.bar-group {
   flex: 1;
-  background: #f0eeeb;
-  border-top: 2px solid #b8963f;
-  transition: all 0.4s;
-  position: relative;
-  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-.chart-bar:hover {
-  background: rgba(184,150,63,0.15);
-  border-top-color: #c45c4a;
-}
-
-.chart-bar::after {
-  content: attr(data-label);
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  color: #999;
-  white-space: nowrap;
-}
-
-.chart-tooltip {
-  position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #faf9f7;
-  border: 1px solid #e8e5e0;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.chart-bar:hover .chart-tooltip { opacity: 1; }
-
-/* ── Pie Chart ── */
-.pie-chart {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  margin: 0 auto 28px;
-  background: conic-gradient(
-    #c45c4a 0% 35%,
-    #b8963f 35% 60%,
-    #2d8a5e 60% 80%,
-    #f0eeeb 80% 100%
-  );
+.bar {
+  width: 100%;
+  max-width: 36px;
+  background: linear-gradient(180deg, rgba(176,92,79,0.22) 0%, rgba(176,92,79,0.08) 100%);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.4s cubic-bezier(0.22,1,0.36,1);
   position: relative;
 }
-
-.pie-chart::after {
+.bar::before {
   content: '';
   position: absolute;
-  inset: 38px;
-  border-radius: 50%;
-  background: #ffffff;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: #b05c4f;
+  border-radius: 6px 6px 0 0;
 }
 
-.pie-legend {
+.bar-label {
+  font-size: 11px;
+  color: #a9a39d;
+}
+
+/* ── Donut ── */
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex: 1;
+}
+
+.donut-chart {
+  width: 180px;
+  height: 180px;
+  position: relative;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 8px 24px rgba(176,92,79,0.1));
+}
+.donut-chart svg { width: 100%; height: 100%; overflow: visible; }
+
+.donut-track { fill: none; stroke: #e6e1dc; stroke-width: 22; }
+
+.donut-segment {
+  fill: none;
+  stroke-width: 22;
+  stroke-linecap: round;
+  cursor: pointer;
+  transition: filter 0.3s, transform 0.3s;
+  transform-origin: 80px 80px;
+}
+.donut-segment:hover { filter: brightness(1.08) drop-shadow(0 0 8px currentColor); transform: scale(1.04); }
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(90deg);
+  pointer-events: none;
+}
+.donut-center__label {
+  font-size: 11px;
+  color: #a9a39d;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.donut-center__value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  color: #1a1816;
+  margin-top: 2px;
+}
+
+.legend {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
-.pie-legend-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #1a1a1a;
-}
-
-.pie-legend-left {
+.legend-item {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-size: 13px;
+  color: #706a64;
 }
-
-.pie-legend-dot {
-  width: 8px;
-  height: 8px;
-  display: inline-block;
-  border-radius: 2px;
-}
-
-.pie-legend-pct {
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.legend-pct {
+  margin-left: auto;
   font-family: 'JetBrains Mono', monospace;
-  color: #666;
+  color: #1a1816;
 }
 
-/* ── Data Table ── */
-.data-table {
+/* ── Orders ── */
+.orders-section {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  border: 1px solid #e6e1dc;
+  border-radius: 24px;
+  margin-top: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(26,24,22,0.04);
+}
+
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 1px solid #e6e1dc;
+}
+.orders-header h3 {
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1816;
+}
+.orders-more {
+  font-size: 13px;
+  color: #b05c4f;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+.orders-more:hover { opacity: 0.7; }
+
+.orders-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
-
-.data-table th {
+.orders-table th {
   text-align: left;
-  padding: 16px 24px;
+  padding: 14px 24px;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: #666;
+  color: #a9a39d;
   font-weight: 500;
-  border-bottom: 1px solid #e8e5e0;
+  border-bottom: 1px solid #e6e1dc;
 }
-
-.data-table td {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e8e5e0;
-  color: #1a1a1a;
+.orders-table td {
+  padding: 18px 24px;
+  border-bottom: 1px solid #e6e1dc;
+  color: #1a1816;
 }
+.orders-table tr { transition: background 0.2s; }
+.orders-table tr:hover td { background: #faf8f6; }
+.orders-table tr:last-child td { border-bottom: none; }
 
-.data-table tr { transition: background 0.2s; }
-.data-table tr:hover td { background: #faf9f7; }
-.data-table tr:last-child td { border-bottom: none; }
-
-.cell-mono {
-  font-family: 'JetBrains Mono', monospace;
-  color: #666;
-  font-size: 12px;
-}
-
-.cell-subtle {
-  color: #666;
-  font-size: 12px;
-}
+.cell-mono { font-family: 'JetBrains Mono', monospace; color: #706a64; font-size: 12px; }
+.cell-subtle { color: #a9a39d; font-size: 12px; }
 
 .tag {
   display: inline-block;
@@ -479,14 +757,39 @@ onMounted(async () => {
   font-weight: 500;
   letter-spacing: 0.5px;
 }
+.tag-primary { background: rgba(176,92,79,0.1); color: #d47a6a; }
+.tag-success { background: rgba(74,124,89,0.1); color: #4a7c59; }
+.tag-warning { background: rgba(201,162,39,0.1); color: #c9a227; }
+.tag-muted { background: #f0eeeb; color: #999; }
 
-.tag-primary { background: rgba(196,92,74,0.1); color: #d47a6a; }
-.tag-success { background: rgba(90,143,123,0.1); color: #2d8a5e; }
-.tag-warning { background: rgba(184,154,74,0.1); color: #b8963f; }
-.tag-muted { background: #f0eeeb; color: #666; }
+/* ── Magic particles & ripple ── */
+:deep(.particle) {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(176,92,79, 1);
+  box-shadow: 0 0 10px 2px rgba(176,92,79, 0.55);
+  pointer-events: none;
+  z-index: 4;
+}
+:deep(.ripple) {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(176,92,79,0.35) 0%, rgba(176,92,79,0.15) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 5;
+  transform: scale(0);
+  opacity: 1;
+}
 
 @media (max-width: 1100px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-  .dashboard-grid { grid-template-columns: 1fr; }
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  .bento-card--wide { grid-column: span 2; }
+}
+@media (max-width: 680px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .bento-card--wide { grid-column: span 1; }
+  .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .donut-wrap { flex-direction: column; }
 }
 </style>

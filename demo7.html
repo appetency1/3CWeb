@@ -1,843 +1,715 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAISON - 个人中心</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: #f5f5f5;
-            color: #333;
-        }
+## Integrate the <CircularGallery /> component from React Bits
 
-        /* ========== 顶部导航（复用首页） ========== */
-        .top-nav {
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 40px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 48px;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-        .logo-icon {
-            width: 40px; height: 40px;
-            background: #b85450;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .logo-text {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1a1a1a;
-            letter-spacing: 3px;
-        }
-        .main-nav {
-            display: flex;
-            gap: 36px;
-            list-style: none;
-        }
-        .main-nav a {
-            text-decoration: none;
-            color: #666;
-            font-size: 15px;
-            font-weight: 500;
-            padding: 8px 0;
-            position: relative;
-            transition: color 0.3s;
-        }
-        .main-nav a:hover { color: #b85450; }
-        .main-nav a.active {
-            color: #1a1a1a;
-            font-weight: 600;
-        }
-        .main-nav a.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 2.5px;
-            background: #b85450;
-            border-radius: 2px;
-        }
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-        .action-icon {
-            position: relative;
-            cursor: pointer;
-            color: #666;
-            transition: color 0.3s;
-        }
-        .action-icon:hover { color: #b85450; }
-        .action-icon svg { width: 22px; height: 22px; }
-        .cart-badge {
-            position: absolute;
-            top: -6px; right: -6px;
-            background: #b85450;
-            color: #fff;
-            font-size: 10px;
-            font-weight: 600;
-            width: 16px; height: 16px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .user-avatar-nav {
-            width: 32px; height: 32px;
-            background: #b85450;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-        }
+You are helping integrate an open-source React component into an existing application.
 
-        /* ========== 主内容区 ========== */
-        .main-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 32px 40px;
-            display: grid;
-            grid-template-columns: 260px 1fr;
-            gap: 24px;
-        }
+### Component: CircularGallery
+### Variant: JavaScript + CSS
+### Dependencies: ogl
 
-        /* ========== 左侧边栏 ========== */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+---
 
-        /* 用户信息卡片 */
-        .user-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            border: 1px solid #f0f0f0;
-        }
-        .user-avatar-large {
-            width: 72px; height: 72px;
-            background: linear-gradient(135deg, #b85450, #d4736f);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0 auto 12px;
-            position: relative;
-        }
-        .user-avatar-large::after {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            border: 2px solid #b85450;
-            opacity: 0.3;
-        }
-        .user-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 4px;
-        }
-        .user-level {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #f5e6c8, #f0d9a8);
-            color: #8b6914;
-            padding: 3px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        .user-stats-mini {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #f5f5f5;
-        }
-        .user-stat-mini {
-            text-align: center;
-        }
-        .user-stat-mini .num {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a1a;
-        }
-        .user-stat-mini .label {
-            font-size: 12px;
-            color: #999;
-            margin-top: 2px;
-        }
+### Usage Example
+```jsx
+import CircularGallery from './CircularGallery'
 
-        /* 菜单 */
-        .menu-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 8px;
-            border: 1px solid #f0f0f0;
-        }
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #555;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .menu-item:hover {
-            background: #faf8f6;
-            color: #b85450;
-        }
-        .menu-item.active {
-            background: #fdf6f5;
-            color: #b85450;
-            font-weight: 600;
-        }
-        .menu-icon {
-            width: 20px; height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        .menu-arrow {
-            margin-left: auto;
-            font-size: 12px;
-            color: #ccc;
-        }
-        .menu-divider {
-            height: 1px;
-            background: #f5f5f5;
-            margin: 4px 12px;
-        }
-        .menu-item.logout {
-            color: #b85450;
-        }
+<div style={{ height: '600px', position: 'relative' }}>
+  <CircularGallery
+    bend={3}
+    textColor="#ffffff"
+    borderRadius={0.05}
+    scrollEase={0.02}
+    // Optionally load a custom font for the labels.
+    // Accepts a stylesheet URL (e.g. Google Fonts) or a direct font file.
+    fontUrl="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap"
+    font="bold 30px Orbitron"
+  />
+</div>
+```
 
-        /* ========== 右侧内容区 ========== */
-        .content-area {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+### Props
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| items | Array<{ image: string; text: string }> | undefined | List of items to display in the gallery. Each item should have an image URL and a text label. |
+| bend | number | 3 | Determines the curvature of the gallery layout. A negative value bends in one direction, a positive value in the opposite. |
+| textColor | string | "#ffffff" | Specifies the color of the text labels. |
+| borderRadius | number | 0.05 | Sets the border radius for the media items to achieve rounded corners. |
+| font | string | "bold 30px Figtree" | CSS font shorthand (style, weight, size, family) used for the text labels below each card. |
+| fontUrl | string | undefined | URL of a font to load for the labels. Accepts a stylesheet URL (e.g. a Google Fonts link) or a direct font file (.woff2, .woff, .ttf, .otf). The loaded family overrides the family in `font`. |
+| scrollSpeed | number | 2 | Controls how much the gallery moves per scroll event. Lower values result in slower scrolling, higher values in faster scrolling. |
+| scrollEase | number | 0.05 | Controls the smoothness of scroll transitions. Lower values create smoother, more fluid motion, while higher values make it more responsive. |
 
-        /* 订单快捷入口 */
-        .orders-section {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid #f0f0f0;
-        }
-        .section-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a1a;
-        }
-        .section-more {
-            color: #999;
-            font-size: 13px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: color 0.3s;
-        }
-        .section-more:hover { color: #b85450; }
+### Full Component Source
+```jsx
+import { Camera, Mesh, Plane, Program, Renderer, Texture, Transform } from 'ogl';
+import { useEffect, useRef } from 'react';
 
-        .order-status-bar {
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-        }
-        .order-status-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 8px 24px;
-            border-radius: 12px;
-            transition: all 0.2s;
-            position: relative;
-            text-decoration: none;
-            color: inherit;
-        }
-        .order-status-item:hover {
-            background: #faf8f6;
-        }
-        .status-icon-wrap {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            position: relative;
-        }
-        .status-icon-wrap.all { background: #fdf2f2; }
-        .status-icon-wrap.pay { background: #fff8e6; }
-        .status-icon-wrap.ship { background: #e8f5e9; }
-        .status-icon-wrap.review { background: #e3f2fd; }
-        .status-badge {
-            position: absolute;
-            top: -4px; right: -4px;
-            min-width: 18px; height: 18px;
-            background: #b85450;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-        }
-        .status-label {
-            font-size: 13px;
-            color: #666;
-            font-weight: 500;
-        }
+import './CircularGallery.css';
 
-        /* 资产卡片 */
-        .assets-section {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-        }
-        .asset-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        .asset-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        }
-        .asset-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-        }
-        .asset-card.coupon::before { background: #b85450; }
-        .asset-card.points::before { background: #e6a23c; }
-        .asset-card.balance::before { background: #4caf50; }
-        .asset-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        .asset-label {
-            font-size: 13px;
-            color: #999;
-            font-weight: 500;
-        }
-        .asset-icon {
-            width: 28px; height: 28px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-        .asset-card.coupon .asset-icon { background: #fdf2f2; }
-        .asset-card.points .asset-icon { background: #fff8e6; }
-        .asset-card.balance .asset-icon { background: #e8f5e9; }
-        .asset-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 4px;
-        }
-        .asset-value span {
-            font-size: 14px;
-            font-weight: 500;
-            color: #999;
-            margin-left: 2px;
-        }
-        .asset-desc {
-            font-size: 12px;
-            color: #ccc;
-        }
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
 
-        /* 账户信息 */
-        .profile-section {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid #f0f0f0;
-        }
-        .profile-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .profile-progress {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .progress-bar-wrap {
-            width: 120px;
-            height: 6px;
-            background: #f0f0f0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(90deg, #b85450, #e6a23c);
-            border-radius: 3px;
-        }
-        .progress-text {
-            font-size: 12px;
-            color: #b85450;
-            font-weight: 600;
-        }
-        .profile-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        .profile-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px;
-            background: #fafafa;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-        .profile-item:hover {
-            border-color: #f0e0de;
-            background: #fdf8f7;
-        }
-        .profile-item-left {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .profile-label {
-            font-size: 12px;
-            color: #999;
-        }
-        .profile-value {
-            font-size: 15px;
-            color: #1a1a1a;
-            font-weight: 500;
-        }
-        .profile-value.empty {
-            color: #ccc;
-        }
-        .profile-action {
-            padding: 6px 14px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-        }
-        .profile-action.bind {
-            background: #fdf2f2;
-            color: #b85450;
-        }
-        .profile-action.bind:hover {
-            background: #b85450;
-            color: #fff;
-        }
-        .profile-action.set {
-            background: #f5f5f5;
-            color: #666;
-        }
-        .profile-action.set:hover {
-            background: #e0e0e0;
-        }
+function lerp(p1, p2, t) {
+  return p1 + (p2 - p1) * t;
+}
 
-        /* 最近浏览 */
-        .recent-section {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid #f0f0f0;
-        }
-        .recent-grid {
-            display: flex;
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .recent-item {
-            width: 140px;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        .recent-item:hover {
-            transform: translateY(-4px);
-        }
-        .recent-img {
-            width: 100%;
-            aspect-ratio: 1;
-            background: linear-gradient(145deg, #f0e8e0, #e5dbd2);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            opacity: 0.6;
-            margin-bottom: 8px;
-        }
-        .recent-name {
-            font-size: 13px;
-            color: #333;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .recent-price {
-            font-size: 14px;
-            font-weight: 700;
-            color: #b85450;
-            margin-top: 2px;
-        }
+function autoBind(instance) {
+  const proto = Object.getPrototypeOf(instance);
+  Object.getOwnPropertyNames(proto).forEach(key => {
+    if (key !== 'constructor' && typeof instance[key] === 'function') {
+      instance[key] = instance[key].bind(instance);
+    }
+  });
+}
 
-        /* ========== 页脚 ========== */
-        .footer {
-            background: #1a1a1a;
-            color: #888;
-            padding: 40px;
-            text-align: center;
-            font-size: 13px;
-            margin-top: 40px;
+const DEFAULT_FONT = 'bold 30px Figtree';
+// Figtree is not guaranteed to be available on the host page, so the component
+// loads it on demand whenever the default font is used.
+const DEFAULT_FONT_URL = 'https://fonts.googleapis.com/css2?family=Figtree:wght@400;700&display=swap';
+
+function deriveFontFamilyFromUrl(url) {
+  const fileName = (url.split('/').pop() || 'custom-font').split('?')[0];
+  const base = fileName.replace(/\.(woff2?|ttf|otf|eot)$/i, '');
+  return base.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'CircularGalleryFont';
+}
+
+async function loadFontFromStylesheet(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch font stylesheet (${response.status})`);
+  const cssText = await response.text();
+  const faceBlocks = cssText.match(/@font-face\s*{[^}]*}/g) || [];
+  let family = null;
+  const fontFaces = [];
+  for (const block of faceBlocks) {
+    const familyMatch = block.match(/font-family:\s*['"]?([^;'"]+)['"]?/);
+    const urlMatch = block.match(/url\(\s*['"]?([^'")]+)['"]?\s*\)/);
+    if (!familyMatch || !urlMatch) continue;
+    family = familyMatch[1].trim();
+    const descriptors = {};
+    const weightMatch = block.match(/font-weight:\s*([^;]+);/);
+    const styleMatch = block.match(/font-style:\s*([^;]+);/);
+    const rangeMatch = block.match(/unicode-range:\s*([^;]+);/);
+    if (weightMatch) descriptors.weight = weightMatch[1].trim();
+    if (styleMatch) descriptors.style = styleMatch[1].trim();
+    if (rangeMatch) descriptors.unicodeRange = rangeMatch[1].trim();
+    fontFaces.push(new FontFace(family, `url(${urlMatch[1]})`, descriptors));
+  }
+  if (!family) throw new Error('No @font-face rule found in the stylesheet');
+  await Promise.allSettled(
+    fontFaces.map(async face => {
+      await face.load();
+      document.fonts.add(face);
+    })
+  );
+  return family;
+}
+
+async function loadFontFromFile(url) {
+  const family = deriveFontFamilyFromUrl(url);
+  const fontFace = new FontFace(family, `url(${url})`);
+  await fontFace.load();
+  document.fonts.add(fontFace);
+  return family;
+}
+
+async function loadCustomFont(fontUrl) {
+  const isStylesheet = fontUrl.includes('fonts.googleapis.com') || /\.css(\?.*)?$/i.test(fontUrl);
+  return isStylesheet ? loadFontFromStylesheet(fontUrl) : loadFontFromFile(fontUrl);
+}
+
+// Loads `fontUrl` (a stylesheet such as a Google Fonts URL, or a direct font
+// file) and returns a canvas-ready font string that keeps the size/weight from
+// `font` but swaps in the freshly loaded family. Falls back to `font` on error.
+async function resolveFont(font, fontUrl) {
+  // Use the bundled Figtree stylesheet when the caller relies on the default
+  // font, otherwise honor the explicit `fontUrl`.
+  const effectiveUrl = fontUrl || (font === DEFAULT_FONT ? DEFAULT_FONT_URL : null);
+  if (!effectiveUrl) {
+    // A custom family was supplied without a URL – make sure it is ready (in
+    // case the host page declares it) before we draw it to the canvas,
+    // otherwise the first paint silently falls back to a system font.
+    if (document.fonts && document.fonts.load) {
+      try {
+        await document.fonts.load(font);
+        await document.fonts.ready;
+      } catch {
+        // Ignore – fall back to whatever the browser provides.
+      }
+    }
+    return font;
+  }
+  try {
+    const family = await loadCustomFont(effectiveUrl);
+    const sizeMatch = font.match(/^\s*(.*?\d+px)/);
+    const prefix = sizeMatch ? sizeMatch[1].trim() : 'bold 30px';
+    const resolved = `${prefix} "${family}"`;
+    if (document.fonts && document.fonts.load) {
+      try {
+        await document.fonts.load(resolved);
+      } catch {
+        // Ignore – we still attempt to render with the requested font.
+      }
+    }
+    return resolved;
+  } catch (error) {
+    console.error('CircularGallery: unable to load font from', fontUrl, error);
+    return font;
+  }
+}
+
+function getFontSize(font) {
+  const match = font.match(/(\d+)px/);
+  return match ? parseInt(match[1], 10) : 30;
+}
+
+function createTextTexture(gl, text, font = 'bold 30px monospace', color = 'black') {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  context.font = font;
+  const metrics = context.measureText(text);
+  const textWidth = Math.ceil(metrics.width);
+  const textHeight = Math.ceil(getFontSize(font) * 1.2);
+  canvas.width = textWidth + 20;
+  canvas.height = textHeight + 20;
+  context.font = font;
+  context.fillStyle = color;
+  context.textBaseline = 'middle';
+  context.textAlign = 'center';
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillText(text, canvas.width / 2, canvas.height / 2);
+  const texture = new Texture(gl, { generateMipmaps: false });
+  texture.image = canvas;
+  return { texture, width: canvas.width, height: canvas.height };
+}
+
+class Title {
+  constructor({ gl, plane, renderer, text, textColor = '#545050', font = '30px sans-serif' }) {
+    autoBind(this);
+    this.gl = gl;
+    this.plane = plane;
+    this.renderer = renderer;
+    this.text = text;
+    this.textColor = textColor;
+    this.font = font;
+    this.createMesh();
+  }
+  createMesh() {
+    const { texture, width, height } = createTextTexture(this.gl, this.text, this.font, this.textColor);
+    const geometry = new Plane(this.gl);
+    const program = new Program(this.gl, {
+      vertex: `
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
-
-        /* ========== 响应式 ========== */
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                padding: 16px;
-            }
-            .sidebar {
-                flex-direction: row;
-                overflow-x: auto;
-            }
-            .user-card { min-width: 260px; }
-            .menu-card { display: none; }
-            .assets-section { grid-template-columns: repeat(3, 1fr); }
+      `,
+      fragment: `
+        precision highp float;
+        uniform sampler2D tMap;
+        varying vec2 vUv;
+        void main() {
+          vec4 color = texture2D(tMap, vUv);
+          if (color.a < 0.1) discard;
+          gl_FragColor = color;
         }
-        @media (max-width: 768px) {
-            .assets-section { grid-template-columns: 1fr; }
-            .profile-grid { grid-template-columns: 1fr; }
-            .order-status-bar { gap: 8px; }
-            .order-status-item { padding: 8px 12px; }
-            .recent-grid { overflow-x: auto; }
+      `,
+      uniforms: { tMap: { value: texture } },
+      transparent: true
+    });
+    this.mesh = new Mesh(this.gl, { geometry, program });
+    const aspect = width / height;
+    const textHeight = this.plane.scale.y * 0.15;
+    const textWidth = textHeight * aspect;
+    this.mesh.scale.set(textWidth, textHeight, 1);
+    this.mesh.position.y = -this.plane.scale.y * 0.5 - textHeight * 0.5 - 0.05;
+    this.mesh.setParent(this.plane);
+  }
+}
+
+class Media {
+  constructor({
+    geometry,
+    gl,
+    image,
+    index,
+    length,
+    renderer,
+    scene,
+    screen,
+    text,
+    viewport,
+    bend,
+    textColor,
+    borderRadius = 0,
+    font
+  }) {
+    this.extra = 0;
+    this.geometry = geometry;
+    this.gl = gl;
+    this.image = image;
+    this.index = index;
+    this.length = length;
+    this.renderer = renderer;
+    this.scene = scene;
+    this.screen = screen;
+    this.text = text;
+    this.viewport = viewport;
+    this.bend = bend;
+    this.textColor = textColor;
+    this.borderRadius = borderRadius;
+    this.font = font;
+    this.createShader();
+    this.createMesh();
+    this.createTitle();
+    this.onResize();
+  }
+  createShader() {
+    const texture = new Texture(this.gl, {
+      generateMipmaps: true
+    });
+    this.program = new Program(this.gl, {
+      depthTest: false,
+      depthWrite: false,
+      vertex: `
+        precision highp float;
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        uniform float uTime;
+        uniform float uSpeed;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec3 p = position;
+          p.z = (sin(p.x * 4.0 + uTime) * 1.5 + cos(p.y * 2.0 + uTime) * 1.5) * (0.1 + uSpeed * 0.5);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
         }
-    </style>
-<base target="_blank">
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <div class="logo-section">
-                <a href="#" class="logo">
-                    <div class="logo-icon">M</div>
-                    <span class="logo-text">MAISON</span>
-                </a>
-                <ul class="main-nav">
-                    <li><a href="#">首页</a></li>
-                    <li><a href="#">女装</a></li>
-                    <li><a href="#">男装</a></li>
-                    <li><a href="#">鞋靴</a></li>
-                    <li><a href="#">配饰</a></li>
-                </ul>
-            </div>
-            <div class="nav-actions">
-                <div class="action-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                    <span class="cart-badge">3</span>
-                </div>
-                <div class="action-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                </div>
-                <div class="user-avatar-nav">R</div>
-            </div>
-        </div>
-    </nav>
+      `,
+      fragment: `
+        precision highp float;
+        uniform vec2 uImageSizes;
+        uniform vec2 uPlaneSizes;
+        uniform sampler2D tMap;
+        uniform float uBorderRadius;
+        varying vec2 vUv;
+        
+        float roundedBoxSDF(vec2 p, vec2 b, float r) {
+          vec2 d = abs(p) - b;
+          return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0) - r;
+        }
+        
+        void main() {
+          vec2 ratio = vec2(
+            min((uPlaneSizes.x / uPlaneSizes.y) / (uImageSizes.x / uImageSizes.y), 1.0),
+            min((uPlaneSizes.y / uPlaneSizes.x) / (uImageSizes.y / uImageSizes.x), 1.0)
+          );
+          vec2 uv = vec2(
+            vUv.x * ratio.x + (1.0 - ratio.x) * 0.5,
+            vUv.y * ratio.y + (1.0 - ratio.y) * 0.5
+          );
+          vec4 color = texture2D(tMap, uv);
+          
+          float d = roundedBoxSDF(vUv - 0.5, vec2(0.5 - uBorderRadius), uBorderRadius);
+          
+          // Smooth antialiasing for edges
+          float edgeSmooth = 0.002;
+          float alpha = 1.0 - smoothstep(-edgeSmooth, edgeSmooth, d);
+          
+          gl_FragColor = vec4(color.rgb, alpha);
+        }
+      `,
+      uniforms: {
+        tMap: { value: texture },
+        uPlaneSizes: { value: [0, 0] },
+        uImageSizes: { value: [0, 0] },
+        uSpeed: { value: 0 },
+        uTime: { value: 100 * Math.random() },
+        uBorderRadius: { value: this.borderRadius }
+      },
+      transparent: true
+    });
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = this.image;
+    img.onload = () => {
+      texture.image = img;
+      this.program.uniforms.uImageSizes.value = [img.naturalWidth, img.naturalHeight];
+    };
+  }
+  createMesh() {
+    this.plane = new Mesh(this.gl, {
+      geometry: this.geometry,
+      program: this.program
+    });
+    this.plane.setParent(this.scene);
+  }
+  createTitle() {
+    this.title = new Title({
+      gl: this.gl,
+      plane: this.plane,
+      renderer: this.renderer,
+      text: this.text,
+      textColor: this.textColor,
+      font: this.font
+    });
+  }
+  update(scroll, direction) {
+    this.plane.position.x = this.x - scroll.current - this.extra;
 
-    <!-- 主内容 -->
-    <div class="main-content">
-        <!-- 左侧边栏 -->
-        <aside class="sidebar">
-            <div class="user-card">
-                <div class="user-avatar-large">R</div>
-                <div class="user-name">rafa</div>
-                <div class="user-level">👑 黄金会员</div>
-                <div class="user-stats-mini">
-                    <div class="user-stat-mini">
-                        <div class="num">12</div>
-                        <div class="label">关注</div>
-                    </div>
-                    <div class="user-stat-mini">
-                        <div class="num">48</div>
-                        <div class="label">粉丝</div>
-                    </div>
-                    <div class="user-stat-mini">
-                        <div class="num">156</div>
-                        <div class="label">获赞</div>
-                    </div>
-                </div>
-            </div>
+    const x = this.plane.position.x;
+    const H = this.viewport.width / 2;
 
-            <div class="menu-card">
-                <a href="#" class="menu-item active">
-                    <span class="menu-icon">📋</span>
-                    <span>我的订单</span>
-                    <span class="menu-arrow">›</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <span class="menu-icon">📍</span>
-                    <span>收货地址</span>
-                    <span class="menu-arrow">›</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <span class="menu-icon">♡</span>
-                    <span>我的收藏</span>
-                    <span class="menu-arrow">›</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <span class="menu-icon">👤</span>
-                    <span>个人资料</span>
-                    <span class="menu-arrow">›</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <span class="menu-icon">🔒</span>
-                    <span>账号安全</span>
-                    <span class="menu-arrow">›</span>
-                </a>
-                <a href="#" class="menu-item">
-                    <span class="menu-icon">💬</span>
-                    <span>联系客服</span>
-                    <span class="menu-arrow">›</span>
-                </a>
-                <div class="menu-divider"></div>
-                <a href="#" class="menu-item logout">
-                    <span class="menu-icon">↪</span>
-                    <span>退出登录</span>
-                </a>
-            </div>
-        </aside>
+    if (this.bend === 0) {
+      this.plane.position.y = 0;
+      this.plane.rotation.z = 0;
+    } else {
+      const B_abs = Math.abs(this.bend);
+      const R = (H * H + B_abs * B_abs) / (2 * B_abs);
+      const effectiveX = Math.min(Math.abs(x), H);
 
-        <!-- 右侧内容 -->
-        <div class="content-area">
-            <!-- 订单状态 -->
-            <div class="orders-section">
-                <div class="section-header-row">
-                    <h2 class="section-title">我的订单</h2>
-                    <a href="#" class="section-more">查看全部 ›</a>
-                </div>
-                <div class="order-status-bar">
-                    <a href="#" class="order-status-item">
-                        <div class="status-icon-wrap all">
-                            📦
-                        </div>
-                        <span class="status-label">全部订单</span>
-                    </a>
-                    <a href="#" class="order-status-item">
-                        <div class="status-icon-wrap pay">
-                            💳
-                            <span class="status-badge">2</span>
-                        </div>
-                        <span class="status-label">待付款</span>
-                    </a>
-                    <a href="#" class="order-status-item">
-                        <div class="status-icon-wrap ship">
-                            🚚
-                            <span class="status-badge">1</span>
-                        </div>
-                        <span class="status-label">待收货</span>
-                    </a>
-                    <a href="#" class="order-status-item">
-                        <div class="status-icon-wrap review">
-                            ⭐
-                        </div>
-                        <span class="status-label">待评价</span>
-                    </a>
-                </div>
-            </div>
+      const arc = R - Math.sqrt(R * R - effectiveX * effectiveX);
+      if (this.bend > 0) {
+        this.plane.position.y = -arc;
+        this.plane.rotation.z = -Math.sign(x) * Math.asin(effectiveX / R);
+      } else {
+        this.plane.position.y = arc;
+        this.plane.rotation.z = Math.sign(x) * Math.asin(effectiveX / R);
+      }
+    }
 
-            <!-- 资产卡片 -->
-            <div class="assets-section">
-                <div class="asset-card coupon">
-                    <div class="asset-header">
-                        <span class="asset-label">优惠券</span>
-                        <div class="asset-icon">🎫</div>
-                    </div>
-                    <div class="asset-value">3<span>张</span></div>
-                    <div class="asset-desc">2张即将过期</div>
-                </div>
-                <div class="asset-card points">
-                    <div class="asset-header">
-                        <span class="asset-label">积分</span>
-                        <div class="asset-icon">✨</div>
-                    </div>
-                    <div class="asset-value">1,280<span>分</span></div>
-                    <div class="asset-desc">可抵 ¥12.80</div>
-                </div>
-                <div class="asset-card balance">
-                    <div class="asset-header">
-                        <span class="asset-label">余额</span>
-                        <div class="asset-icon">💰</div>
-                    </div>
-                    <div class="asset-value">0.00<span>元</span></div>
-                    <div class="asset-desc">充值享优惠</div>
-                </div>
-            </div>
+    this.speed = scroll.current - scroll.last;
+    this.program.uniforms.uTime.value += 0.04;
+    this.program.uniforms.uSpeed.value = this.speed;
 
-            <!-- 账户信息 -->
-            <div class="profile-section">
-                <div class="profile-header">
-                    <h2 class="section-title">账户信息</h2>
-                    <div class="profile-progress">
-                        <div class="progress-bar-wrap">
-                            <div class="progress-bar-fill"></div>
-                        </div>
-                        <span class="progress-text">资料完善度 50%</span>
-                    </div>
-                </div>
-                <div class="profile-grid">
-                    <div class="profile-item">
-                        <div class="profile-item-left">
-                            <span class="profile-label">用户名</span>
-                            <span class="profile-value">rafa</span>
-                        </div>
-                        <button class="profile-action set">修改</button>
-                    </div>
-                    <div class="profile-item">
-                        <div class="profile-item-left">
-                            <span class="profile-label">昵称</span>
-                            <span class="profile-value empty">未设置</span>
-                        </div>
-                        <button class="profile-action bind">去设置</button>
-                    </div>
-                    <div class="profile-item">
-                        <div class="profile-item-left">
-                            <span class="profile-label">手机号</span>
-                            <span class="profile-value empty">未绑定</span>
-                        </div>
-                        <button class="profile-action bind">去绑定</button>
-                    </div>
-                    <div class="profile-item">
-                        <div class="profile-item-left">
-                            <span class="profile-label">邮箱</span>
-                            <span class="profile-value empty">未绑定</span>
-                        </div>
-                        <button class="profile-action bind">去绑定</button>
-                    </div>
-                </div>
-            </div>
+    const planeOffset = this.plane.scale.x / 2;
+    const viewportOffset = this.viewport.width / 2;
+    this.isBefore = this.plane.position.x + planeOffset < -viewportOffset;
+    this.isAfter = this.plane.position.x - planeOffset > viewportOffset;
+    if (direction === 'right' && this.isBefore) {
+      this.extra -= this.widthTotal;
+      this.isBefore = this.isAfter = false;
+    }
+    if (direction === 'left' && this.isAfter) {
+      this.extra += this.widthTotal;
+      this.isBefore = this.isAfter = false;
+    }
+  }
+  onResize({ screen, viewport } = {}) {
+    if (screen) this.screen = screen;
+    if (viewport) {
+      this.viewport = viewport;
+      if (this.plane.program.uniforms.uViewportSizes) {
+        this.plane.program.uniforms.uViewportSizes.value = [this.viewport.width, this.viewport.height];
+      }
+    }
+    this.scale = this.screen.height / 1500;
+    this.plane.scale.y = (this.viewport.height * (900 * this.scale)) / this.screen.height;
+    this.plane.scale.x = (this.viewport.width * (700 * this.scale)) / this.screen.width;
+    this.plane.program.uniforms.uPlaneSizes.value = [this.plane.scale.x, this.plane.scale.y];
+    this.padding = 2;
+    this.width = this.plane.scale.x + this.padding;
+    this.widthTotal = this.width * this.length;
+    this.x = this.width * this.index;
+  }
+}
 
-            <!-- 最近浏览 -->
-            <div class="recent-section">
-                <div class="section-header-row">
-                    <h2 class="section-title">最近浏览</h2>
-                    <a href="#" class="section-more">查看全部 ›</a>
-                </div>
-                <div class="recent-grid">
-                    <div class="recent-item">
-                        <div class="recent-img">👜</div>
-                        <div class="recent-name">通勤手提单肩包</div>
-                        <div class="recent-price">¥229</div>
-                    </div>
-                    <div class="recent-item">
-                        <div class="recent-img">👟</div>
-                        <div class="recent-name">复古运动跑步鞋</div>
-                        <div class="recent-price">¥459</div>
-                    </div>
-                    <div class="recent-item">
-                        <div class="recent-img">👕</div>
-                        <div class="recent-name">230G重磅纯棉T恤</div>
-                        <div class="recent-price">¥89</div>
-                    </div>
-                    <div class="recent-item">
-                        <div class="recent-img">🧥</div>
-                        <div class="recent-name">宽松慵懒风针织衫</div>
-                        <div class="recent-price">¥179</div>
-                    </div>
-                    <div class="recent-item">
-                        <div class="recent-img">👗</div>
-                        <div class="recent-name">法式复古连衣裙</div>
-                        <div class="recent-price">¥299</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+class App {
+  constructor(
+    container,
+    {
+      items,
+      bend,
+      textColor = '#ffffff',
+      borderRadius = 0,
+      font = 'bold 30px Figtree',
+      scrollSpeed = 2,
+      scrollEase = 0.05
+    } = {}
+  ) {
+    document.documentElement.classList.remove('no-js');
+    this.container = container;
+    this.scrollSpeed = scrollSpeed;
+    this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
+    this.onCheckDebounce = debounce(this.onCheck, 200);
+    this.createRenderer();
+    this.createCamera();
+    this.createScene();
+    this.onResize();
+    this.createGeometry();
+    this.createMedias(items, bend, textColor, borderRadius, font);
+    this.update();
+    this.addEventListeners();
+  }
+  createRenderer() {
+    this.renderer = new Renderer({
+      alpha: true,
+      antialias: true,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    });
+    this.gl = this.renderer.gl;
+    this.gl.clearColor(0, 0, 0, 0);
+    this.container.appendChild(this.gl.canvas);
+  }
+  createCamera() {
+    this.camera = new Camera(this.gl);
+    this.camera.fov = 45;
+    this.camera.position.z = 20;
+  }
+  createScene() {
+    this.scene = new Transform();
+  }
+  createGeometry() {
+    this.planeGeometry = new Plane(this.gl, {
+      heightSegments: 50,
+      widthSegments: 100
+    });
+  }
+  createMedias(items, bend = 1, textColor, borderRadius, font) {
+    const defaultItems = [
+      { image: `https://picsum.photos/seed/1/800/600?grayscale`, text: 'Bridge' },
+      { image: `https://picsum.photos/seed/2/800/600?grayscale`, text: 'Desk Setup' },
+      { image: `https://picsum.photos/seed/3/800/600?grayscale`, text: 'Waterfall' },
+      { image: `https://picsum.photos/seed/4/800/600?grayscale`, text: 'Strawberries' },
+      { image: `https://picsum.photos/seed/5/800/600?grayscale`, text: 'Deep Diving' },
+      { image: `https://picsum.photos/seed/16/800/600?grayscale`, text: 'Train Track' },
+      { image: `https://picsum.photos/seed/17/800/600?grayscale`, text: 'Santorini' },
+      { image: `https://picsum.photos/seed/8/800/600?grayscale`, text: 'Blurry Lights' },
+      { image: `https://picsum.photos/seed/9/800/600?grayscale`, text: 'New York' },
+      { image: `https://picsum.photos/seed/10/800/600?grayscale`, text: 'Good Boy' },
+      { image: `https://picsum.photos/seed/21/800/600?grayscale`, text: 'Coastline' },
+      { image: `https://picsum.photos/seed/12/800/600?grayscale`, text: 'Palm Trees' }
+    ];
+    const galleryItems = items && items.length ? items : defaultItems;
+    this.mediasImages = galleryItems.concat(galleryItems);
+    this.medias = this.mediasImages.map((data, index) => {
+      return new Media({
+        geometry: this.planeGeometry,
+        gl: this.gl,
+        image: data.image,
+        index,
+        length: this.mediasImages.length,
+        renderer: this.renderer,
+        scene: this.scene,
+        screen: this.screen,
+        text: data.text,
+        viewport: this.viewport,
+        bend,
+        textColor,
+        borderRadius,
+        font
+      });
+    });
+  }
+  onTouchDown(e) {
+    this.isDown = true;
+    this.scroll.position = this.scroll.current;
+    this.start = e.touches ? e.touches[0].clientX : e.clientX;
+  }
+  onTouchMove(e) {
+    if (!this.isDown) return;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const distance = (this.start - x) * (this.scrollSpeed * 0.025);
+    this.scroll.target = this.scroll.position + distance;
+  }
+  onTouchUp() {
+    this.isDown = false;
+    this.onCheck();
+  }
+  onWheel(e) {
+    const delta = e.deltaY || e.wheelDelta || e.detail;
+    this.scroll.target += (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
+    this.onCheckDebounce();
+  }
+  onKeyDown(e) {
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault();
+        this.scroll.target += this.scrollSpeed * 5;
+        this.onCheckDebounce();
+        break;
 
-    <div class="footer">
-        © 2026 MAISON 时尚电商 · 保留所有权利
-    </div>
-</body>
-</html>
+      case 'ArrowLeft':
+        e.preventDefault();
+        this.scroll.target -= this.scrollSpeed * 5;
+        this.onCheckDebounce();
+        break;
+
+      case 'Home':
+        e.preventDefault();
+        this.scroll.target = 0;
+        this.onCheckDebounce();
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  onCheck() {
+    if (!this.medias || !this.medias[0]) return;
+    const width = this.medias[0].width;
+    const itemIndex = Math.round(Math.abs(this.scroll.target) / width);
+    const item = width * itemIndex;
+    this.scroll.target = this.scroll.target < 0 ? -item : item;
+  }
+  onResize() {
+    this.screen = {
+      width: this.container.clientWidth,
+      height: this.container.clientHeight
+    };
+    this.renderer.setSize(this.screen.width, this.screen.height);
+    this.camera.perspective({
+      aspect: this.screen.width / this.screen.height
+    });
+    const fov = (this.camera.fov * Math.PI) / 180;
+    const height = 2 * Math.tan(fov / 2) * this.camera.position.z;
+    const width = height * this.camera.aspect;
+    this.viewport = { width, height };
+    if (this.medias) {
+      this.medias.forEach(media => media.onResize({ screen: this.screen, viewport: this.viewport }));
+    }
+  }
+  update() {
+    this.scroll.current = lerp(this.scroll.current, this.scroll.target, this.scroll.ease);
+    const direction = this.scroll.current > this.scroll.last ? 'right' : 'left';
+    if (this.medias) {
+      this.medias.forEach(media => media.update(this.scroll, direction));
+    }
+    this.renderer.render({ scene: this.scene, camera: this.camera });
+    this.scroll.last = this.scroll.current;
+    this.raf = window.requestAnimationFrame(this.update.bind(this));
+  }
+  addEventListeners() {
+    this.boundOnResize = this.onResize.bind(this);
+    this.boundOnWheel = this.onWheel.bind(this);
+    this.boundOnTouchDown = this.onTouchDown.bind(this);
+    this.boundOnTouchMove = this.onTouchMove.bind(this);
+    this.boundOnTouchUp = this.onTouchUp.bind(this);
+    this.boundOnKeyDown = this.onKeyDown.bind(this);
+
+    window.addEventListener('resize', this.boundOnResize);
+    window.addEventListener('mousewheel', this.boundOnWheel);
+    window.addEventListener('wheel', this.boundOnWheel);
+    window.addEventListener('mousedown', this.boundOnTouchDown);
+    window.addEventListener('mousemove', this.boundOnTouchMove);
+    window.addEventListener('mouseup', this.boundOnTouchUp);
+    window.addEventListener('touchstart', this.boundOnTouchDown);
+    window.addEventListener('touchmove', this.boundOnTouchMove);
+    window.addEventListener('touchend', this.boundOnTouchUp);
+
+    this.container?.addEventListener('keydown', this.boundOnKeyDown);
+  }
+  destroy() {
+    window.cancelAnimationFrame(this.raf);
+    window.removeEventListener('resize', this.boundOnResize);
+    window.removeEventListener('mousewheel', this.boundOnWheel);
+    window.removeEventListener('wheel', this.boundOnWheel);
+    window.removeEventListener('mousedown', this.boundOnTouchDown);
+    window.removeEventListener('mousemove', this.boundOnTouchMove);
+    window.removeEventListener('mouseup', this.boundOnTouchUp);
+    window.removeEventListener('touchstart', this.boundOnTouchDown);
+    window.removeEventListener('touchmove', this.boundOnTouchMove);
+    window.removeEventListener('touchend', this.boundOnTouchUp);
+    if (this.renderer && this.renderer.gl && this.renderer.gl.canvas.parentNode) {
+      this.renderer.gl.canvas.parentNode.removeChild(this.renderer.gl.canvas);
+    }
+
+    if (this.container) {
+      this.container.removeEventListener('keydown', this.boundOnKeyDown);
+    }
+  }
+}
+
+export default function CircularGallery({
+  items,
+  bend = 3,
+  textColor = '#ffffff',
+  borderRadius = 0.05,
+  font = 'bold 30px Figtree',
+  fontUrl,
+  scrollSpeed = 2,
+  scrollEase = 0.05
+}) {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    let app;
+    let isMounted = true;
+    resolveFont(font, fontUrl).then(resolvedFont => {
+      if (!isMounted || !containerRef.current) return;
+      app = new App(containerRef.current, {
+        items,
+        bend,
+        textColor,
+        borderRadius,
+        font: resolvedFont,
+        scrollSpeed,
+        scrollEase
+      });
+    });
+
+    return () => {
+      isMounted = false;
+      if (app) app.destroy();
+    };
+  }, [items, bend, textColor, borderRadius, font, fontUrl, scrollSpeed, scrollEase]);
+  return (
+    <div
+      className="circular-gallery"
+      ref={containerRef}
+      tabIndex={0}
+      role="region"
+      aria-label="Circular image gallery. Use left and right arrow keys to navigate."
+    />
+  );
+}
+
+```
+
+### Component CSS
+```css
+.circular-gallery {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.circular-gallery:active {
+  cursor: grabbing;
+}
+
+.circular-gallery:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+```
+
+### Integration Instructions
+1. Install any listed dependencies.
+2. Copy the component source into the appropriate directory in the project.
+3. Import the CSS file alongside the component.
+4. Import and render the component using the usage example above as a starting point.
+5. Adjust props as needed for the specific use case — refer to the props table for all available options.
+.lanyard-wrapper {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scale(1);
+  transform-origin: center;
+}

@@ -40,9 +40,14 @@ async function toggleWishlist(g: any) {
   if (!userStore.isLoggedIn) { router.push({ name: 'login', query: { redirect: '/user/favorites' } }); return }
   const id = Number(g.id)
   const s = new Set(wishlistSet.value)
-  if (s.has(id)) { await favoriteApi.remove(id); s.delete(id) }
-  else { await favoriteApi.add(id); s.add(id) }
-  wishlistSet.value = s
+  const isLiked = s.has(id)
+  try {
+    if (isLiked) { await favoriteApi.remove(id); s.delete(id) }
+    else { await favoriteApi.add(id); s.add(id) }
+    wishlistSet.value = s
+  } catch (e: any) {
+    showToast(isLiked ? '取消收藏失败' : '收藏失败')
+  }
 }
 
 // 秒杀自动轮转
@@ -203,14 +208,6 @@ let brandLogos: { name: string; file: string }[] = [
   { name: 'LV', file: 'lv' },
   { name: 'CHANEL', file: 'chanel' },
 ]
-
-function createBrandLogoSvg(brand: { name: string; file: string }) {
-  const img = document.createElement('img')
-  img.alt = brand.name
-  img.loading = 'lazy'
-  img.src = `/assets/logos/brands/${brand.file}.png`
-  return img
-}
 
 function initBrandScroll() {
   const wrapper = document.getElementById('brand-raf-wrapper')
@@ -567,9 +564,22 @@ function initLogoLoop(
   wrapper: HTMLElement,
   track: HTMLElement,
   brands: { name: string; file: string }[],
-  options: { speed: number; hoverSpeed: number; easingFactor: number }
+  options: {
+    speed?: number
+    hoverSpeed?: number
+    easingFactor?: number
+    hoverEasing?: number
+    pauseOnHover?: boolean
+  }
 ) {
-  const opt = { speed: 0.6, hoverSpeed: 0, easingFactor: 0.1, pauseOnHover: true, ...options }
+  const opt = {
+    speed: 0.6,
+    hoverSpeed: 0,
+    easingFactor: 0.1,
+    hoverEasing: 0.08,
+    pauseOnHover: true,
+    ...options,
+  }
 
   // 生成内容
   brands.forEach(brand => {
@@ -955,7 +965,7 @@ function initLogoLoop(
   cursor: pointer;
   opacity: 0;
   transform: scale(0.8);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, background 0.3s ease, color 0.3s ease;
   color: #999;
   font-size: 16px;
 }
@@ -983,7 +993,14 @@ function initLogoLoop(
 }
 
 .new-fav-btn:not(.liked) {
-  transition: all 0.25s ease;
+  transition: opacity 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+@media (hover: none) {
+  .new-fav-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .new-info { padding: 14px; }
 .new-brand-row {

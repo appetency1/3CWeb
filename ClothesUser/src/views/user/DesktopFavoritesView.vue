@@ -25,11 +25,6 @@ const pills = [
 
 const favCount = computed(() => list.value.length)
 
-const userAvatar = computed(() => {
-  const str = userStore.userInfo?.nickname || userStore.userInfo?.username || '?'
-  return str[0].toUpperCase()
-})
-
 async function onLoad() {
   if (loading.value || finished.value) return
   loading.value = true

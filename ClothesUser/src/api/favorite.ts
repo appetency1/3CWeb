@@ -7,7 +7,9 @@ export interface FavoriteItem {
   name: string
   cover: string
   price: number
-  createdAt: string
+  createTime: string
+  brand?: string
+  originalPrice?: number
 }
 
 export const favoriteApi = {
