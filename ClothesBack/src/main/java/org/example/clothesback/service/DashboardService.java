@@ -24,7 +24,7 @@ public class DashboardService {
             LocalDateTime end = today.plusDays(1).atStartOfDay();
             out.put("todayOrders", JdbcUtils.queryLong(
                 "SELECT COUNT(*) FROM orders WHERE create_time >= ? AND create_time < ?", start, end));
-            out.put("todaySales", sumSales("WHERE create_time >= ? AND create_time < ?"));
+            out.put("todaySales", sumSales("AND create_time >= ? AND create_time < ?"));
             return out;
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "查询失败");

@@ -1,0 +1,36 @@
+{
+  "banners": [
+    {"id": 1, "name": "春季新品", "description": "2025春季新品上市", "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1200&q=80", "link": "/category/women"},
+    {"id": 2, "name": "连衣裙专场", "description": "优雅连衣裙精选", "image": "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=1200&q=80", "link": "/category/dresses"},
+    {"id": 3, "name": "夏日清凉", "description": "清爽夏日穿搭", "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=1200&q=80", "link": "/category/tops"},
+    {"id": 4, "name": "品牌特惠", "description": "精选品牌折扣", "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=1200&q=80", "link": "/sale"},
+    {"id": 5, "name": "职场穿搭", "description": "专业通勤装", "image": "https://images.unsplash.com/photo-1582142839970-2b9e04b60f65?w=1200&q=80", "link": "/category/suits"},
+    {"id": 6, "name": "运动休闲", "description": "舒适运动风", "image": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80", "link": "/category/sports"},
+    {"id": 7, "name": "鞋包配饰", "description": "精致搭配", "image": "https://images.unsplash.com/photo-1543544176-141782ddb702?w=1200&q=80", "link": "/category/accessories"},
+    {"id": 8, "name": "针织暖意", "description": "温暖针织系列", "image": "https://images.unsplash.com/photo-1551163943-3f6a29e39426?w=1200&q=80", "link": "/category/knitwear"},
+    {"id": 9, "name": "牛仔风尚", "description": "经典牛仔系列", "image": "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=1200&q=80", "link": "/category/denim"},
+    {"id": 10, "name": "内衣家居", "description": "舒适居家体验", "image": "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=1200&q=80", "link": "/category/lingerie"}
+  ],
+  "products": [
+    {"id": 1, "name": "墨兰地面T恤", "category": "tops", "price": 99, "brand": "MUJI", "image": "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80", "sold": 1560, "rating": 4.8, "stock": 85},
+    {"id": 2, "name": "条纹Polo", "category": "tops", "price": 149, "brand": "UNIQLO", "image": "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600&q=80", "sold": 2340, "rating": 4.9, "stock": 120},
+    {"id": 3, "name": "纯棉白T", "category": "tops", "price": 79, "brand": "MUJI", "image": "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&q=80", "sold": 5680, "rating": 4.9, "stock": 200},
+    {"id": 4, "name": "黑色阔腿长裤", "category": "bottoms", "price": 199, "brand": "COS", "image": "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&q=80", "sold": 1890, "rating": 4.7, "stock": 95},
+    {"id": 5, "name": "奶茶色Polo", "category": "tops", "price": 129, "brand": "UR", "image": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80", "sold": 870, "rating": 4.6, "stock": 65},
+    {"id": 6, "name": "棉衬衫", "category": "tops", "price": 179, "brand": "UNIQLO", "image": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80", "sold": 1450, "rating": 4.8, "stock": 110},
+    {"id": 7, "name": "奶茶黄T恤", "category": "tops", "price": 89, "brand": "MUJI", "image": "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&q=80", "sold": 3200, "rating": 4.9, "stock": 150},
+    {"id": 8, "name": "长袖针织", "category": "tops", "price": 259, "brand": "COS", "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80", "sold": 980, "rating": 4.8, "stock": 75},
+    {"id": 9, "name": "修身直筒牛仔", "category": "bottoms", "price": 249, "brand": "LEVI'S", "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&q=80", "sold": 2100, "rating": 4.9, "stock": 130},
+    {"id": 10, "name": "黑色水洗裤", "category": "bottoms", "price": 169, "brand": "UR", "image": "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&q=80", "sold": 1680, "rating": 4.7, "stock": 100},
+    {"id": 11, "name": "藏蓝休闲裤", "category": "bottoms", "price": 189, "brand": "UNIQLO", "image": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80", "sold": 1230, "rating": 4.8, "stock": 88},
+    {"id": 12, "name": "宽松大板裤", "category": "bottoms", "price": 219, "brand": "ZARA", "image": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80", "sold": 890, "rating": 4.6, "stock": 60},
+    {"id": 13, "name": "白色西裤", "category": "bottoms", "price": 239, "brand": "COS", "image": "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&q=80", "sold": 760, "rating": 4.7, "stock": 55},
+    {"id": 14, "name": "浅色系服裤", "category": "bottoms", "price": 159, "brand": "MUJI", "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80", "sold": 1450, "rating": 4.8, "stock": 95},
+    {"id": 15, "name": "黑色短裤", "category": "bottoms", "price": 99, "brand": "UNIQLO", "image": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&q=80", "sold": 3400, "rating": 4.9, "stock": 180},
+    {"id": 16, "name": "轻薄透气裤", "category": "bottoms", "price": 149, "brand": "UR", "image": "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&q=80", "sold": 1890, "rating": 4.7, "stock": 110},
+    {"id": 17, "name": "黑色毛呢外套", "category": "outerwear", "price": 499, "originalPrice": 699, "brand": "ZARA", "image": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80", "sold": 680, "rating": 4.8, "stock": 45},
+    {"id": 18, "name": "宽松棉服", "category": "outerwear", "price": 399, "brand": "MUJI", "image": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80", "sold": 1200, "rating": 4.9, "stock": 70},
+    {"id": 19, "name": "植物印花外套", "category": "outerwear", "price": 299, "brand": "ZARA", "image": "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&q=80", "sold": 560, "rating": 4.5, "stock": 40},
+    {"id": 20, "name": "修身泡芙服", "category": "outerwear", "price": 599, "brand": "UNIQLO", "image": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80", "sold": 980, "rating": 4.8, "stock": 55}
+  ]
+}

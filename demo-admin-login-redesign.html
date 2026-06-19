@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clothes. 管理后台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0c0b;
+      --bg-elevated: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
+      --text: #f5f2ed;
+      --text-secondary: rgba(245, 242, 237, 0.55);
+      --text-muted: rgba(245, 242, 237, 0.32);
+      --accent: #c45c4a;
+      --accent-light: #e07a68;
+      --gold: #c9a227;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== 动态背景 ===== */
+    .stage {
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .ambient {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .ambient__grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.45;
+      animation: drift 24s ease-in-out infinite alternate;
+    }
+
+    .orb--1 {
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, rgba(196,92,74,0.45) 0%, transparent 70%);
+      top: -120px; left: -80px;
+      animation-duration: 28s;
+    }
+
+    .orb--2 {
+      width: 480px; height: 480px;
+      background: radial-gradient(circle, rgba(201,162,39,0.28) 0%, transparent 70%);
+      bottom: -100px; right: -60px;
+      animation-duration: 32s;
+      animation-delay: -8s;
+    }
+
+    .orb--3 {
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse 16s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 40px) scale(1.12); }
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.3; }
+      100% { transform: translate(-50%, -50%) scale(1.25); opacity: 0.55; }
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 70%);
+      opacity: 0;
+      animation: fadeIn 1.2s var(--ease-out) 0.4s forwards;
+    }
+
+    /* ===== 主布局 ===== */
+    .login-frame {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    /* ===== 左侧品牌区 ===== */
+    .brand {
+      padding-right: 20px;
+    }
+
+    .brand__logo {
+      font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
+      font-size: 72px;
+      font-weight: 600;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: rise 1s var(--ease-out) 0.1s forwards;
+    }
+
+    .brand__logo span {
+      color: var(--accent);
+      display: inline-block;
+      animation: accentPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes accentPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+
+    .brand__tagline {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 300;
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: rise 0.9s var(--ease-out) 0.25s forwards;
+    }
+
+    .brand__tagline::before {
+      content: '';
+      width: 40px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .brand__desc {
+      max-width: 380px;
+      font-size: 14px;
+      line-height: 1.9;
+      color: var(--text-muted);
+      font-weight: 300;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: rise 0.9s var(--ease-out) 0.4s forwards;
+    }
+
+    .brand__meta {
+      margin-top: 64px;
+      display: flex;
+      gap: 48px;
+      opacity: 0;
+      animation: fadeIn 1s var(--ease-out) 0.8s forwards;
+    }
+
+    .meta-item {
+      position: relative;
+    }
+
+    .meta-item__num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .meta-item__label {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .meta-item::after {
+      content: '';
+      position: absolute;
+      right: -24px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .meta-item:last-child::after { display: none; }
+
+    @keyframes rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    /* ===== 右侧登录卡片 ===== */
+    .card-wrap {
+      perspective: 1200px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: rise 1s var(--ease-out) 0.3s forwards;
+    }
+
+    .login-card {
+      position: relative;
+      padding: 52px 44px 44px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out, box-shadow 0.4s var(--ease-out);
+      will-change: transform;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 40%, transparent 60%, rgba(196,92,74,0.25));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .login-card:hover {
+      box-shadow:
+        0 40px 100px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .card__header {
+      margin-bottom: 36px;
+    }
+
+    .card__title {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .card__subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    /* ===== 表单字段 ===== */
+    .field {
+      position: relative;
+      margin-bottom: 28px;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: rise 0.7s var(--ease-out) forwards;
+    }
+
+    .field:nth-child(1) { animation-delay: 0.45s; }
+    .field:nth-child(2) { animation-delay: 0.55s; }
+
+    .field__input {
+      width: 100%;
+      height: 54px;
+      padding: 18px 44px 8px 16px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s var(--ease-out);
+    }
+
+    .field__input:hover { border-color: var(--border-hover); }
+
+    .field__input:focus {
+      border-color: rgba(196,92,74,0.6);
+      background: rgba(255,255,255,0.04);
+      box-shadow: 0 0 0 4px rgba(196,92,74,0.1);
+    }
+
+    .field__label {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: all 0.25s var(--ease-out);
+      transform-origin: left top;
+    }
+
+    .field__input:focus + .field__label,
+    .field__input:not(:placeholder-shown) + .field__label {
+      top: 10px;
+      transform: translateY(0) scale(0.72);
+      color: var(--accent-light);
+    }
+
+    .field__line {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      border-radius: 2px;
+      transition: width 0.4s var(--ease-out), left 0.4s var(--ease-out);
+      pointer-events: none;
+    }
+
+    .field__input:focus ~ .field__line {
+      width: calc(100% - 2px);
+      left: 1px;
+    }
+
+    .field__icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.3s, transform 0.2s var(--ease-spring);
+    }
+
+    .field__icon:hover {
+      color: var(--text);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    /* ===== 选项 ===== */
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: -4px 0 28px;
+      font-size: 13px;
+      opacity: 0;
+      animation: fadeIn 0.6s var(--ease-out) 0.65s forwards;
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .checkbox:hover { color: var(--text); }
+
+    .checkbox input {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 5px;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s var(--ease-out);
+      flex-shrink: 0;
+    }
+
+    .checkbox input:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .checkbox input:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 4px;
+      height: 8px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      animation: tick 0.3s var(--ease-spring);
+    }
+
+    @keyframes tick {
+      0% { transform: rotate(45deg) scale(0); }
+      70% { transform: rotate(45deg) scale(1.2); }
+      100% { transform: rotate(45deg) scale(1); }
+    }
+
+    .link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      position: relative;
+      transition: color 0.3s;
+    }
+
+    .link::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 0;
+      height: 1px;
+      background: var(--accent-light);
+      transition: width 0.3s var(--ease-out);
+    }
+
+    .link:hover {
+      color: var(--text);
+    }
+
+    .link:hover::after {
+      width: 100%;
+    }
+
+    /* ===== 登录按钮 ===== */
+    .btn {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      background: transparent;
+      color: var(--text);
+      opacity: 0;
+      animation: fadeIn 0.6s var(--ease-out) 0.75s forwards;
+    }
+
+    .btn__bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #1a1a1a, #2a2523, #1a1a1a);
+      background-size: 200% 100%;
+      transition: background-position 0.6s, transform 0.4s var(--ease-out);
+      z-index: 0;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s var(--ease-out);
+      z-index: 1;
+    }
+
+    .btn:hover .btn__bg {
+      background-position: 100% 0;
+      transform: scale(1.02);
+    }
+
+    .btn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .btn__text {
+      position: relative;
+      z-index: 2;
+      transition: opacity 0.3s, transform 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn.loading .btn__text {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    .btn__spinner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s var(--ease-spring);
+      z-index: 2;
+    }
+
+    .btn.loading .btn__spinner {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .btn__ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .card__footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      opacity: 0;
+      animation: fadeIn 0.6s var(--ease-out) 0.85s forwards;
+    }
+
+    /* ===== 登录成功覆盖层 ===== */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s var(--ease-out);
+    }
+
+    .success-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .success-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .success-ring::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+
+    .success-ring svg {
+      width: 32px;
+      height: 32px;
+      color: var(--accent-light);
+      transform: scale(0);
+      animation: popIn 0.5s var(--ease-spring) 0.3s forwards;
+    }
+
+    @keyframes popIn {
+      to { transform: scale(1); }
+    }
+
+    .success-text {
+      font-size: 18px;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 900px) {
+      .login-frame {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+      }
+      .brand { padding-right: 0; }
+      .brand__desc { margin: 0 auto; }
+      .brand__meta { justify-content: center; }
+      .brand__tagline { justify-content: center; }
+      .brand__tagline::before { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      .stage { padding: 24px; }
+      .brand__logo { font-size: 52px; }
+      .login-card { padding: 40px 28px 32px; }
+      .brand__meta { gap: 32px; }
+      .meta-item::after { right: -16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="ambient">
+    <div class="orb orb--1"></div>
+    <div class="orb orb--2"></div>
+    <div class="orb orb--3"></div>
+    <div class="ambient__grain"></div>
+    <div class="grid"></div>
+  </div>
+
+  <div class="login-frame">
+    <div class="brand">
+      <h1 class="brand__logo">Clothes<span>.</span></h1>
+      <div class="brand__tagline">管理后台 · 数据总览</div>
+      <p class="brand__desc">
+        为时尚零售场景打造的轻量管理中枢。从商品上架到订单履约，从用户洞察到数据决策，一切尽在掌控。
+      </p>
+      <div class="brand__meta">
+        <div class="meta-item">
+          <div class="meta-item__num">12.8k</div>
+          <div class="meta-item__label">商品</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-item__num">3.2k</div>
+          <div class="meta-item__label">订单</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-item__num">98%</div>
+          <div class="meta-item__label">满意度</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-wrap" id="cardWrap">
+      <div class="login-card" id="loginCard">
+        <div class="card__header">
+          <div class="card__title">欢迎回来</div>
+          <div class="card__subtitle">请输入管理员账号继续</div>
+        </div>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="field">
+            <input type="text" class="field__input" id="username" placeholder=" " autocomplete="username" value="admin">
+            <label class="field__label" for="username">账号</label>
+            <div class="field__line"></div>
+          </div>
+
+          <div class="field">
+            <input type="password" class="field__input" id="password" placeholder=" " autocomplete="current-password" value="admin">
+            <label class="field__label" for="password">密码</label>
+            <button type="button" class="field__icon" id="togglePwd" aria-label="切换密码可见">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+            <div class="field__line"></div>
+          </div>
+
+          <div class="options">
+            <label class="checkbox">
+              <input type="checkbox" checked>
+              <span>记住我</span>
+            </label>
+            <a href="#" class="link">忘记密码？</a>
+          </div>
+
+          <button type="submit" class="btn" id="loginBtn">
+            <span class="btn__bg"></span>
+            <span class="btn__text">登 录</span>
+            <span class="btn__spinner"><div class="spinner"></div></span>
+          </button>
+        </form>
+
+        <div class="card__footer">Clothes 管理后台 v2.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-ring">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <div class="success-text">登录成功，正在进入管理后台…</div>
+</div>
+
+<script>
+  const card = document.getElementById('loginCard');
+  const wrap = document.getElementById('cardWrap');
+  const form = document.getElementById('loginForm');
+  const btn = document.getElementById('loginBtn');
+  const pwdInput = document.getElementById('password');
+  const togglePwd = document.getElementById('togglePwd');
+  const successOverlay = document.getElementById('successOverlay');
+
+  // 鼠标 3D 倾斜
+  document.addEventListener('mousemove', (e) => {
+    if (window.innerWidth < 900) return;
+    const rect = wrap.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    const rotateX = dy * -4;
+    const rotateY = dx * 4;
+    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+
+  document.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+
+  // 密码可见切换
+  const eyeOpen = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const eyeClosed = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+  togglePwd.addEventListener('click', () => {
+    const isPwd = pwdInput.type === 'password';
+    pwdInput.type = isPwd ? 'text' : 'password';
+    togglePwd.innerHTML = isPwd ? eyeClosed : eyeOpen;
+    togglePwd.style.transform = 'translateY(-50%) scale(0.9)';
+    setTimeout(() => togglePwd.style.transform = '', 150);
+  });
+
+  // 按钮波纹
+  btn.addEventListener('click', function(e) {
+    if (this.classList.contains('loading')) return;
+    const ripple = document.createElement('span');
+    ripple.className = 'btn__ripple';
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    this.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+
+  // 登录提交
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    setTimeout(() => {
+      successOverlay.classList.add('show');
+    }, 1400);
+  });
+</script>
+
+</body>
+</html>

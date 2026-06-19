@@ -179,6 +179,48 @@ function startCountdown() {
   }, 1000)
 }
 
+// ── RAF 品牌滚动 ──
+let brandLoop: any = null
+let brandLogos: { name: string; file: string }[] = [
+  { name: 'MLB', file: 'mlb' },
+  { name: '回力', file: 'warrior' },
+  { name: 'Uniqlo', file: 'uniqlo' },
+  { name: '小CK', file: 'charleskeith' },
+  { name: '飞跃', file: 'feiyue' },
+  { name: 'Nike', file: 'nike' },
+  { name: 'H&M', file: 'hm' },
+  { name: 'UR', file: 'ur' },
+  { name: '红豆', file: 'hongdou' },
+  { name: '红蜻蜓', file: 'red-dragonfly' },
+  { name: 'Supreme', file: 'supreme' },
+  { name: 'Adidas', file: 'adidas' },
+  { name: 'ZARA', file: 'zara' },
+  { name: 'MUJI', file: 'muji' },
+  { name: 'GAP', file: 'gap' },
+  { name: 'GUCCI', file: 'gucci' },
+  { name: 'PRADA', file: 'prada' },
+  { name: 'DIOR', file: 'dior' },
+  { name: 'LV', file: 'lv' },
+  { name: 'CHANEL', file: 'chanel' },
+]
+
+function createBrandLogoSvg(brand: { name: string; file: string }) {
+  const img = document.createElement('img')
+  img.alt = brand.name
+  img.loading = 'lazy'
+  img.src = `/assets/logos/brands/${brand.file}.png`
+  return img
+}
+
+function initBrandScroll() {
+  const wrapper = document.getElementById('brand-raf-wrapper')
+  const track = document.getElementById('brand-raf-track')
+  if (!wrapper || !track) return
+  brandLoop = initLogoLoop(wrapper, track, brandLogos, { speed: 0.6, hoverSpeed: 0, easingFactor: 0.1 })
+}
+function pauseBrandScroll() { if (brandLoop) brandLoop.isHovered = true; brandLoop.targetSpeed = 0 }
+function resumeBrandScroll() { if (brandLoop) { brandLoop.isHovered = false; brandLoop.targetSpeed = brandLoop.options.speed } }
+
 onMounted(async () => {
   await Promise.all([loadBanners(), loadCategories(), loadHot(), loadNew(), loadAll()])
   buildFlash()
@@ -186,8 +228,12 @@ onMounted(async () => {
   startCountdown()
   loadWishlist()
   startFlashScroll()
+  initBrandScroll()
 })
-onUnmounted(() => { clearInterval(countdownTimer) })
+onUnmounted(() => {
+  clearInterval(countdownTimer)
+  if (brandLoop && brandLoop.destroy) brandLoop.destroy()
+})
 </script>
 
 <template>
@@ -353,11 +399,16 @@ onUnmounted(() => { clearInterval(countdownTimer) })
       </div>
     </section>
 
-    <!-- 4. 热门品牌（紧凑行） -->
-    <section v-if="brands.length" class="brand-strip">
-      <span class="bs-label">🏷️ 热门品牌</span>
-      <div class="bs-items">
-        <span v-for="b in brands" :key="b" class="bs-tag" @click="goCategory()">{{ b }}</span>
+    <!-- 4. 热门品牌（RAF 无限滚动) -->
+    <section class="brand-raf-section">
+      <div class="brand-raf-header">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+        </svg>
+        <span>热门品牌</span>
+      </div>
+      <div class="brand-raf-wrapper" id="brand-raf-wrapper" @mouseenter="pauseBrandScroll" @mouseleave="resumeBrandScroll">
+        <div class="brand-raf-track" id="brand-raf-track"></div>
       </div>
     </section>
 
@@ -469,15 +520,7 @@ onUnmounted(() => { clearInterval(countdownTimer) })
       </div>
     </section>
 
-    <!-- 9. 品牌矩阵 -->
-    <section v-if="brands.length" class="brands">
-      <div class="brands-inner">
-        <h3 class="brands-title">热门品牌</h3>
-        <div class="brands-grid">
-          <div v-for="b in brands" :key="b" class="brand-item" @click="goCategory()">{{ b }}</div>
-        </div>
-      </div>
-    </section>
+<!-- 品牌矩阵已合入 RAF 滚动区 -->
 
     <!-- 10. 服务保障 -->
     <section class="service">
@@ -515,6 +558,128 @@ onUnmounted(() => { clearInterval(countdownTimer) })
   </div>
   </DesktopLayout>
 </template>
+
+<script lang="ts">
+/**
+ * LogoLoop — RAF 物理缓动无限滚动
+ */
+function initLogoLoop(
+  wrapper: HTMLElement,
+  track: HTMLElement,
+  brands: { name: string; file: string }[],
+  options: { speed: number; hoverSpeed: number; easingFactor: number }
+) {
+  const opt = { speed: 0.6, hoverSpeed: 0, easingFactor: 0.1, pauseOnHover: true, ...options }
+
+  // 生成内容
+  brands.forEach(brand => {
+    const el = document.createElement('div')
+    el.className = 'brand-raf-card'
+    const img = document.createElement('img')
+    img.alt = brand.name
+    img.loading = 'lazy'
+    img.src = `/assets/logos/brands/${brand.file}.png`
+    el.appendChild(img)
+    track.appendChild(el)
+  })
+
+  const originalCount = brands.length
+  let singleGroupWidth = 0
+  let position = 0
+  let velocity = 0
+  let targetSpeed = opt.speed
+  let isHovered = false
+  let rafId: number | null = null
+  let resizeObserver: ResizeObserver | null = null
+  let prefersReducedMotion: MediaQueryList | null = null
+
+  function calculateGroupWidth() {
+    const children = Array.from(track.children) as HTMLElement[]
+    if (!children.length || !originalCount) {
+      singleGroupWidth = 0
+      return
+    }
+    singleGroupWidth = children.slice(0, originalCount).reduce((sum, el) => {
+      const style = getComputedStyle(el)
+      return sum + el.offsetWidth + parseInt(style.marginLeft) + parseInt(style.marginRight)
+    }, 0)
+  }
+
+  function adjustDuplication() {
+    if (!singleGroupWidth) return
+    const wrapperWidth = wrapper.offsetWidth
+    while (track.scrollWidth < wrapperWidth * 2) {
+      Array.from(track.children)
+        .slice(0, originalCount)
+        .forEach(child => track.appendChild(child.cloneNode(true)))
+    }
+  }
+
+  // 等待图片加载
+  function waitForImages(): Promise<void> {
+    const images = track.querySelectorAll('img')
+    if (images.length === 0) return Promise.resolve()
+    return Promise.all(
+      Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve()
+        return new Promise<void>(resolve => {
+          img.onload = () => resolve()
+          img.onerror = () => resolve()
+        })
+      })
+    ).then(() => undefined)
+  }
+
+  function animate() {
+    const factor = isHovered ? (opt.hoverEasing || 0.08) : opt.easingFactor
+    velocity += (targetSpeed - velocity) * factor
+    position -= velocity
+
+    if (singleGroupWidth && position <= -singleGroupWidth) {
+      position += singleGroupWidth
+    }
+
+    track.style.transform = `translate3d(${position}px, 0, 0)`
+    rafId = requestAnimationFrame(animate)
+  }
+
+  function start() {
+    rafId = requestAnimationFrame(animate)
+  }
+
+  // 初始化
+  waitForImages().then(() => {
+    calculateGroupWidth()
+    adjustDuplication()
+    start()
+  })
+
+  // ResizeObserver
+  resizeObserver = new ResizeObserver(() => {
+    calculateGroupWidth()
+    adjustDuplication()
+  })
+  resizeObserver.observe(wrapper)
+
+  // prefers-reduced-motion
+  prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  prefersReducedMotion.addEventListener?.('change', (e: MediaQueryListEvent) => {
+    targetSpeed = e.matches ? 0 : opt.speed
+  })
+
+  return {
+    get isHovered() { return isHovered },
+    set isHovered(v: boolean) { isHovered = v },
+    get targetSpeed() { return targetSpeed },
+    set targetSpeed(v: number) { targetSpeed = v },
+    get options() { return opt },
+    destroy() {
+      if (rafId) cancelAnimationFrame(rafId)
+      if (resizeObserver) resizeObserver.disconnect()
+    }
+  }
+}
+</script>
 
 <style scoped>
 .home { background: #faf9f7; padding-bottom: 0; }
@@ -807,6 +972,18 @@ onUnmounted(() => { clearInterval(countdownTimer) })
   transform: scale(1);
   color: var(--accent, #c45c4a);
   background: rgba(255,255,255,0.95);
+  animation: favPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes favPop {
+  0% { transform: scale(0.8); }
+  40% { transform: scale(1.25); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.new-fav-btn:not(.liked) {
+  transition: all 0.25s ease;
 }
 .new-info { padding: 14px; }
 .new-brand-row {
@@ -898,25 +1075,111 @@ onUnmounted(() => { clearInterval(countdownTimer) })
   text-decoration: line-through;
 }
 
-/* ===== 4. 热门品牌（紧凑行） ===== */
-.brand-strip {
-  max-width: 1400px; margin: 28px auto 0; padding: 0 40px;
-  display: flex; align-items: center; gap: 16px;
-  overflow-x: auto; scrollbar-width: none;
+/* ===== 4. 热门品牌（RAF 无限滚动） ===== */
+.brand-raf-section {
+  max-width: 1400px;
+  margin: 32px auto 0;
+  padding: 20px 40px;
+  background: #fcfcfb;
+  border: 1px solid #e8e6e2;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
 }
-.brand-strip::-webkit-scrollbar { display: none; }
-.bs-label {
-  flex-shrink: 0; font-size: 13px; font-weight: 600; color: #1a1a1a; white-space: nowrap;
+
+.brand-raf-section::before,
+.brand-raf-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 72px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
 }
-.bs-items {
-  display: flex; gap: 10px;
+.brand-raf-section::before {
+  left: 0;
+  background: linear-gradient(to right, #fcfcfb, transparent);
 }
-.bs-tag {
-  flex-shrink: 0; padding: 6px 16px; background: #fff; border: 1px solid #e8e5e0;
-  border-radius: 16px; font-size: 12px; font-weight: 600; color: #666;
-  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+.brand-raf-section::after {
+  right: 0;
+  background: linear-gradient(to left, #fcfcfb, transparent);
 }
-.bs-tag:hover { border-color: var(--accent, #c45c4a); color: var(--accent, #c45c4a); background: #fdf5f3; }
+
+.brand-raf-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+  margin-bottom: 20px;
+}
+
+.brand-raf-header svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent, #c45c4a);
+}
+
+.brand-raf-header span {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1a1a1a;
+}
+
+.brand-raf-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.brand-raf-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.brand-raf-card {
+  flex-shrink: 0;
+  width: 128px;
+  height: 68px;
+  margin: 0 8px;
+  background: #f2f0ec;
+  border: 1px solid #e8e6e2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand-raf-card:hover {
+  transform: translateY(-3px) scale(1.04);
+  border-color: var(--accent, #c45c4a);
+  background: #fcfcfb;
+  box-shadow: 0 12px 28px rgba(44, 42, 39, 0.08);
+}
+
+.brand-raf-card img {
+  max-width: 92px;
+  max-height: 40px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand-raf-card:hover img {
+  opacity: 1;
+}
 
 /* ===== Section 通用 ===== */
 .section { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
@@ -975,14 +1238,7 @@ onUnmounted(() => { clearInterval(countdownTimer) })
 
 /* ===== 9. 品牌墙 ===== */
 .brands { background: #f5f3f0; padding: 40px 0; margin: 40px 0 0; }
-.brands-inner { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
-.brands-title { text-align: center; font-size: 12px; font-weight: 600; color: #999; letter-spacing: 2px; margin-bottom: 24px; }
-.brands-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; }
-.brand-item {
-  padding: 10px 24px; background: #fff; border: 1px solid #e8e5e0; border-radius: 8px;
-  font-size: 12px; font-weight: 700; color: #666; letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
-}
-.brand-item:hover { border-color: #c45c4a; color: #c45c4a; }
+/* 品牌矩阵已合入 RAF 滚动区 */
 
 /* ===== 10. 服务保障 ===== */
 .service { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
@@ -1006,7 +1262,7 @@ onUnmounted(() => { clearInterval(countdownTimer) })
   .flash-item { width: calc((100% - 48px) / 4); min-width: 160px; }
 }
 @media (max-width: 768px) {
-  .hero, .section, .flash-sale, .brand-strip, .promo-banners, .service { padding-left: 16px; padding-right: 16px; }
+  .hero, .section, .flash-sale, .brand-raf-section, .promo-banners, .service { padding-left: 16px; padding-right: 16px; }
   .flash-item { width: calc((100% - 32px) / 3); min-width: 130px; }
   .grid-5, .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .service-grid { grid-template-columns: repeat(2, 1fr); }

@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOIR ÉDITO · 女装系列</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --bg-soft: #111111;
+            --surface: #161616;
+            --surface-elevated: #1e1e1e;
+            --text: #f4f0e9;
+            --text-muted: #a0a0a0;
+            --text-dim: #666666;
+            --accent: #c9a472;
+            --accent-soft: rgba(201, 164, 114, 0.12);
+            --border: rgba(244, 240, 233, 0.08);
+            --shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-slow: cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Grain overlay */
+        .grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* ===== Minimal Nav ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 24px 4vw;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            mix-blend-mode: difference;
+            color: #fff;
+        }
+        .nav-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .nav-links {
+            display: flex;
+            gap: 36px;
+            align-items: center;
+        }
+        .nav-links a {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: inherit;
+            text-decoration: none;
+            position: relative;
+            padding-bottom: 4px;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: currentColor;
+            transition: width 0.5s var(--ease-out);
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-tools {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+        .nav-tools button {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+        .nav-tools svg { width: 20px; height: 20px; stroke-width: 1.4; }
+
+        /* ===== Hero Editorial ===== */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            align-items: stretch;
+            overflow: hidden;
+        }
+        .hero-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 12vh 6vw 10vh;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-label {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(56px, 8vw, 132px);
+            font-weight: 500;
+            line-height: 0.92;
+            letter-spacing: -0.03em;
+            margin-bottom: 40px;
+        }
+        .hero-title em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--accent);
+        }
+        .hero-desc {
+            max-width: 420px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 48px;
+        }
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text);
+            text-decoration: none;
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 8px;
+            width: fit-content;
+            transition: gap 0.4s var(--ease-out);
+        }
+        .hero-cta:hover { gap: 22px; }
+        .hero-image {
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(25%) contrast(1.05);
+            transform: scale(1.05);
+            animation: heroZoom 12s var(--ease-slow) forwards;
+        }
+        @keyframes heroZoom {
+            to { transform: scale(1); }
+        }
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--bg) 0%, transparent 35%);
+        }
+        .hero-meta {
+            position: absolute;
+            bottom: 8vh;
+            right: 4vw;
+            z-index: 3;
+            text-align: right;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            line-height: 2;
+        }
+
+        /* ===== Section Label ===== */
+        .section-label {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        /* ===== Editorial Intro ===== */
+        .intro {
+            padding: 14vh 4vw;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 8vw;
+            align-items: start;
+        }
+        .intro-headline {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(32px, 4.5vw, 64px);
+            line-height: 1.1;
+            font-weight: 400;
+            position: sticky;
+            top: 14vh;
+        }
+        .intro-headline em {
+            font-style: italic;
+            color: var(--accent);
+        }
+        .intro-body {
+            color: var(--text-muted);
+            font-size: 16px;
+            line-height: 2;
+            padding-top: 8px;
+        }
+        .intro-body p + p { margin-top: 28px; }
+
+        /* ===== Collection Filter Bar ===== */
+        .collection {
+            padding: 0 4vw 12vh;
+        }
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .collection-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(28px, 3.5vw, 48px);
+            font-weight: 400;
+        }
+        .collection-count {
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .collection-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 4vw;
+        }
+
+        /* Sidebar filters */
+        .filters {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        .filter-group {
+            margin-bottom: 40px;
+        }
+        .filter-title {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text);
+            margin-bottom: 18px;
+            font-weight: 500;
+        }
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .filter-options label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .filter-options label:hover { color: var(--text); }
+        .filter-options input[type="checkbox"] {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--text-dim);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .filter-options input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+        }
+
+        /* ===== Product Grid - Editorial Masonry ===== */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: minmax(120px, auto);
+            gap: 20px;
+        }
+        .product-card {
+            position: relative;
+            background: var(--surface);
+            overflow: hidden;
+            cursor: pointer;
+            group: card;
+        }
+        .product-card:nth-child(1) { grid-column: span 7; grid-row: span 5; }
+        .product-card:nth-child(2) { grid-column: span 5; grid-row: span 4; }
+        .product-card:nth-child(3) { grid-column: span 5; grid-row: span 5; }
+        .product-card:nth-child(4) { grid-column: span 7; grid-row: span 4; }
+        .product-card:nth-child(5) { grid-column: span 4; grid-row: span 5; }
+        .product-card:nth-child(6) { grid-column: span 4; grid-row: span 5; }
+        .product-card:nth-child(7) { grid-column: span 4; grid-row: span 5; }
+        .product-card:nth-child(8) { grid-column: span 6; grid-row: span 4; }
+        .product-card:nth-child(9) { grid-column: span 6; grid-row: span 4; }
+
+        .card-media {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%) contrast(1.02);
+            transition: transform 0.9s var(--ease-out), filter 0.6s;
+        }
+        .product-card:hover .card-media img {
+            transform: scale(1.06);
+            filter: grayscale(0%) contrast(1.05);
+        }
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%);
+            opacity: 0.7;
+            transition: opacity 0.5s;
+        }
+        .product-card:hover .card-overlay { opacity: 0.9; }
+        .card-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 28px;
+            transform: translateY(12px);
+            opacity: 0.85;
+            transition: all 0.5s var(--ease-out);
+        }
+        .product-card:hover .card-info {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .card-brand {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(20px, 2vw, 32px);
+            font-weight: 400;
+            line-height: 1.15;
+            margin-bottom: 14px;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-price {
+            font-size: 14px;
+            letter-spacing: 0.04em;
+        }
+        .card-price .orig {
+            color: var(--text-dim);
+            text-decoration: line-through;
+            margin-left: 10px;
+        }
+        .card-wishlist {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            transition: all 0.3s;
+        }
+        .card-wishlist:hover {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+        }
+        .card-wishlist svg { width: 16px; height: 16px; stroke-width: 1.6; }
+        .card-badge {
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            padding: 8px 14px;
+            background: var(--accent);
+            color: var(--bg);
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* ===== Editorial Break ===== */
+        .break {
+            padding: 16vh 4vw;
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 6vw;
+            align-items: center;
+            background: var(--bg-soft);
+        }
+        .break-image {
+            position: relative;
+            aspect-ratio: 4/5;
+            overflow: hidden;
+        }
+        .break-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%);
+        }
+        .break-quote {
+            padding: 4vh 0;
+        }
+        .break-quote blockquote {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(28px, 3.8vw, 52px);
+            line-height: 1.2;
+            font-weight: 400;
+            margin-bottom: 36px;
+        }
+        .break-quote blockquote em {
+            font-style: italic;
+            color: var(--accent);
+        }
+        .break-quote p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.9;
+            max-width: 420px;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            padding: 10vh 4vw 6vh;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 4vw;
+        }
+        .footer-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .footer-desc {
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.8;
+            max-width: 320px;
+        }
+        .footer-title {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            color: var(--text);
+        }
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-bottom {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 6vh;
+            margin-top: 4vh;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* ===== Scroll Reveal ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+        }
+        .reveal.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; }
+            .hero-image { position: absolute; inset: 0; opacity: 0.35; }
+            .hero-text { padding-top: 18vh; }
+            .hero-image::after { background: linear-gradient(to top, var(--bg) 0%, transparent 60%); }
+            .intro { grid-template-columns: 1fr; }
+            .intro-headline { position: relative; top: 0; }
+            .collection-layout { grid-template-columns: 1fr; }
+            .filters { position: relative; top: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .break { grid-template-columns: 1fr; }
+            .footer { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero-title { font-size: 48px; }
+            .product-grid { grid-template-columns: 1fr; }
+            .product-card { grid-column: span 1 !important; grid-row: span 4 !important; }
+            .filters { grid-template-columns: 1fr 1fr; }
+            .footer { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <div class="nav-logo">Noir Édito</div>
+        <div class="nav-links">
+            <a href="#">首页</a>
+            <a href="#" style="color: var(--accent);">女装</a>
+            <a href="#">男装</a>
+            <a href="#">鞋履</a>
+            <a href="#">配饰</a>
+        </div>
+        <div class="nav-tools">
+            <button aria-label="搜索">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </button>
+            <button aria-label="购物袋">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="hero-text">
+            <div class="hero-label reveal">Fall / Winter 2025</div>
+            <h1 class="hero-title reveal" style="transition-delay: 0.1s;">The Art of <em>Dressing</em></h1>
+            <p class="hero-desc reveal" style="transition-delay: 0.2s;">以编辑视角重新诠释当代女装。每一件单品都经过精心甄选，呈现克制而有力的着装语言。这不是货架，而是一本可以翻阅的时装画册。</p>
+            <a href="#collection" class="hero-cta reveal" style="transition-delay: 0.3s;">
+                探索系列
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+        </div>
+        <div class="hero-image">
+            <img src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&q=85" alt="女装系列">
+        </div>
+        <div class="hero-meta">
+            <div>Scroll</div>
+            <div>02 / 05</div>
+        </div>
+    </header>
+
+    <!-- Editorial Intro -->
+    <section class="intro">
+        <h2 class="intro-headline reveal">Less noise.<br>More <em>intention.</em></h2>
+        <div class="intro-body reveal">
+            <p>当快时尚用无数选项淹没消费者时，我们选择反向而行。本季女装系列以建筑线条、天然面料与克制色彩为核心，构建一个可以长久穿着的衣橱。</p>
+            <p>我们相信，真正的风格不在于追逐潮流，而在于找到那些让你感到自在、自信且不可替代的单品。这里的每一件衣服，都是为了被反复穿着而设计。</p>
+        </div>
+    </section>
+
+    <!-- Collection -->
+    <section class="collection" id="collection">
+        <div class="collection-header reveal">
+            <h2 class="collection-title">精选单品</h2>
+            <span class="collection-count">共 9 件</span>
+        </div>
+
+        <div class="collection-layout">
+            <aside class="filters reveal">
+                <div class="filter-group">
+                    <div class="filter-title">分类</div>
+                    <div class="filter-options">
+                        <label><input type="checkbox" checked> 连衣裙</label>
+                        <label><input type="checkbox"> 上装</label>
+                        <label><input type="checkbox"> 外套</label>
+                        <label><input type="checkbox"> 裤装</label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">价格区间</div>
+                    <div class="filter-options">
+                        <label><input type="checkbox" checked> ¥100 - ¥300</label>
+                        <label><input type="checkbox"> ¥300 - ¥600</label>
+                        <label><input type="checkbox"> ¥600 以上</label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">颜色</div>
+                    <div class="filter-options">
+                        <label><span class="color-dot" style="background:#0a0a0a"></span> 黑色</label>
+                        <label><span class="color-dot" style="background:#c9a472"></span> 驼色</label>
+                        <label><span class="color-dot" style="background:#f4f0e9"></span> 米白</label>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="product-grid">
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80" alt="卡其迷你裙">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <span class="card-badge">-42%</span>
+                    <div class="card-info">
+                        <div class="card-brand">Peacebird</div>
+                        <div class="card-name">卡其迷你裙</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥149.00<span class="orig">¥259.00</span></div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80" alt="缎面吊带裙">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-brand">Zara</div>
+                        <div class="card-name">缎面吊带裙</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥289.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&q=80" alt="高腰阔腿牛仔裤">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-brand">Uniqlo</div>
+                        <div class="card-name">高腰阔腿牛仔裤</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥199.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80" alt="oversize 西装外套">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <span class="card-badge">New</span>
+                    <div class="card-info">
+                        <div class="card-brand">Massimo Dutti</div>
+                        <div class="card-name">Oversize 西装外套</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥599.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800&q=80" alt="法式碎花裙">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-brand">Sézane</div>
+                        <div class="card-name">法式碎花裙</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥329.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80" alt="针织开衫">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-brand">COS</div>
+                        <div class="card-name">羊绒针织开衫</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥459.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&q=80" alt="皮质手提包">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-brand">Charles & Keith</div>
+                        <div class="card-name">极简皮质手提包</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥369.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80" alt="白色基础T恤">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-brand">Muji</div>
+                        <div class="card-name">有机棉基础T恤</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥79.00</div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-card reveal">
+                    <div class="card-media">
+                        <img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80" alt="乐福鞋">
+                        <div class="card-overlay"></div>
+                    </div>
+                    <span class="card-badge">-30%</span>
+                    <div class="card-info">
+                        <div class="card-brand">Sam Edelman</div>
+                        <div class="card-name">经典乐福鞋</div>
+                        <div class="card-footer">
+                            <div class="card-price">¥629.00<span class="orig">¥899.00</span></div>
+                            <button class="card-wishlist" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Editorial Break -->
+    <section class="break">
+        <div class="break-image reveal">
+            <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&q=85" alt="时装编辑大片">
+        </div>
+        <div class="break-quote reveal">
+            <blockquote>"Style is a way to say who you are without having to <em>speak.</em>"</blockquote>
+            <p>本期编辑精选聚焦于那些能够跨越季节、场合与潮流的经典单品。我们相信，最好的衣橱从不是填满，而是经过深思熟虑后的精准选择。</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div>
+            <div class="footer-brand">Noir Édito</div>
+            <p class="footer-desc">以编辑视角策划的当代时装集合。克制、精准、有态度。</p>
+        </div>
+        <div>
+            <div class="filter-title">购物</div>
+            <div class="footer-links">
+                <a href="#">女装</a>
+                <a href="#">男装</a>
+                <a href="#">鞋履</a>
+                <a href="#">配饰</a>
+            </div>
+        </div>
+        <div>
+            <div class="filter-title">帮助</div>
+            <div class="footer-links">
+                <a href="#">配送说明</a>
+                <a href="#">退换政策</a>
+                <a href="#">尺码指南</a>
+                <a href="#">联系我们</a>
+            </div>
+        </div>
+        <div>
+            <div class="filter-title">关于</div>
+            <div class="footer-links">
+                <a href="#">品牌故事</a>
+                <a href="#">可持续发展</a>
+                <a href="#">编辑团队</a>
+                <a href="#">加入我们</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2025 Noir Édito. Demo only.</span>
+            <span>Privacy · Terms</span>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Hero initial load animation
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.hero .reveal').forEach((el, i) => {
+                setTimeout(() => el.classList.add('in-view'), 200 + i * 120);
+            });
+        });
+    </script>
+</body>
+</html>

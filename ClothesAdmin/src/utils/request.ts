@@ -54,3 +54,27 @@ export function put<T = any>(url: string, data?: any) {
 export function del<T = any>(url: string) {
   return request<T>(url, { method: 'DELETE' })
 }
+
+/** 后端文件上传 */
+const UPLOAD_BASE = BASE_URL.replace(/\/api$/, '')
+
+export function uploadFile(file: File): Promise<string> {
+  const form = new FormData()
+  form.append('file', file)
+  const token = localStorage.getItem('admin_token')
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = 'Bearer ' + token
+  return fetch(`${UPLOAD_BASE}/api/public/upload`, { method: 'POST', body: form, headers })
+    .then(r => r.json())
+    .then((resp: any) => {
+      if (resp.code !== 0 && resp.code !== 200) throw new Error(resp.message || '上传失败')
+      return resp.data.url  // 返回相对路径如 /uploads/2026/06/19/xxx.jpg
+    })
+}
+
+/** 根据后端返回的相对路径拼出完整图片 URL */
+export function imgUrl(path: string): string {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  return UPLOAD_BASE + path
+}

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>品牌Logo横向滚动动画 Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px 20px;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background-color: #c9302c;
+            border-radius: 2px;
+        }
+
+        /* ===== 通用容器 ===== */
+        .brand-section {
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 24px;
+            margin-bottom: 18px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .section-header .fire-icon {
+            font-size: 14px;
+        }
+
+        .marquee-wrapper {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .marquee-wrapper::before,
+        .marquee-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 60px;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .marquee-wrapper::before {
+            left: 0;
+            background: linear-gradient(to right, #fff, transparent);
+        }
+
+        .marquee-wrapper::after {
+            right: 0;
+            background: linear-gradient(to left, #fff, transparent);
+        }
+
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: scroll-left 20s linear infinite;
+        }
+
+        .marquee-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ===== 版本1：标签风格（最接近截图） ===== */
+        .brand-tag {
+            flex-shrink: 0;
+            width: 96px;
+            height: 44px;
+            margin: 0 6px;
+            background: #f7f7f7;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+            overflow: hidden;
+        }
+
+        .brand-tag:hover {
+            background: #fff;
+            border-color: #ddd;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .brand-tag img {
+            max-width: 76px;
+            max-height: 28px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* ===== 版本2：Logo卡片风格 ===== */
+        .brand-section-v2 {
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .marquee-track-v2 {
+            display: flex;
+            width: max-content;
+            animation: scroll-left 25s linear infinite;
+            align-items: center;
+        }
+
+        .marquee-track-v2:hover {
+            animation-play-state: paused;
+        }
+
+        .brand-card {
+            flex-shrink: 0;
+            width: 120px;
+            height: 64px;
+            margin: 0 12px;
+            background: #fafafa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+        }
+
+        .brand-card:hover {
+            background: #fff;
+            border-color: #c9302c;
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(201, 48, 44, 0.1);
+        }
+
+        .brand-card img {
+            max-width: 90px;
+            max-height: 44px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* ===== 版本3：灰度Logo悬停变彩色 ===== */
+        .brand-section-v3 {
+            width: 100%;
+            max-width: 900px;
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .marquee-track-v3 {
+            display: flex;
+            width: max-content;
+            animation: scroll-left 18s linear infinite;
+            align-items: center;
+        }
+
+        .marquee-track-v3:hover {
+            animation-play-state: paused;
+        }
+
+        .brand-logo-item {
+            flex-shrink: 0;
+            width: 100px;
+            height: 50px;
+            margin: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: grayscale(100%);
+            opacity: 0.7;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-logo-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #c9302c;
+            transition: all 0.4s ease;
+            transform: translateX(-50%);
+        }
+
+        .brand-logo-item:hover {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+
+        .brand-logo-item:hover::after {
+            width: 100%;
+        }
+
+        .brand-logo-item img {
+            max-width: 85px;
+            max-height: 38px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* 提示文字 */
+        .hint {
+            color: #999;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 版本1：标签风格 -->
+    <div style="width:100%; max-width:900px;">
+        <h2>标签风格（最接近你的截图）</h2>
+        <p class="hint">鼠标悬停可暂停，Logo自动从 clearbit 加载，失败时显示占位图</p>
+    </div>
+    <div class="brand-section">
+        <div class="section-header">
+            <span class="fire-icon">&#128293;</span>
+            <span>热门品牌</span>
+        </div>
+        <div class="marquee-wrapper">
+            <div class="marquee-track" id="track1"></div>
+        </div>
+    </div>
+
+    <!-- 版本2：Logo卡片风格 -->
+    <div style="width:100%; max-width:900px;">
+        <h2>品牌卡片风格</h2>
+        <p class="hint">更大尺寸Logo展示，悬停放大高亮</p>
+    </div>
+    <div class="brand-section-v2">
+        <div class="section-header">
+            <span class="fire-icon">&#128293;</span>
+            <span>合作品牌</span>
+        </div>
+        <div class="marquee-wrapper">
+            <div class="marquee-track-v2" id="track2"></div>
+        </div>
+    </div>
+
+    <!-- 版本3：灰度悬停显色风格 -->
+    <div style="width:100%; max-width:900px;">
+        <h2>灰度悬停显色风格</h2>
+        <p class="hint">经典电商品牌墙效果，悬停恢复彩色+下划线动画</p>
+    </div>
+    <div class="brand-section-v3">
+        <div class="section-header">
+            <span class="fire-icon">&#11088;</span>
+            <span>全球精选品牌</span>
+        </div>
+        <div class="marquee-wrapper">
+            <div class="marquee-track-v3" id="track3"></div>
+        </div>
+    </div>
+
+    <script>
+        // 品牌数据（name=显示名, file=本地图片文件名）
+        const brandsV1V2 = [
+            { name: 'MLB', file: 'mlb' },
+            { name: '回力', file: 'warrior' },
+            { name: 'Uniqlo', file: 'uniqlo' },
+            { name: '小CK', file: 'charleskeith' },
+            { name: '飞跃', file: 'feiyue' },
+            { name: 'Nike', file: 'nike' },
+            { name: 'H&M', file: 'hm' },
+            { name: 'UR', file: 'ur' },
+            { name: '红豆', file: 'hongdou' },
+            { name: '红蜻蜓', file: 'red-dragonfly' },
+            { name: 'Supreme', file: 'supreme' },
+            { name: 'Adidas', file: 'adidas' },
+            { name: 'ZARA', file: 'zara' },
+            { name: 'MUJI', file: 'muji' },
+            { name: 'GAP', file: 'gap' },
+        ];
+
+        const brandsV3 = [
+            { name: 'GUCCI', file: 'gucci' },
+            { name: 'PRADA', file: 'prada' },
+            { name: 'DIOR', file: 'dior' },
+            { name: 'LV', file: 'lv' },
+            { name: 'CHANEL', file: 'chanel' },
+            { name: 'HERMES', file: 'hermes' },
+            { name: 'BURBERRY', file: 'burberry' },
+            { name: 'COACH', file: 'coach' },
+            { name: 'FENDI', file: 'fendi' },
+            { name: 'CELINE', file: 'celine' },
+            { name: 'BALENCIAGA', file: 'balenciaga' },
+            { name: 'YSL', file: 'ysl' },
+        ];
+
+        // 创建品牌Logo图片元素（引用本地 demo-logos/ 目录）
+        function createLogoImg(brand, maxW, maxH) {
+            const img = document.createElement('img');
+            img.alt = brand.name;
+            img.style.maxWidth = maxW;
+            img.style.maxHeight = maxH;
+            img.style.width = 'auto';
+            img.style.height = 'auto';
+            img.style.objectFit = 'contain';
+            img.src = `demo-logos/${brand.file}.png`;
+            return img;
+        }
+
+        // 版本1：创建圆角标签项
+        function createTagItem(brand) {
+            const tag = document.createElement('span');
+            tag.className = 'brand-tag';
+            tag.appendChild(createLogoImg(brand, '76px', '28px'));
+            return tag;
+        }
+
+        // 版本2：创建卡片项
+        function createCardItem(brand) {
+            const card = document.createElement('div');
+            card.className = 'brand-card';
+            card.appendChild(createLogoImg(brand, '90px', '44px'));
+            return card;
+        }
+
+        // 版本3：创建灰度Logo项
+        function createLogoItem(brand) {
+            const item = document.createElement('div');
+            item.className = 'brand-logo-item';
+            item.appendChild(createLogoImg(brand, '85px', '38px'));
+            return item;
+        }
+
+        // 填充轨道（先生成2组，确保CSS -50% 动画有内容可滚）
+        function fillTrack(trackId, brands, createFn) {
+            const track = document.getElementById(trackId);
+            // 第1组
+            brands.forEach(brand => track.appendChild(createFn(brand)));
+            // 第2组（复制，用于无缝循环）
+            brands.forEach(brand => track.appendChild(createFn(brand)));
+        }
+
+        // 如果内容不够宽，继续复制更多组（适配超大屏幕）
+        function duplicateForSeamless(trackId, minWidth) {
+            const track = document.getElementById(trackId);
+            const originalChildren = Array.from(track.children);
+            if (originalChildren.length === 0) return;
+
+            const groupWidth = originalChildren.reduce((sum, el) => {
+                const style = getComputedStyle(el);
+                return sum + el.offsetWidth + parseInt(style.marginLeft) + parseInt(style.marginRight);
+            }, 0);
+
+            let currentWidth = groupWidth;
+            while (currentWidth < minWidth * 2) {
+                originalChildren.forEach(child => {
+                    track.appendChild(child.cloneNode(true));
+                });
+                currentWidth += groupWidth;
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', () => {
+            fillTrack('track1', brandsV1V2, createTagItem);
+            fillTrack('track2', brandsV1V2, createCardItem);
+            fillTrack('track3', brandsV3, createLogoItem);
+
+            duplicateForSeamless('track1', window.innerWidth);
+            duplicateForSeamless('track2', window.innerWidth);
+            duplicateForSeamless('track3', window.innerWidth);
+        });
+    </script>
+</body>
+</html>

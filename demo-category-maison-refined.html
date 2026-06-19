@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAISON · 女装分类</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #faf9f7;
+            --bg-secondary: #f5f3f0;
+            --bg-card: #ffffff;
+            --bg-dark: #1a1a1a;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --accent: #c45c4a;
+            --accent-dark: #8b3a2a;
+            --accent-bg: #fdf5f3;
+            --border: #e8e5e0;
+            --border-hover: #d0cbc4;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.10);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+            --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        img { max-width: 100%; display: block; }
+
+        /* ===== Top Bar ===== */
+        .topbar {
+            background: var(--bg-dark);
+            color: rgba(255,255,255,0.85);
+            font-size: 12px;
+            text-align: center;
+            padding: 10px 16px;
+            letter-spacing: 0.04em;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .logo span { color: var(--accent); }
+        .search {
+            flex: 1;
+            max-width: 520px;
+            position: relative;
+        }
+        .search input {
+            width: 100%;
+            height: 42px;
+            border: 1.5px solid var(--border);
+            border-radius: 999px;
+            padding: 0 44px 0 18px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            outline: none;
+            transition: all 0.25s;
+        }
+        .search input:focus {
+            border-color: var(--accent);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 4px var(--accent-bg);
+        }
+        .search button {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+        .search button svg { width: 14px; height: 14px; }
+        .header-tools {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .header-tools a {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .header-tools a:hover { color: var(--accent); }
+        .header-tools svg { width: 18px; height: 18px; stroke-width: 1.6; }
+
+        /* ===== Nav ===== */
+        .nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            gap: 4px;
+        }
+        .nav-inner a {
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .nav-inner a:hover { color: var(--text-primary); }
+        .nav-inner a.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            background: linear-gradient(135deg, #f5e6d8 0%, #e8d4c4 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            right: -10%;
+            top: -30%;
+            width: 45%;
+            padding-bottom: 45%;
+            background: radial-gradient(circle, rgba(196,92,74,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .hero-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 56px 40px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-text { max-width: 520px; }
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 999px;
+            margin-bottom: 18px;
+        }
+        .hero h1 {
+            font-size: clamp(32px, 4.5vw, 52px);
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 14px;
+            letter-spacing: -0.02em;
+        }
+        .hero p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+            line-height: 1.7;
+        }
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-dark);
+            color: #fff;
+            text-decoration: none;
+            padding: 13px 28px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s var(--ease);
+        }
+        .hero-cta:hover {
+            background: var(--accent);
+            transform: translateX(4px);
+        }
+        .hero-image {
+            position: relative;
+            aspect-ratio: 4/3;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== Category Tabs ===== */
+        .cat-tabs {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 73px;
+            z-index: 99;
+        }
+        .cat-tabs-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            gap: 0;
+        }
+        .cat-tab {
+            padding: 16px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .cat-tab:hover { color: var(--accent); }
+        .cat-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ===== Sub Chips ===== */
+        .sub-chips {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+        }
+        .sub-chips-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 14px 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .chip {
+            padding: 7px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip:hover { color: var(--accent); border-color: var(--accent); }
+        .chip.active {
+            background: var(--bg-dark);
+            color: #fff;
+            border-color: var(--bg-dark);
+        }
+
+        /* ===== Main Layout ===== */
+        .main {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 32px 40px 80px;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 32px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .side-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+        }
+        .side-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .side-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+        .side-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+        .side-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+        .side-item .count {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            padding: 2px 7px;
+            border-radius: 999px;
+        }
+        .side-item.active .count { background: #fff; color: var(--accent); }
+        .side-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .side-check input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .side-tip {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2d2a2a 100%);
+            color: #fff;
+        }
+        .side-tip .side-title {
+            color: #fff;
+            border-bottom-color: rgba(255,255,255,0.12);
+        }
+        .side-tip p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.8;
+        }
+
+        /* ===== Sort Bar ===== */
+        .sort-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            margin-bottom: 20px;
+        }
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sort-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-right: 6px;
+        }
+        .sort-btn {
+            padding: 7px 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sort-btn:hover { color: var(--text-primary); }
+        .sort-btn.active {
+            background: var(--bg-dark);
+            color: #fff;
+            border-color: var(--bg-dark);
+        }
+        .result-count {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .result-count strong { color: var(--text-primary); }
+
+        /* ===== Product Grid ===== */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+        }
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s var(--ease);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: cardIn 0.5s var(--ease) forwards;
+        }
+        .product-card:nth-child(1) { animation-delay: 0.04s; }
+        .product-card:nth-child(2) { animation-delay: 0.08s; }
+        .product-card:nth-child(3) { animation-delay: 0.12s; }
+        .product-card:nth-child(4) { animation-delay: 0.16s; }
+        .product-card:nth-child(5) { animation-delay: 0.20s; }
+        .product-card:nth-child(6) { animation-delay: 0.24s; }
+        .product-card:nth-child(7) { animation-delay: 0.28s; }
+        .product-card:nth-child(8) { animation-delay: 0.32s; }
+        .product-card:nth-child(9) { animation-delay: 0.36s; }
+        .product-card:nth-child(10) { animation-delay: 0.40s; }
+        @keyframes cardIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .product-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+        .card-img-wrap {
+            position: relative;
+            aspect-ratio: 1;
+            background: var(--bg-secondary);
+            overflow: hidden;
+        }
+        .card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s var(--ease);
+        }
+        .product-card:hover .card-img-wrap img { transform: scale(1.06); }
+        .card-badges {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .badge {
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+            color: #fff;
+        }
+        .badge-discount { background: var(--accent); }
+        .badge-hot { background: #d4920a; }
+        .badge-new { background: #2d8a5e; }
+        .card-fav {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(6px);
+            color: var(--text-muted);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.25s var(--ease);
+        }
+        .product-card:hover .card-fav {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .card-fav:hover { color: var(--accent); }
+        .card-fav svg { width: 15px; height: 15px; stroke-width: 2; }
+        .card-body {
+            padding: 12px 14px 14px;
+        }
+        .card-brand {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.04em;
+            margin-bottom: 5px;
+        }
+        .card-name {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.45;
+            margin-bottom: 8px;
+            min-height: 38px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .card-price {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .card-price .unit { font-size: 12px; margin-right: 1px; }
+        .card-orig {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .card-meta .sold {
+            color: #d4920a;
+            font-weight: 600;
+        }
+        .card-stock {
+            margin-top: 8px;
+            height: 3px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .card-stock-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #e6a23c);
+            border-radius: 2px;
+        }
+
+        /* Load More */
+        .load-more {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding-top: 48px;
+        }
+        .load-more button {
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 13px 40px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .load-more button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ===== Service Bar ===== */
+        .service-bar {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+        .service-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .service-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            transition: all 0.25s;
+        }
+        .service-item:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .service-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-bg);
+            color: var(--accent);
+            display: grid;
+            place-items: center;
+            font-size: 18px;
+        }
+        .service-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .service-text p { font-size: 12px; color: var(--text-muted); }
+
+        /* ===== Footer ===== */
+        .footer {
+            background: var(--bg-dark);
+            color: rgba(255,255,255,0.55);
+            padding: 50px 40px 30px;
+        }
+        .footer-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.5fr repeat(3, 1fr);
+            gap: 40px;
+        }
+        .footer-brand {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.08em;
+            margin-bottom: 14px;
+        }
+        .footer-brand span { color: var(--accent); }
+        .footer-desc {
+            font-size: 13px;
+            line-height: 1.8;
+            max-width: 280px;
+        }
+        .footer-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 18px;
+            letter-spacing: 0.04em;
+        }
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .footer-links a {
+            color: rgba(255,255,255,0.55);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover { color: #fff; }
+        .footer-bottom {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            padding-top: 30px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 12px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1200px) {
+            .product-grid { grid-template-columns: repeat(4, 1fr); }
+            .hero-inner { grid-template-columns: 1fr; }
+            .hero-image { display: none; }
+        }
+        @media (max-width: 900px) {
+            .header-inner, .nav-inner, .cat-tabs-inner, .sub-chips-inner, .main, .service-inner, .footer { padding-left: 20px; padding-right: 20px; }
+            .main { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+            .service-inner { grid-template-columns: repeat(2, 1fr); }
+            .footer-inner { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">满 ¥299 免运费 · 新用户首单立减 ¥30 · 7 天无理由退换</div>
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="#" class="logo">MAI<span>S</span>ON</a>
+            <div class="search">
+                <input type="text" placeholder="搜索商品、品牌、分类...">
+                <button aria-label="搜索">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </button>
+            </div>
+            <div class="header-tools">
+                <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>登录</a>
+                <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>购物袋</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="#">首页</a>
+            <a href="#" class="active">女装</a>
+            <a href="#">男装</a>
+            <a href="#">鞋靴</a>
+            <a href="#">包袋</a>
+            <a href="#">配饰</a>
+            <a href="#">运动</a>
+            <a href="#">美妆</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-text">
+                <div class="hero-tag">WOMEN · 2025 春夏</div>
+                <h1>轻盈衣橱，<br>从一件好衣开始</h1>
+                <p>精选透气面料与百搭剪裁，为日常通勤与周末出游打造舒适造型。本季新品已上架，限时享专属折扣。</p>
+                <a href="#collection" class="hero-cta">立即选购 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+            </div>
+            <div class="hero-image">
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&q=85" alt="女装系列">
+            </div>
+        </div>
+    </section>
+
+    <section class="cat-tabs">
+        <div class="cat-tabs-inner">
+            <div class="cat-tab active">全部女装</div>
+            <div class="cat-tab">上装</div>
+            <div class="cat-tab">裙装</div>
+            <div class="cat-tab">裤装</div>
+            <div class="cat-tab">外套</div>
+            <div class="cat-tab">内衣家居</div>
+        </div>
+    </section>
+
+    <section class="sub-chips">
+        <div class="sub-chips-inner">
+            <span class="chip active">全部</span>
+            <span class="chip">连衣裙</span>
+            <span class="chip">T恤</span>
+            <span class="chip">衬衫</span>
+            <span class="chip">针织衫</span>
+            <span class="chip">半身裙</span>
+            <span class="chip">牛仔裤</span>
+            <span class="chip">休闲裤</span>
+            <span class="chip">西装外套</span>
+            <span class="chip">风衣</span>
+        </div>
+    </section>
+
+    <main class="main" id="collection">
+        <aside class="sidebar">
+            <div class="side-card">
+                <div class="side-title">价格区间</div>
+                <div class="side-item active">全部价格 <span class="count">128</span></div>
+                <div class="side-item">¥0 - 100 <span class="count">32</span></div>
+                <div class="side-item">¥100 - 300 <span class="count">58</span></div>
+                <div class="side-item">¥300 - 500 <span class="count">26</span></div>
+                <div class="side-item">¥500 以上 <span class="count">12</span></div>
+            </div>
+
+            <div class="side-card">
+                <div class="side-title">筛选</div>
+                <label class="side-check"><input type="checkbox"> 仅显示有货</label>
+                <label class="side-check"><input type="checkbox" checked> 新品优先</label>
+                <label class="side-check"><input type="checkbox"> 参与促销</label>
+            </div>
+
+            <div class="side-card side-tip">
+                <div class="side-title">服务承诺</div>
+                <p>7×24 小时在线客服<br>满 ¥299 免运费<br>7 天无理由退换货</p>
+            </div>
+        </aside>
+
+        <div class="content">
+            <div class="sort-bar">
+                <div class="sort-group">
+                    <span class="sort-label">排序</span>
+                    <button class="sort-btn active">综合</button>
+                    <button class="sort-btn">销量</button>
+                    <button class="sort-btn">价格 ↑</button>
+                    <button class="sort-btn">价格 ↓</button>
+                    <button class="sort-btn">新品</button>
+                </div>
+                <div class="result-count">共 <strong>128</strong> 件商品</div>
+            </div>
+
+            <div class="product-grid">
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80" alt="卡其迷你裙">
+                        <div class="card-badges">
+                            <span class="badge badge-discount">-42%</span>
+                            <span class="badge badge-hot">热卖</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">PEACEBIRD</div>
+                        <div class="card-name">卡其迷你裙 · 高腰显瘦 A 字版型</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>149.00</div>
+                            <span class="card-orig">¥259.00</span>
+                        </div>
+                        <div class="card-meta"><span class="sold">已售 1.2k</span><span>98% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 72%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80" alt="缎面吊带裙">
+                        <div class="card-badges">
+                            <span class="badge badge-new">新品</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">ZARA</div>
+                        <div class="card-name">缎面吊带裙 · 法式优雅通勤</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>289.00</div>
+                        </div>
+                        <div class="card-meta"><span>已售 856</span><span>96% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 45%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&q=80" alt="高腰阔腿牛仔裤">
+                        <div class="card-badges">
+                            <span class="badge badge-hot">热卖</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">UNIQLO</div>
+                        <div class="card-name">高腰阔腿牛仔裤 · 水洗复古蓝</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>199.00</div>
+                        </div>
+                        <div class="card-meta"><span class="sold">已售 2.3k</span><span>99% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 88%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80" alt="缎面吊带裙">
+                        <div class="card-badges">
+                            <span class="badge badge-discount">-20%</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">COS</div>
+                        <div class="card-name">真丝缎面吊带裙 · 香槟色</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>459.00</div>
+                            <span class="card-orig">¥569.00</span>
+                        </div>
+                        <div class="card-meta"><span>已售 342</span><span>97% 好评</span></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&q=80" alt="法式碎花裙">
+                        <div class="card-badges">
+                            <span class="badge badge-new">新品</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">SÉZANE</div>
+                        <div class="card-name">法式碎花裙 · 泡泡袖收腰</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>329.00</div>
+                        </div>
+                        <div class="card-meta"><span>已售 567</span><span>95% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 60%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&q=80" alt="针织开衫">
+                        <div class="card-badges">
+                            <span class="badge badge-discount">-30%</span>
+                            <span class="badge badge-hot">热卖</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">COS</div>
+                        <div class="card-name">羊绒针织开衫 · 米白色</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>459.00</div>
+                            <span class="card-orig">¥659.00</span>
+                        </div>
+                        <div class="card-meta"><span class="sold">已售 1.8k</span><span>98% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 35%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=600&q=80" alt="白色基础T恤">
+                        <div class="card-badges">
+                            <span class="badge badge-new">新品</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">MUJI</div>
+                        <div class="card-name">有机棉基础T恤 · 圆领百搭</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>79.00</div>
+                        </div>
+                        <div class="card-meta"><span>已售 5.6k</span><span>99% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 92%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&q=80" alt="乐福鞋">
+                        <div class="card-badges">
+                            <span class="badge badge-discount">-30%</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">SAM EDELMAN</div>
+                        <div class="card-name">经典乐福鞋 · 黑色漆皮</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>629.00</div>
+                            <span class="card-orig">¥899.00</span>
+                        </div>
+                        <div class="card-meta"><span>已售 423</span><span>96% 好评</span></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=600&q=80" alt="皮质手提包">
+                        <div class="card-badges">
+                            <span class="badge badge-hot">热卖</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">CHARLES & KEITH</div>
+                        <div class="card-name">极简皮质手提包 · 通勤必备</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>369.00</div>
+                        </div>
+                        <div class="card-meta"><span class="sold">已售 2.1k</span><span>97% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 78%"></div></div>
+                    </div>
+                </article>
+
+                <article class="product-card">
+                    <div class="card-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=600&q=80" alt="条纹衬衫">
+                        <div class="card-badges">
+                            <span class="badge badge-new">新品</span>
+                        </div>
+                        <button class="card-fav" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-brand">UNIQLO</div>
+                        <div class="card-name">纯棉条纹衬衫 · 宽松廓形</div>
+                        <div class="card-price-row">
+                            <div class="card-price"><span class="unit">¥</span>149.00</div>
+                        </div>
+                        <div class="card-meta"><span>已售 1.5k</span><span>98% 好评</span></div>
+                        <div class="card-stock"><div class="card-stock-fill" style="width: 65%"></div></div>
+                    </div>
+                </article>
+
+                <div class="load-more">
+                    <button>加载更多商品</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section class="service-bar">
+        <div class="service-inner">
+            <div class="service-item">
+                <div class="service-icon">🚚</div>
+                <div class="service-text"><h4>全场包邮</h4><p>满 ¥299 免运费</p></div>
+            </div>
+            <div class="service-item">
+                <div class="service-icon">🔄</div>
+                <div class="service-text"><h4>7 天无理由</h4><p>不满意随时退换</p></div>
+            </div>
+            <div class="service-item">
+                <div class="service-icon">🛡️</div>
+                <div class="service-text"><h4>正品保障</h4><p>品牌授权 · 假一赔十</p></div>
+            </div>
+            <div class="service-item">
+                <div class="service-icon">💬</div>
+                <div class="service-text"><h4>专属客服</h4><p>24 小时在线服务</p></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">MAI<span>S</span>ON</div>
+                <p class="footer-desc">精选时尚商城，致力于为每一位用户带来优质、舒适、有态度的穿搭体验。</p>
+            </div>
+            <div>
+                <div class="footer-title">购物指南</div>
+                <div class="footer-links">
+                    <a href="#">购物流程</a>
+                    <a href="#">会员介绍</a>
+                    <a href="#">常见问题</a>
+                    <a href="#">联系客服</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-title">配送与售后</div>
+                <div class="footer-links">
+                    <a href="#">配送方式</a>
+                    <a href="#">退换货政策</a>
+                    <a href="#">价格保护</a>
+                    <a href="#">投诉建议</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-title">关于我们</div>
+                <div class="footer-links">
+                    <a href="#">品牌故事</a>
+                    <a href="#">加入我们</a>
+                    <a href="#">商务合作</a>
+                    <a href="#">隐私政策</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2025 MAISON. Demo only.</span>
+                <span>沪 ICP 备 00000000 号</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

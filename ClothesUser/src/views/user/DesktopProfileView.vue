@@ -1,15 +1,31 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast, showToast } from 'vant'
 import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
+import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
 const form = ref({ nickname: '', phone: '', email: '', gender: 0 })
 const loading = ref(true)
 const saving = ref(false)
+const avatarUploading = ref(false)
+
+const userAvatar = computed(() => {
+  const str = userStore.userInfo?.nickname || userStore.userInfo?.username || '?'
+  return str[0].toUpperCase()
+})
+
+const avatarUrl = computed(() => {
+  const a = userStore.userInfo?.avatar
+  if (!a) return ''
+  if (a.startsWith('http')) return a
+  const base = 'http://localhost:8080/ClothesBack_war'
+  return base + a
+})
 
 async function loadInfo() {
   loading.value = true
@@ -19,18 +35,50 @@ async function loadInfo() {
         nickname: userStore.userInfo.nickname || '',
         phone: userStore.userInfo.phone || '',
         email: userStore.userInfo.email || '',
-        gender: userStore.userInfo.gender || 0,
+        gender: userStore.userInfo.gender ?? 0,
       })
     } else {
       const info: any = await userApi.info()
       userStore.setUserInfo(info)
       Object.assign(form.value, {
         nickname: info.nickname || '', phone: info.phone || '',
-        email: info.email || '', gender: info.gender || 0,
+        email: info.email || '', gender: info.gender ?? 0,
       })
     }
   } catch { /* silent */ }
   finally { loading.value = false }
+}
+
+async function onAvatarUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) { showFailToast('请选择图片文件'); return }
+  if (file.size > 5 * 1024 * 1024) { showFailToast('图片不能超过 5MB'); return }
+  avatarUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const token = localStorage.getItem('token')
+    const base = 'http://localhost:8080/ClothesBack_war'
+    const res = await fetch(`${base}/api/public/upload`, {
+      method: 'POST',
+      body: formData,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    const data = await res.json()
+    if (data.code !== 0 && data.code !== 200) throw new Error(data.message || '上传失败')
+    const url = data.data.url
+    // 更新头像
+    await userApi.updateInfo({ avatar: url } as any)
+    userStore.setUserInfo({ ...userStore.userInfo, avatar: url })
+    showToast('头像已更新')
+  } catch (e: any) {
+    showFailToast(e?.message || '上传失败')
+  } finally {
+    avatarUploading.value = false
+    input.value = ''
+  }
 }
 
 async function save() {
@@ -39,63 +87,528 @@ async function save() {
   try {
     await userApi.updateInfo(form.value as any)
     userStore.setUserInfo({ ...userStore.userInfo, ...form.value } as any)
-    showToast('保存成功')
-    router.push('/user')
+    showToast('资料已保存')
   } catch (e: any) { showFailToast(e?.message || '保存失败') }
   finally { saving.value = false }
 }
+
+function goOrders() { router.push('/order') }
+function goFavorites() { router.push('/favorites') }
+function goProfile() { router.push('/profile') }
 
 onMounted(loadInfo)
 </script>
 
 <template>
   <DesktopLayout>
-    <div class="desktop-page-title">个人资料</div>
+    <div class="profile-page">
+      <!-- Breadcrumbs -->
+      <div class="breadcrumbs">
+        <a href="/">首页</a>
+        <span>/</span>
+        <a href="/user">我的账户</a>
+        <span>/</span>
+        <span>个人资料</span>
+      </div>
 
-    <div style="max-width:640px">
-      <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <!-- Avatar -->
-        <div style="text-align:center;margin-bottom:24px">
-          <div style="width:80px;height:80px;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;overflow:hidden">
-            <img src="/assets/avatars/avatar-default.svg" style="width:80px;height:80px" alt="" />
-          </div>
-          <div style="font-size:12px;color:#bbb">点击头像更换（开发中）</div>
-        </div>
+      <h1 class="page-title">个人资料</h1>
+      <p class="page-subtitle">管理你的账户信息，让购物体验更个性化。</p>
 
-        <!-- Fields -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div>
-            <div style="font-size:12px;color:#888;margin-bottom:6px">昵称</div>
-            <input v-model="form.nickname" style="width:100%;height:42px;border:1.5px solid #e0e0e0;border-radius:8px;padding:0 14px;font-size:14px;outline:none;box-sizing:border-box" />
+      <div class="main-layout">
+        <!-- Left Sidebar -->
+        <aside class="profile-sidebar">
+          <div class="avatar-upload-wrap">
+            <input type="file" id="avatarInput" accept="image/*" style="display:none" @change="onAvatarUpload" />
+            <label for="avatarInput" class="avatar-preview">
+              <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" />
+              <div v-else class="avatar-placeholder">{{ userAvatar }}</div>
+              <div class="avatar-overlay">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span>{{ avatarUploading ? '上传中...' : '更换头像' }}</span>
+              </div>
+            </label>
           </div>
-          <div>
-            <div style="font-size:12px;color:#888;margin-bottom:6px">性别</div>
-            <div style="display:flex;gap:8px">
-              <div
-                v-for="opt in [{label:'保密',val:0},{label:'男',val:1},{label:'女',val:2}]"
-                :key="opt.val"
-                style="flex:1;height:42px;border:1.5px solid #ddd;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all 0.15s"
-                :style="form.gender === opt.val ? {borderColor:'#c9a96e',background:'#fdf6ec',color:'#c9a96e',fontWeight:700} : {}"
-                @click="form.gender = opt.val"
-              >{{ opt.label }}</div>
+
+          <div class="profile-name">{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</div>
+          <div v-if="userStore.userInfo?.id" class="profile-id">会员 ID: {{ userStore.userInfo.id }}</div>
+
+          <div class="profile-stats">
+            <div class="profile-stat" @click="goOrders">
+              <strong>{{ userStore.userInfo?.orderCount ?? '-' }}</strong>
+              <span>订单</span>
+            </div>
+            <div class="profile-stat" @click="goFavorites">
+              <strong>{{ userStore.userInfo?.favCount ?? '-' }}</strong>
+              <span>收藏</span>
+            </div>
+            <div class="profile-stat">
+              <strong>{{ userStore.userInfo?.couponCount ?? '-' }}</strong>
+              <span>优惠券</span>
             </div>
           </div>
-          <div style="grid-column:1/-1">
-            <div style="font-size:12px;color:#888;margin-bottom:6px">手机号</div>
-            <input v-model="form.phone" style="width:100%;height:42px;border:1.5px solid #e0e0e0;border-radius:8px;padding:0 14px;font-size:14px;outline:none;box-sizing:border-box" placeholder="选填" />
-          </div>
-          <div style="grid-column:1/-1">
-            <div style="font-size:12px;color:#888;margin-bottom:6px">邮箱</div>
-            <input v-model="form.email" style="width:100%;height:42px;border:1.5px solid #e0e0e0;border-radius:8px;padding:0 14px;font-size:14px;outline:none;box-sizing:border-box" placeholder="选填" />
-          </div>
-        </div>
 
-        <button
-          style="width:100%;height:46px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-top:24px;transition:background 0.15s"
-          :disabled="saving"
-          @click="save"
-        >{{ saving ? '保存中...' : '保存修改' }}</button>
+          <div class="sidebar-menu">
+            <div class="menu-item active" @click="goProfile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              个人资料
+            </div>
+            <div class="menu-item" @click="goOrders">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              我的订单
+            </div>
+            <div class="menu-item" @click="goFavorites">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+              </svg>
+              收藏夹
+            </div>
+            <div class="menu-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+              </svg>
+              账户设置
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Form -->
+        <section class="form-card">
+          <div class="form-section">
+            <div class="section-label">基本信息</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">昵称</label>
+                <input v-model="form.nickname" class="form-input" placeholder="请输入昵称" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">性别</label>
+                <div class="gender-group">
+                  <label :class="['gender-option', { active: form.gender === 0 }]">
+                    <input type="radio" name="gender" :value="0" v-model="form.gender" class="gender-radio" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                    保密
+                  </label>
+                  <label :class="['gender-option', { active: form.gender === 1 }]">
+                    <input type="radio" name="gender" :value="1" v-model="form.gender" class="gender-radio" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10" cy="14" r="6"/><path d="M19 5l-3.5 3.5"/><path d="M19 5h-4"/><path d="M19 5v4"/></svg>
+                    男
+                  </label>
+                  <label :class="['gender-option', { active: form.gender === 2 }]">
+                    <input type="radio" name="gender" :value="2" v-model="form.gender" class="gender-radio" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="9" r="6"/><path d="M12 15v7"/><path d="M9 20h6"/></svg>
+                    女
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">手机号</label>
+                <input v-model="form.phone" class="form-input" placeholder="选填" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">邮箱</label>
+                <input v-model="form.email" class="form-input" placeholder="选填" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" type="button" @click="router.push('/user')">取消</button>
+            <button class="btn btn-primary" :disabled="saving" @click="save">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:18px;height:18px;stroke-width:2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+              </svg>
+              {{ saving ? '保存中...' : '保存修改' }}
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   </DesktopLayout>
 </template>
+
+<style scoped>
+.profile-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 40px 80px;
+}
+
+/* ── Breadcrumbs ── */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 16px;
+}
+.breadcrumbs a {
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+.breadcrumbs a:hover { color: #c45c4a; }
+
+/* ── Page Title ── */
+.page-title {
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+}
+.page-subtitle {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 36px;
+}
+
+/* ── Main Layout ── */
+.main-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── Sidebar ── */
+.profile-sidebar {
+  background: #fff;
+  border: 1px solid #e8e5e0;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 90px;
+}
+
+.avatar-upload-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+}
+
+.avatar-preview {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.avatar-preview:hover { transform: scale(1.03); }
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f8e8e4, #f5d6ce);
+  display: grid;
+  place-items: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 600;
+  color: #c45c4a;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(26,26,26,0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.avatar-preview:hover .avatar-overlay { opacity: 1; }
+.avatar-overlay span { font-size: 11px; font-weight: 500; }
+
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1a1a1a;
+}
+
+.profile-id {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 24px;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid #e8e5e0;
+}
+
+.profile-stat {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.profile-stat:hover { opacity: 0.7; }
+.profile-stat strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.profile-stat span {
+  font-size: 12px;
+  color: #999;
+}
+
+.sidebar-menu {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.menu-item:hover {
+  background: #f5f3f0;
+  color: #1a1a1a;
+}
+
+.menu-item.active {
+  background: #fdf5f3;
+  color: #c45c4a;
+}
+
+.menu-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Form Card ── */
+.form-card {
+  background: #fff;
+  border: 1px solid #e8e5e0;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.form-section { margin-bottom: 32px; }
+.form-section:last-of-type { margin-bottom: 0; }
+
+.section-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-label::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: #c45c4a;
+  border-radius: 2px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.form-input {
+  height: 48px;
+  border: 1.5px solid #e8e5e0;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #fff;
+  transition: all 0.25s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder { color: #999; }
+.form-input:hover { border-color: #d0cbc4; }
+.form-input:focus {
+  border-color: #c45c4a;
+  box-shadow: 0 0 0 4px #fdf5f3;
+}
+
+/* ── Gender ── */
+.gender-group {
+  display: flex;
+  gap: 12px;
+}
+
+.gender-option {
+  flex: 1;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px solid #e8e5e0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.gender-option svg { width: 18px; height: 18px; flex-shrink: 0; }
+.gender-option:hover { border-color: #d0cbc4; }
+.gender-option.active {
+  border-color: #c45c4a;
+  background: #fdf5f3;
+  color: #c45c4a;
+  font-weight: 600;
+}
+
+.gender-radio { display: none; }
+
+/* ── Buttons ── */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 32px;
+  border-top: 1px solid #e8e5e0;
+  margin-top: 8px;
+}
+
+.btn {
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  background: #f5f3f0;
+  color: #1a1a1a;
+  border: 1.5px solid #e8e5e0;
+}
+
+.btn-secondary:hover {
+  background: #fff;
+  border-color: #d0cbc4;
+}
+
+.btn-primary {
+  background: #1a1a1a;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(26,26,26,0.15);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(26,26,26,0.2);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Animations ── */
+.profile-sidebar, .form-card {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.form-card { animation-delay: 0.1s; }
+
+@keyframes slideUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .profile-sidebar { position: static; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .profile-page { padding: 24px 16px 60px; }
+  .form-card { padding: 28px 20px; }
+  .page-title { font-size: 30px; }
+  .form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .btn { width: 100%; }
+}
+</style>
