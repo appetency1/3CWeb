@@ -15,4 +15,7 @@ export const userApi = {
 
   changePassword: (data: { oldPassword: string; newPassword: string }) =>
     http<void>('/user/password', data, { method: 'PUT' }),
+
+  createComment: (data: { orderId: number; goodsId: number; content: string; rating: number; images?: string[] }) =>
+    http<void>('/user/comment', data, { method: 'POST' }),
 }

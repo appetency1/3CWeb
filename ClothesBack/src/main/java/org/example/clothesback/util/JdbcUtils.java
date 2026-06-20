@@ -43,6 +43,9 @@ public final class JdbcUtils {
             url = p.getProperty("jdbc.url");
             user = p.getProperty("jdbc.user");
             password = p.getProperty("jdbc.password");
+            // 优先使用环境变量 DB_PASSWORD（部署时注入，不写死到代码库）
+            String envPwd = System.getenv("DB_PASSWORD");
+            if (envPwd != null && !envPwd.isEmpty()) password = envPwd;
             String driver = p.getProperty("jdbc.driver", "com.mysql.cj.jdbc.Driver");
             Class.forName(driver);
         } catch (Exception e) {

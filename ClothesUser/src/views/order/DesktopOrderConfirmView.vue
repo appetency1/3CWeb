@@ -23,7 +23,13 @@ const selectedAddress = computed(() =>
 
 const checkedItems = computed(() => cartStore.items.filter(i => i.checked))
 const itemsTotal = computed(() => checkedItems.value.reduce((s, i) => s + i.price * i.count, 0))
-const discount = computed(() => itemsTotal.value > 299 ? (itemsTotal.value > 500 ? 200 : 50) : 0)
+// 满减规则与后端一致: >=500减200, >=299减50
+const discount = computed(() => {
+  const t = itemsTotal.value
+  if (t >= 500) return 200
+  if (t >= 299) return 50
+  return 0
+})
 const finalTotal = computed(() => Math.max(0, itemsTotal.value - discount.value))
 
 async function loadAddresses() {

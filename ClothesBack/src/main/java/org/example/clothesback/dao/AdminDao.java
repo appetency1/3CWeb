@@ -24,4 +24,8 @@ public class AdminDao {
     public int updateLastLogin(Long id, LocalDateTime time) throws SQLException {
         return JdbcUtils.update("UPDATE admin SET last_login=? WHERE id=?", time, id);
     }
+
+    public int updatePassword(Long id, String password) throws SQLException {
+        return JdbcUtils.update("UPDATE admin SET password=? WHERE id=?", password, id);
+    }
 }

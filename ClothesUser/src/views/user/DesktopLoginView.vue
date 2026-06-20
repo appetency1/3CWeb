@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showFailToast, showToast } from 'vant'
 import { userApi } from '@/api/user'
@@ -20,7 +20,7 @@ const cardRef = ref<HTMLElement | null>(null)
 let tiltCleanup: (() => void) | null = null
 
 // Tab pill — 用 CSS transition 实现，不用 JS 计算位置
-const tabPillStyle = ref({})
+
 
 // Login form
 const login = reactive({ username: '', password: '' })
@@ -82,7 +82,6 @@ function switchTo(target: 'login' | 'register') {
 }
 
 onMounted(() => {
-  updateTabPill()
   const card = cardRef.value
   if (!card) return
   const wrap = card.parentElement

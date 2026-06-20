@@ -27,11 +27,9 @@ public class UserDao {
     }
 
     public int insert(String username, String password, String nickname, String phone, String email) throws SQLException {
-        System.out.println("[DEBUG] UserDao.insert: username=" + username + ", password=" + password);
         int n = JdbcUtils.update(
             "INSERT INTO user (username, password, nickname, phone, email, status) VALUES (?, ?, ?, ?, ?, 1)",
             username, password, nickname, phone, email);
-        System.out.println("[DEBUG] UserDao.insert result: " + n);
         return n;
     }
 

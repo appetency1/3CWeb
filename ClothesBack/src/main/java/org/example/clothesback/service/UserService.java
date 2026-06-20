@@ -27,9 +27,13 @@ public class UserService {
             }
             Map<String, Object> row = userDao.findByUsername(dto.username().trim());
             if (row == null) throw new BizException(ResultCode.BAD_REQUEST, "用户名或密码错误");
-            String pwd = String.valueOf(row.get("password"));
-            if (!pwd.equals(MD5Utils.md5(dto.password()))) {
+            String storedPwd = String.valueOf(row.get("password"));
+            if (!MD5Utils.verify(dto.password(), storedPwd)) {
                 throw new BizException(ResultCode.BAD_REQUEST, "用户名或密码错误");
+            }
+            // 旧 MD5 密码登录成功时自动升级为 BCrypt
+            if (MD5Utils.needsUpgrade(storedPwd)) {
+                userDao.updatePassword(((Number) row.get("id")).longValue(), MD5Utils.hash(dto.password()));
             }
             Integer status = ((Number) row.get("status")).intValue();
             if (status != 1) throw new BizException(ResultCode.FORBIDDEN, "账号已禁用");
@@ -52,7 +56,6 @@ public class UserService {
     }
 
     public LoginVO register(RegisterDTO dto) {
-        System.out.println("[DEBUG] register called: username=" + dto.username() + ", password=" + dto.password());
         try {
             if (dto.username() == null || dto.username().isBlank()) throw new BizException(400, "用户名不能为空");
             if (dto.username().length() < 3 || dto.username().length() > 50) throw new BizException(400, "用户名长度3-50");
@@ -63,7 +66,7 @@ public class UserService {
             if (phone != null && !phone.isBlank() && userDao.findByPhone(phone) != null) {
                 throw new BizException(409, "手机号已注册");
             }
-            userDao.insert(dto.username().trim(), MD5Utils.md5(dto.password()),
+            userDao.insert(dto.username().trim(), MD5Utils.hash(dto.password()),
                 dto.nickname(), phone, dto.email());
             return login(new LoginDTO(dto.username(), dto.password()));
         } catch (SQLException e) {
@@ -101,10 +104,10 @@ public class UserService {
         try {
             Map<String, Object> row = userDao.findById(userId);
             if (row == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
-            if (!String.valueOf(row.get("password")).equals(MD5Utils.md5(dto.oldPassword()))) {
+            if (!MD5Utils.verify(dto.oldPassword(), String.valueOf(row.get("password")))) {
                 throw new BizException(400, "原密码错误");
             }
-            userDao.updatePassword(userId, MD5Utils.md5(dto.newPassword()));
+            userDao.updatePassword(userId, MD5Utils.hash(dto.newPassword()));
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "修改失败");
         }

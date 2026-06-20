@@ -49,10 +49,8 @@ public abstract class BaseServlet extends HttpServlet {
             writeJson(resp, Result.error(e.getCode(), e.getMessage()));
         } catch (Exception e) {
             log.severe("unhandled: " + e);
-            e.printStackTrace();
-            String msg = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-            if (e.getCause() != null && e.getCause() != e) msg = msg + " | cause: " + e.getCause();
-            writeJson(resp, Result.error(500, msg));
+            log.severe(java.util.Arrays.toString(e.getStackTrace()));
+            writeJson(resp, Result.error(500, "服务器繁忙，请稍后重试"));
         }
     }
 

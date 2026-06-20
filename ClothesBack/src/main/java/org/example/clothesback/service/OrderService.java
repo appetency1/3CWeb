@@ -90,16 +90,25 @@ public class OrderService {
             snapshotList.add(snap);
         }
 
-        // 4. 写订单
+        // 4. 计算优惠 + 实付
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (total.compareTo(new BigDecimal("500")) >= 0) {
+            discountAmount = new BigDecimal("200");
+        } else if (total.compareTo(new BigDecimal("299")) >= 0) {
+            discountAmount = new BigDecimal("50");
+        }
+        BigDecimal payAmount = total.subtract(discountAmount);
+
+        // 5. 写订单
         String orderNo = IdGenerator.orderNo();
-        orderDao.insert(conn, orderNo, userId, total, total, BigDecimal.ZERO, BigDecimal.ZERO,
+        orderDao.insert(conn, orderNo, userId, total, payAmount, BigDecimal.ZERO, discountAmount,
             String.valueOf(addr.get("receiver")),
             String.valueOf(addr.get("phone")),
             addr.get("province") + " " + addr.get("city") + " " + addr.get("district") + " " + addr.get("detail"),
             dto.remark());
         Long orderId = orderDao.lastInsertId(conn);
 
-        // 5. 写订单项
+        // 6. 写订单项
         for (Map<String, Object> s : snapshotList) {
             orderItemDao.insert(conn, orderId,
                 ((Number) s.get("goods_id")).longValue(),
@@ -112,12 +121,12 @@ public class OrderService {
                 (BigDecimal) s.get("subtotal"));
         }
 
-        // 6. 同步 SPU 冗余库存/销量
+        // 7. 同步 SPU 冗余库存/销量
         for (Map<String, Object> s : snapshotList) {
             goodsDao.recomputeStockAndSales(conn, ((Number) s.get("goods_id")).longValue());
         }
 
-        // 7. 删购物车项
+        // 8. 删购物车项
         List<Long> cartIds = new ArrayList<>();
         for (Map<String, Object> s : snapshotList) {
             cartIds.add(((Number) s.get("cart_id")).longValue());

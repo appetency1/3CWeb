@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { showFailToast } from 'vant'
+import { showFailToast, showConfirmDialog, showToast } from 'vant'
 import { orderApi } from '@/api/order'
 import { fullImgUrl } from '@/utils/img'
 
@@ -16,6 +16,8 @@ const tabs = [
 ]
 
 const orders = ref<any[]>([])
+const allOrdersForStats = ref<any[]>([])
+const statsLoaded = ref(false)
 const loading = ref(false)
 const finished = ref(false)
 const page = ref(1)
@@ -30,15 +32,13 @@ const STATUS_MAP: Record<number, { label: string; cls: string }> = {
 }
 
 const stats = computed(() => {
-  const all = orders.value.length
-  const pending = orders.value.filter((o: any) => o.status === 0).length
-  const shipped = orders.value.filter((o: any) => o.status === 2).length
-  const done = orders.value.filter((o: any) => o.status === 3).length
+  const all = allOrdersForStats.value
   return [
-    { label: '全部订单', value: all, color: '' },
-    { label: '待付款', value: pending, color: 'var(--accent)' },
-    { label: '待收货', value: shipped, color: 'var(--warning)' },
-    { label: '已完成', value: done, color: 'var(--success)' },
+    { label: '全部订单', value: all.length, color: '', tabIdx: 0 },
+    { label: '待付款', value: all.filter((o: any) => o.status === 0).length, color: 'var(--accent)', tabIdx: 1 },
+    { label: '待发货', value: all.filter((o: any) => o.status === 1).length, color: '#3498db', tabIdx: 2 },
+    { label: '待收货', value: all.filter((o: any) => o.status === 2).length, color: 'var(--warning)', tabIdx: 3 },
+    { label: '已完成', value: all.filter((o: any) => o.status === 3).length, color: 'var(--success)', tabIdx: 4 },
   ]
 })
 
@@ -65,8 +65,40 @@ function confirmReceive(order: any) {
   router.push(`/order/${order.id}`)
 }
 
+async function cancelOrder(order: any) {
+  try {
+    await showConfirmDialog({
+      title: '取消订单',
+      message: '确定要取消该订单吗？',
+      confirmButtonText: '确认取消',
+      cancelButtonText: '暂不取消',
+    })
+    await orderApi.cancel(order.id)
+    showToast('订单已取消')
+    // 刷新当前页数据 + 统计
+    page.value = 1
+    orders.value = []
+    finished.value = false
+    fetchOrders()
+    loadStats()
+  } catch { /* 用户取消对话框或操作失败 */ }
+}
+
+async function loadStats() {
+  try {
+    const data: any = await orderApi.list({ page: 1, size: 999 })
+    allOrdersForStats.value = data?.list || data || []
+  } catch { /* 统计不影响主流程 */ }
+  finally { statsLoaded.value = true }
+}
+
+// 切换 Tab 时重新请求列表，但统计不受影响
 watch(active, () => { page.value = 1; orders.value = []; finished.value = false; fetchOrders() })
-onMounted(fetchOrders)
+
+onMounted(() => {
+  loadStats()
+  fetchOrders()
+})
 </script>
 
 <template>
@@ -81,8 +113,8 @@ onMounted(fetchOrders)
       <div class="stats-bar">
         <div v-for="(s, i) in stats" :key="s.label"
           class="stat-card"
-          :class="{ active: i === 0 }"
-          @click="active = 0"
+          :class="{ active: active === s.tabIdx }"
+          @click="active = s.tabIdx"
         >
           <div class="stat-value" :style="s.color ? { color: s.color } : {}">{{ s.value }}</div>
           <div class="stat-label">{{ s.label }}</div>
@@ -122,24 +154,34 @@ onMounted(fetchOrders)
           </div>
 
           <div class="order-body" @click="router.push(`/order/${order.id}`)">
-            <div class="items-preview">
-              <img v-for="(item, idx) in (order.items || []).slice(0, 3)" :key="idx"
-                :src="fullImgUrl(item.goodsCover)" class="item-thumb"
-                @error="($event.target as HTMLImageElement).src = '/assets/placeholders/product-placeholder.svg'"
-              />
-              <div v-if="(order.items || []).length > 3" class="item-more">+{{ order.items.length - 3 }}</div>
-            </div>
-            <div class="order-summary">
-              <div class="order-total-label">订单金额</div>
-              <div class="order-total">¥{{ (order.payAmount || order.totalAmount || 0).toFixed(2) }}</div>
-              <div class="order-items-count">共{{ order.items?.length || 0 }}件商品</div>
+            <div class="order-main">
+              <div class="order-row">
+                <span class="order-row-label">订单金额</span>
+                <span class="order-row-amount">¥{{ (order.payAmount || order.totalAmount || 0).toFixed(2) }}</span>
+              </div>
+              <div v-if="order.discountAmount > 0" class="order-row discount">
+                <span class="order-row-label">优惠</span>
+                <span class="order-row-discount">-¥{{ Number(order.discountAmount).toFixed(2) }}</span>
+              </div>
+              <div class="order-row freight">
+                <span class="order-row-label">运费</span>
+                <span class="order-row-freight">{{ order.freightAmount > 0 ? '¥' + Number(order.freightAmount).toFixed(2) : '免运费' }}</span>
+              </div>
             </div>
           </div>
 
+          <!-- 操作栏 -->
           <div class="order-footer">
             <button class="btn btn-outline" @click="router.push(`/order/${order.id}`)">查看详情</button>
-            <button v-if="order.status === 0" class="btn btn-accent" @click="payOrder(order)">立即付款</button>
-            <button v-if="order.status === 2" class="btn btn-primary-order" @click="confirmReceive(order)">确认收货</button>
+            <span class="footer-right">
+              <button v-if="order.status === 0" class="btn btn-cancel" @click="cancelOrder(order)">取消订单</button>
+              <button v-if="order.status === 0" class="btn btn-pay" @click="payOrder(order)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                立即付款
+              </button>
+              <button v-if="order.status === 2" class="btn btn-primary-order" @click="confirmReceive(order)">确认收货</button>
+              <button v-if="order.status === 3" class="btn btn-review" @click="router.push(`/order/${order.id}`)">去评价</button>
+            </span>
           </div>
         </div>
       </div>
@@ -163,7 +205,7 @@ onMounted(fetchOrders)
 /* 统计卡片 */
 .stats-bar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   margin-bottom: 28px;
 }
@@ -234,34 +276,29 @@ onMounted(fetchOrders)
 .status-pending { background: #fdf0ed; color: var(--accent, #c45c4a); }
 .status-cancelled { background: #f5f5f5; color: #bbb; }
 
-.order-body { padding: 24px; display: flex; gap: 24px; cursor: pointer; }
-.items-preview { display: flex; gap: 12px; flex: 1; }
-.item-thumb {
-  width: 80px; height: 80px; border-radius: 10px; object-fit: cover;
-  border: 1px solid var(--border, #ece9e4);
+.order-body {
+  padding: 20px 28px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-.item-thumb:hover { transform: scale(1.05); }
-.item-more {
-  width: 80px; height: 80px; border-radius: 10px;
-  background: var(--bg-secondary, #f5f3f0);
-  border: 1px dashed var(--border, #ece9e4);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: var(--text-muted, #9a9a9a);
-  font-weight: 500;
-}
+.order-body:hover { background: #fcfaf8; }
 
-.order-summary { text-align: right; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-.order-total-label { font-size: 12px; color: var(--text-muted, #9a9a9a); }
-.order-total { font-size: 22px; font-weight: 700; color: var(--accent, #c45c4a); }
-.order-items-count { font-size: 12px; color: var(--text-secondary, #6b6b6b); }
+.order-main { display: flex; flex-direction: column; gap: 10px; }
+.order-row { display: flex; justify-content: space-between; align-items: center; }
+.order-row-label { font-size: 13px; color: var(--text-muted, #9a9a9a); }
+.order-row-amount { font-size: 22px; font-weight: 700; color: var(--accent, #c45c4a); letter-spacing: -0.5px; }
+.order-row.discount .order-row-discount { font-size: 13px; color: var(--success, #2d8a5e); font-weight: 600; }
+.order-row.freight .order-row-freight { font-size: 13px; color: var(--text-secondary, #6b6b6b); }
 
+/* 操作栏 */
 .order-footer {
-  padding: 16px 24px;
+  padding: 14px 24px;
   background: var(--bg-secondary, #f5f3f0);
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
 }
+.footer-right { display: flex; gap: 10px; align-items: center; }
 
 .btn {
   padding: 10px 24px;
@@ -286,6 +323,40 @@ onMounted(fetchOrders)
   background: var(--accent, #c45c4a); color: white;
 }
 .btn-accent:hover { background: var(--accent-dark, #8b3a2a); transform: translateY(-1px); }
+.btn-pay {
+  background: linear-gradient(135deg, var(--accent, #c45c4a), var(--accent-dark, #8b3a2a));
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(196,92,74,0.25);
+  position: relative;
+  overflow: hidden;
+}
+.btn-pay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(196,92,74,0.35);
+}
+.btn-pay:active { transform: translateY(0); }
+.btn-pay svg { width: 16px; height: 16px; }
+.btn-pay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+.btn-pay:hover::after { transform: translateX(100%); }
+
+.btn-cancel {
+  background: transparent; color: #999; border: 1px solid #e0ddd8;
+}
+.btn-cancel:hover { color: #dc3545; border-color: #dc3545; }
+.btn-review {
+  background: transparent; color: #c45c4a; border: 1px solid #c45c4a;
+}
+.btn-review:hover { background: #c45c4a; color: #fff; }
 
 /* 空状态 */
 .empty-state { text-align: center; padding: 80px 20px; }
@@ -301,8 +372,7 @@ onMounted(fetchOrders)
 
 @media (max-width: 768px) {
   .order-page { padding: 16px 20px 40px; }
-  .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .order-body { flex-direction: column; gap: 16px; }
-  .order-summary { text-align: left; flex-direction: row; align-items: center; justify-content: space-between; }
+  .stats-bar { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .order-body { flex-direction: column; gap: 12px; }
 }
 </style>

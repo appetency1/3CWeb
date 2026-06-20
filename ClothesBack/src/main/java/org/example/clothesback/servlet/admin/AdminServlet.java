@@ -58,11 +58,11 @@ public class AdminServlet extends BaseServlet {
             var adminDao = new org.example.clothesback.dao.AdminDao();
             var row = adminDao.findByUsername(admin.getUsername());
             if (row == null) throw new org.example.clothesback.common.BizException(404, "管理员不存在");
-            if (!String.valueOf(row.get("password")).equals(MD5Utils.md5(dto.oldPassword()))) {
+            if (!MD5Utils.verify(dto.oldPassword(), String.valueOf(row.get("password")))) {
                 throw new org.example.clothesback.common.BizException(400, "原密码错误");
             }
             org.example.clothesback.util.JdbcUtils.update(
-                "UPDATE admin SET password=? WHERE id=?", MD5Utils.md5(dto.newPassword()), admin.getId());
+                "UPDATE admin SET password=? WHERE id=?", MD5Utils.hash(dto.newPassword()), admin.getId());
             TokenManager.remove(currentToken(req));
             writeOk(resp, "修改成功", null);
         } catch (java.sql.SQLException e) {

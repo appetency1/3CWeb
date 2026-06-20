@@ -23,8 +23,14 @@ public class AdminService {
                 throw new BizException(400, "用户名和密码不能为空");
             }
             Map<String, Object> row = adminDao.findByUsername(dto.username().trim());
-            if (row == null || !String.valueOf(row.get("password")).equals(MD5Utils.md5(dto.password()))) {
+            if (row == null) throw new BizException(400, "用户名或密码错误");
+            String storedPwd = String.valueOf(row.get("password"));
+            if (!MD5Utils.verify(dto.password(), storedPwd)) {
                 throw new BizException(400, "用户名或密码错误");
+            }
+            // 旧 MD5 密码登录成功时自动升级为 BCrypt
+            if (MD5Utils.needsUpgrade(storedPwd)) {
+                adminDao.updatePassword(((Number) row.get("id")).longValue(), MD5Utils.hash(dto.password()));
             }
             Admin admin = BeanUtils.mapToBean(row, Admin.class);
             if (admin.getStatus() == null || admin.getStatus() != 1) {
