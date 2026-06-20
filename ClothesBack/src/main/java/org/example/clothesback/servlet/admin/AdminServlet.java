@@ -56,7 +56,7 @@ public class AdminServlet extends BaseServlet {
         try {
             var admin = currentAdmin(req);
             var adminDao = new org.example.clothesback.dao.AdminDao();
-            var row = adminDao.findByUsername(admin.getUsername());
+            var row = adminDao.findByUsernameWithPwd(admin.getUsername());
             if (row == null) throw new org.example.clothesback.common.BizException(404, "管理员不存在");
             if (!MD5Utils.verify(dto.oldPassword(), String.valueOf(row.get("password")))) {
                 throw new org.example.clothesback.common.BizException(400, "原密码错误");

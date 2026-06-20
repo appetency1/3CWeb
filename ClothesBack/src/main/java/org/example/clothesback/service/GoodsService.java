@@ -24,16 +24,16 @@ public class GoodsService {
             long total = goodsDao.countPublic(categoryId, keyword);
             return new PageResult<>(rows, total, page, size);
         } catch (SQLException e) {
-            throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage());
+            throw new BizException(ResultCode.SERVER_ERROR, "查询失败");
         }
     }
 
     public List<Map<String, Object>> listHot() {
-        try { return goodsDao.listHot(10); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage()); }
+        try { return goodsDao.listHot(10); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败"); }
     }
 
     public List<Map<String, Object>> listNew() {
-        try { return goodsDao.listNew(10); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage()); }
+        try { return goodsDao.listNew(10); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败"); }
     }
 
     public GoodsDetailVO detail(Long id) {
@@ -47,7 +47,7 @@ public class GoodsService {
             List<Map<String, Object>> skus = skuDao.listByGoods(id);
             return new GoodsDetailVO(g, skus);
         } catch (SQLException e) {
-            throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage());
+            throw new BizException(ResultCode.SERVER_ERROR, "查询失败");
         }
     }
 
@@ -58,7 +58,7 @@ public class GoodsService {
             long total = goodsDao.countAdmin(categoryId, keyword, status);
             return new PageResult<>(rows, total, page, size);
         } catch (SQLException e) {
-            throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage());
+            throw new BizException(ResultCode.SERVER_ERROR, "查询失败");
         }
     }
 
@@ -68,7 +68,7 @@ public class GoodsService {
             if (g == null) throw new BizException(ResultCode.NOT_FOUND, "商品不存在");
             return g;
         } catch (SQLException e) {
-            throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage());
+            throw new BizException(ResultCode.SERVER_ERROR, "查询失败");
         }
     }
 

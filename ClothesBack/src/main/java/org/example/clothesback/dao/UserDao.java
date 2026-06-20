@@ -8,23 +8,41 @@ import java.util.Map;
 
 public class UserDao {
 
-    public Map<String, Object> findByUsername(String username) throws SQLException {
+    // ── 内部用（含 password，仅限登录/校验场景） ──
+    public Map<String, Object> findByUsernameWithPwd(String username) throws SQLException {
         List<Map<String, Object>> rows = JdbcUtils.query(
             "SELECT * FROM user WHERE username = ? LIMIT 1", username);
         return rows.isEmpty() ? null : rows.get(0);
     }
 
-    public Map<String, Object> findById(Long id) throws SQLException {
+    public Map<String, Object> findByIdWithPwd(Long id) throws SQLException {
         List<Map<String, Object>> rows = JdbcUtils.query(
             "SELECT * FROM user WHERE id = ? LIMIT 1", id);
         return rows.isEmpty() ? null : rows.get(0);
     }
 
-    public Map<String, Object> findByPhone(String phone) throws SQLException {
+    // ── 对外用（不含 password） ──
+    public Map<String, Object> findByUsername(String username) throws SQLException {
         List<Map<String, Object>> rows = JdbcUtils.query(
-            "SELECT * FROM user WHERE phone = ? LIMIT 1", phone);
+            "SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE username = ? LIMIT 1", username);
         return rows.isEmpty() ? null : rows.get(0);
     }
+
+    public Map<String, Object> findById(Long id) throws SQLException {
+        List<Map<String, Object>> rows = JdbcUtils.query(
+            "SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE id = ? LIMIT 1", id);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    public Map<String, Object> findByPhone(String phone) throws SQLException {
+        List<Map<String, Object>> rows = JdbcUtils.query(
+            "SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE phone = ? LIMIT 1", phone);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    // listPage 返回不包含 password（只用于管理后台展示）
+    public List<Map<String, Object>> listPage(String keyword, Integer status, int offset, int size) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE 1=1");
 
     public int insert(String username, String password, String nickname, String phone, String email) throws SQLException {
         int n = JdbcUtils.update(

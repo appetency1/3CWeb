@@ -14,11 +14,11 @@ public class BannerService {
     private final BannerDao dao = new BannerDao();
 
     public List<Map<String, Object>> listEnabled() {
-        try { return dao.listEnabled(); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage()); }
+        try { return dao.listEnabled(); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败"); }
     }
 
     public List<Map<String, Object>> listAll() {
-        try { return dao.listAll(); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败: " + e.getMessage()); }
+        try { return dao.listAll(); } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "查询失败"); }
     }
 
     public Long create(BannerDTO dto) {

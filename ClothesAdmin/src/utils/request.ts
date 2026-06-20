@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080/ClothesBack_war/api'
+const BASE_URL = import.meta.env.VITE_API_BASE || '/api'
 
 interface ApiResponse<T = any> {
   code: number

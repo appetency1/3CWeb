@@ -12,7 +12,7 @@ const id = Number(route.params.id)
 const order = ref<any>(null)
 const loading = ref(true)
 const actionLoading = ref(false)
-const countdownStr = ref('23:59:59')
+const countdownStr = ref('')
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
 const STATUS_MAP: Record<number, { label: string; desc: string }> = {

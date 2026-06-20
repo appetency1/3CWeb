@@ -40,8 +40,11 @@ public class CommentService {
             if (dao.existsByOrderAndGoods(userId, dto.orderId(), dto.goodsId())) {
                 throw new BizException(409, "已评价过该商品");
             }
+            String cleanContent = dto.content().trim()
+                .replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
             String images = dto.images() == null || dto.images().isEmpty() ? null : JSON.toJSONString(dto.images());
-            dao.insert(userId, dto.goodsId(), dto.orderId(), dto.content().trim(), dto.rating(), images);
+            dao.insert(userId, dto.goodsId(), dto.orderId(), cleanContent, dto.rating(), images);
         } catch (SQLException e) { throw new BizException(ResultCode.SERVER_ERROR, "评价失败"); }
     }
 }

@@ -31,7 +31,7 @@ public class UserManageServlet extends BaseServlet {
                 if (id > 0) {
                     if (segs.length == 1 && "GET".equalsIgnoreCase(method)) {
                         try {
-                            Map<String, Object> row = JdbcUtils.query("SELECT * FROM user WHERE id=? LIMIT 1", id)
+                            Map<String, Object> row = JdbcUtils.query("SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE id=? LIMIT 1", id)
                                 .stream().findFirst().orElse(null);
                             if (row == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
                             writeOk(resp, row);
@@ -69,7 +69,7 @@ public class UserManageServlet extends BaseServlet {
         if (status != null) { where.append(" AND status=?"); params.add(status); }
         try {
             long total = JdbcUtils.queryLong("SELECT COUNT(*) FROM user" + where, params.toArray());
-            String sql = "SELECT * FROM user" + where + " ORDER BY id DESC LIMIT ? OFFSET ?";
+            String sql = "SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user" + where + " ORDER BY id DESC LIMIT ? OFFSET ?";
             params.add(size); params.add(offset);
             List<Map<String, Object>> rows = JdbcUtils.query(sql, params.toArray());
             writeOk(resp, new PageResult<>(rows, total, page, size));

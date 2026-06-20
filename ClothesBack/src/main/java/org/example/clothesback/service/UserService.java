@@ -25,7 +25,7 @@ public class UserService {
                 || dto.password() == null || dto.password().isBlank()) {
                 throw new BizException(ResultCode.BAD_REQUEST, "用户名和密码不能为空");
             }
-            Map<String, Object> row = userDao.findByUsername(dto.username().trim());
+            Map<String, Object> row = userDao.findByUsernameWithPwd(dto.username().trim());
             if (row == null) throw new BizException(ResultCode.BAD_REQUEST, "用户名或密码错误");
             String storedPwd = String.valueOf(row.get("password"));
             if (!MD5Utils.verify(dto.password(), storedPwd)) {
@@ -59,7 +59,9 @@ public class UserService {
         try {
             if (dto.username() == null || dto.username().isBlank()) throw new BizException(400, "用户名不能为空");
             if (dto.username().length() < 3 || dto.username().length() > 50) throw new BizException(400, "用户名长度3-50");
-            if (dto.password() == null || dto.password().length() < 6) throw new BizException(400, "密码至少6位");
+            if (!dto.username().matches("^[a-zA-Z0-9_\\u4e00-\\u9fa5]+$")) throw new BizException(400, "用户名只能包含字母、数字、下划线和中文");
+            if (dto.password() == null || dto.password().length() < 6 || dto.password().length() > 50) throw new BizException(400, "密码长度6-50位");
+            if (dto.password().matches("^\\d+$")) throw new BizException(400, "密码不能纯数字");
             if (userDao.findByUsername(dto.username().trim()) != null) throw new BizException(409, "用户名已存在");
 
             String phone = dto.phone();
@@ -102,7 +104,7 @@ public class UserService {
         }
         if (dto.newPassword().length() < 6) throw new BizException(400, "新密码至少6位");
         try {
-            Map<String, Object> row = userDao.findById(userId);
+            Map<String, Object> row = userDao.findByIdWithPwd(userId);
             if (row == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
             if (!MD5Utils.verify(dto.oldPassword(), String.valueOf(row.get("password")))) {
                 throw new BizException(400, "原密码错误");

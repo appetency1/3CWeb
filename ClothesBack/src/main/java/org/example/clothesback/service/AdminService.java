@@ -22,7 +22,7 @@ public class AdminService {
             if (dto.username() == null || dto.password() == null) {
                 throw new BizException(400, "用户名和密码不能为空");
             }
-            Map<String, Object> row = adminDao.findByUsername(dto.username().trim());
+            Map<String, Object> row = adminDao.findByUsernameWithPwd(dto.username().trim());
             if (row == null) throw new BizException(400, "用户名或密码错误");
             String storedPwd = String.valueOf(row.get("password"));
             if (!MD5Utils.verify(dto.password(), storedPwd)) {
