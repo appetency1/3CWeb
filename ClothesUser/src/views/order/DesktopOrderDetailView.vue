@@ -22,8 +22,11 @@ const STATUS_MAP: Record<number, any> = {
 
 async function fetchDetail() {
   loading.value = true
-  try { order.value = await orderApi.detail(id) }
-  catch (e: any) { showFailToast('加载失败') }
+  try {
+    const data: any = await orderApi.detail(id)
+    // 后端 OrderDetailVO 返回 { order: {...}, items: [...] }，展开成扁平结构
+    order.value = data?.order ? { ...data.order, items: data.items || [] } : data
+  } catch (e: any) { showFailToast('加载失败') }
   finally { loading.value = false }
 }
 

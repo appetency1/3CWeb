@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showFailToast, showToast } from 'vant'
 import { userApi } from '@/api/user'
@@ -19,8 +19,8 @@ const successShow = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
 let tiltCleanup: (() => void) | null = null
 
-// Tab pill position
-const tabPillStyle = ref({ width: '0px', transform: 'translateX(0px)' })
+// Tab pill — 用 CSS transition 实现，不用 JS 计算位置
+const tabPillStyle = ref({})
 
 // Login form
 const login = reactive({ username: '', password: '' })
@@ -51,6 +51,7 @@ async function handleLogin() {
     userStore.setToken(data.token)
     userStore.setUserInfo(data.userInfo)
     successShow.value = true
+    loading.value = false
     setTimeout(() => {
       const redirect = (route.query.redirect as string) || '/'
       router.replace(redirect)
@@ -71,29 +72,13 @@ async function handleRegister() {
     showToast('注册成功，请登录')
     Object.assign(reg, { username: '', password: '', confirmPwd: '', phone: '', nickname: '' })
     isLogin.value = true
-    await nextTick(); updateTabPill()
+    // watch 会自动处理 pill 动画
   } catch (e: any) { showFailToast(e?.message || '注册失败') }
   finally { loading.value = false }
 }
 
-function switchMode() {
-  isLogin.value = !isLogin.value
-  nextTick(() => updateTabPill())
-}
-
-function updateTabPill() {
-  const tabs = document.querySelectorAll('.tab')
-  const active = document.querySelector('.tab.active')
-  if (!active) return
-  const idx = isLogin.value ? 0 : 1
-  const el = tabs[idx] as HTMLElement
-  if (!el) return
-  const wrap = el.parentElement as HTMLElement
-  if (!wrap) return
-  tabPillStyle.value = {
-    width: el.offsetWidth + 'px',
-    transform: `translateX(${el.offsetLeft - wrap.offsetLeft}px)`
-  }
+function switchTo(target: 'login' | 'register') {
+  isLogin.value = target === 'login'
 }
 
 onMounted(() => {
@@ -153,10 +138,10 @@ onUnmounted(() => { tiltCleanup?.() })
             <div class="brand__tagline">精选时尚 · 品质生活</div>
           </div>
 
-          <div class="tabs">
-            <div class="tab__pill" :style="tabPillStyle"></div>
-            <button class="tab" :class="{ active: isLogin }" @click="isLogin || switchMode()">登录</button>
-            <button class="tab" :class="{ active: !isLogin }" @click="isLogin && switchMode()">注册</button>
+          <div class="tabs" :class="{ 'tab-login': isLogin, 'tab-register': !isLogin }">
+            <div class="tab__pill"></div>
+            <button class="tab" :class="{ active: isLogin }" @click="switchTo('login')">登录</button>
+            <button class="tab" :class="{ active: !isLogin }" @click="switchTo('register')">注册</button>
           </div>
 
           <!-- 登录 -->
@@ -518,12 +503,18 @@ onUnmounted(() => { tiltCleanup?.() })
   position: absolute;
   top: 4px;
   left: 4px;
+  right: calc(50% + 2px);
   height: calc(100% - 8px);
   background: #ffffff;
   border-radius: 100px;
   box-shadow: 0 4px 24px rgba(26,24,22,0.04);
-  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: left 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              right 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 0;
+}
+.tab-register .tab__pill {
+  left: calc(50% + 2px);
+  right: 4px;
 }
 
 /* ── Form ── */

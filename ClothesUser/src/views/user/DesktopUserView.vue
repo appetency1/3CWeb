@@ -10,9 +10,20 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const recentOrders = ref<any[]>([])
+const allOrdersForStats = ref<any[]>([])
 const loadingOrders = ref(false)
 const userAvatar = computed(() => userStore.userInfo?.avatar || '')
 const userInitial = computed(() => (userStore.userInfo?.nickname || userStore.userInfo?.username || '?')[0].toUpperCase())
+
+const orderStats = computed(() => {
+  const all = allOrdersForStats.value
+  return {
+    total: all.length,
+    pendingPay: all.filter((o: any) => o.status === 0).length,
+    pendingReceive: all.filter((o: any) => o.status === 2).length,
+    pendingReview: all.filter((o: any) => o.status === 3).length,
+  }
+})
 
 const menuItems = [
   { icon: '🏠', label: '个人中心', path: '/user', exact: true },
@@ -29,8 +40,12 @@ const secondaryItems = [
 async function loadRecentOrders() {
   loadingOrders.value = true
   try {
-    const data: any = await orderApi.list({ page: 1, size: 3 })
-    recentOrders.value = data?.list || data || []
+    // 取全部订单用于准确统计（分页取前100条，小站够用了）
+    const allData: any = await orderApi.list({ page: 1, size: 100 })
+    const list = allData?.list || allData || []
+    allOrdersForStats.value = list
+    // 最近订单保留前3条展示
+    recentOrders.value = list.slice(0, 3)
   } catch { /* silent */ }
   finally { loadingOrders.value = false }
 }
@@ -129,7 +144,7 @@ onMounted(async () => {
           <div class="stat-card" @click="navigate('/order')">
             <div class="stat-icon orders">📦</div>
             <div class="stat-info">
-              <div class="stat-num">{{ recentOrders.length }}</div>
+              <div class="stat-num">{{ orderStats.total }}</div>
               <div class="stat-label">全部订单</div>
             </div>
             <span class="stat-arrow">›</span>
@@ -137,7 +152,7 @@ onMounted(async () => {
           <div class="stat-card" @click="navigate('/order')">
             <div class="stat-icon pay">💳</div>
             <div class="stat-info">
-              <div class="stat-num">{{ recentOrders.filter((o:any) => o.status === 0).length }}</div>
+              <div class="stat-num">{{ orderStats.pendingPay }}</div>
               <div class="stat-label">待付款</div>
             </div>
             <span class="stat-arrow">›</span>
@@ -145,7 +160,7 @@ onMounted(async () => {
           <div class="stat-card" @click="navigate('/order')">
             <div class="stat-icon ship">🚚</div>
             <div class="stat-info">
-              <div class="stat-num">{{ recentOrders.filter((o:any) => o.status === 2).length }}</div>
+              <div class="stat-num">{{ orderStats.pendingReceive }}</div>
               <div class="stat-label">待收货</div>
             </div>
             <span class="stat-arrow">›</span>
@@ -153,7 +168,7 @@ onMounted(async () => {
           <div class="stat-card" @click="navigate('/order')">
             <div class="stat-icon review">⭐</div>
             <div class="stat-info">
-              <div class="stat-num">{{ recentOrders.filter((o:any) => o.status === 3).length }}</div>
+              <div class="stat-num">{{ orderStats.pendingReview }}</div>
               <div class="stat-label">待评价</div>
             </div>
             <span class="stat-arrow">›</span>
