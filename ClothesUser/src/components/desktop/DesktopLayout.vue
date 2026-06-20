@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
 import { userApi } from '@/api/user'
+import { fullImgUrl } from '@/utils/img'
 
 const router = useRouter()
 const route = useRoute()
@@ -122,8 +123,7 @@ function isCategoryActive(id: number) {
             </svg>
           </button>
           <div v-if="userStore.isLoggedIn" class="cl-user-chip" @click="goUser">
-            <img v-if="userAvatar && userAvatar.startsWith('http')" :src="userAvatar" class="cl-user-avatar-img" />
-            <img v-else-if="userAvatar && userAvatar.startsWith('/assets/avatars/')" :src="userAvatar" class="cl-user-avatar-img" />
+            <img v-if="userAvatar" :src="fullImgUrl(userAvatar)" class="cl-user-avatar-img" />
             <div v-else class="cl-user-avatar">{{ userAvatarLetter }}</div>
             <span>{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</span>
           </div>
