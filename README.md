@@ -35,7 +35,7 @@
 
 ### 核心任务：配置后端数据库
 
-**这是 AI 唯一需要做的事！**
+**⚠️ AI 只负责配置，不执行任何运行命令！**
 
 ```
 AI 执行步骤：
@@ -48,7 +48,13 @@ AI 执行步骤：
 4. 创建数据库：CREATE DATABASE IF NOT EXISTS clothes_demo
 5. 执行建表语句（跳过 schema.sql 的 DROP DATABASE 部分）
 6. 验证：SHOW TABLES
-7. 提示用户启动
+7. 提示用户手动启动
+
+✅ AI 不要做：
+- ❌ 不要运行 npm install
+- ❌ 不要运行 npm run dev
+- ❌ 不要启动后端服务
+- ❌ 不要修改前端配置
 ```
 
 ### 读取配置文件
