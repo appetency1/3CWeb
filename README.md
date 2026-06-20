@@ -55,60 +55,72 @@
 | **MySQL** | ≥ 8.0 | 数据库 |
 | **Tomcat** | ≥ 10.1 | Servlet 容器 |
 
-### 推荐开发工具
+### AI 部署指令
 
-- **IDE**: VS Code / IntelliJ IDEA
-- **数据库**: MySQL Workbench / Navicat
-- **API 测试**: Postman / Insomnia
+当 AI 需要部署此项目时，请按以下步骤执行：
 
----
+### 第一步：询问用户数据库配置
 
-## 三、快速部署（5 分钟启动）
+在开始部署前，AI **必须询问用户**以下信息：
 
-### 3.1 克隆项目
+```
+请提供以下信息以完成部署：
 
-```bash
-git clone https://github.com/appetency1/ClothesDemo.git
-cd ClothesDemo
+1. MySQL 数据库密码是什么？
+   （注意：如果 MySQL 使用其他用户名而非 root，请一并告知）
+
+2. MySQL 连接地址是什么？
+   （默认：localhost:3306，如有不同请告知）
+
+3. 是否需要修改端口配置？
+   （后端默认：8080，前端用户端默认：5173，管理后台默认：5174）
 ```
 
-### 3.2 初始化数据库
-
-1. 登录 MySQL：
+### 第二步：检查环境
 
 ```bash
+# 检查 Node.js 版本
+node --version
+
+# 检查 Java 版本
+java -version
+
+# 检查 Maven 版本
+mvn --version
+
+# 检查 MySQL 是否运行
+mysql -u root -p -e "SELECT 1"
+```
+
+### 第三步：初始化数据库
+
+```bash
+# 登录 MySQL
 mysql -u root -p
-```
 
-2. 创建数据库：
-
-```sql
+# 在 MySQL 中执行：
 CREATE DATABASE IF NOT EXISTS clothes_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 EXIT;
 ```
 
-3. 导入数据库脚本：
+### 第四步：配置后端数据库连接
 
-```bash
-# 方式一：使用 mysql 命令
-mysql -u root -p clothes_demo < Doc/schema.sql
-
-# 方式二：使用 MySQL Workbench
-# 打开 Doc/schema.sql 文件，执行
-```
-
-### 3.3 配置后端
-
-编辑 `ClothesBack/src/main/resources/db.properties`：
+**AI 必须询问用户获取数据库密码**，然后编辑 `ClothesBack/src/main/resources/db.properties`：
 
 ```properties
 jdbc.driver=com.mysql.cj.jdbc.Driver
 jdbc.url=jdbc:mysql://localhost:3306/clothes_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
 jdbc.user=root
-jdbc.password=你的MySQL密码
+jdbc.password=【用户提供的密码】
 ```
 
-### 3.4 启动后端
+### 第五步：导入数据库表结构
+
+```bash
+mysql -u root -p clothes_demo < Doc/schema.sql
+```
+
+### 第六步：启动后端
 
 ```bash
 cd ClothesBack
@@ -116,24 +128,25 @@ cd ClothesBack
 # 打包 WAR 文件
 mvn clean package
 
-# 将 WAR 文件部署到 Tomcat
-# 复制 target/ClothesBack-1.0-SNAPSHOT.war 到 Tomcat/webapps 目录
+# 复制 WAR 文件到 Tomcat
+# Linux/Mac:
+cp target/ClothesBack-1.0-SNAPSHOT.war /path/to/tomcat/webapps/
 
-# 或使用 IDE 直接运行
-# 在 IntelliJ IDEA 中打开项目，右键 AppListener.java 选择 Run
+# Windows:
+copy target\ClothesBack-1.0-SNAPSHOT.war C:\path\to\tomcat\webapps\
+
+# 启动 Tomcat，或在 IDE 中直接运行
 ```
 
 后端启动后访问：`http://localhost:8080/ClothesBack_war`
 
-### 3.5 启动前端（用户端）
+### 第七步：启动前端（用户端）
 
 ```bash
 cd ClothesUser
 
 # 安装依赖
 npm install
-# 或使用 pnpm
-pnpm install
 
 # 启动开发服务器
 npm run dev
@@ -141,21 +154,47 @@ npm run dev
 
 访问：`http://localhost:5173`
 
-### 3.6 启动前端（管理后台）
+### 第八步：启动前端（管理后台）
 
 ```bash
 cd ClothesAdmin
 
 # 安装依赖
 npm install
-# 或使用 pnpm
-pnpm install
 
 # 启动开发服务器
 npm run dev
 ```
 
 访问：`http://localhost:5174`
+
+---
+
+## 三、部署检查清单
+
+在部署过程中，AI 应该按以下顺序检查：
+
+```
+□ 1. 环境检查
+  □ Node.js ≥ 18.0.0
+  □ Java ≥ JDK 17
+  □ Maven ≥ 3.8
+  □ MySQL 8.0+
+
+□ 2. 数据库配置
+  □ 已创建数据库 clothes_demo
+  □ 已导入 Doc/schema.sql
+  □ 已配置 db.properties 中的密码
+
+□ 3. 后端启动
+  □ WAR 文件已部署到 Tomcat
+  □ Tomcat 已启动
+  □ API 可访问：curl http://localhost:8080/ClothesBack_war/api/public/banners
+
+□ 4. 前端启动
+  □ ClothesUser 已安装依赖并启动
+  □ ClothesAdmin 已安装依赖并启动
+```
 
 ---
 
@@ -195,7 +234,7 @@ ClothesDemo/
 │   │       ├── dao/       # 数据访问层
 │   │       ├── dto/       # 数据传输对象
 │   │       ├── entity/    # 实体类
-│   │       ├── filter/    # 过滤器 (CORS, 编码)
+│   │       ├── filter/     # 过滤器 (CORS, 编码)
 │   │       ├── interceptor/# 拦截器
 │   │       ├── listener/  # 监听器
 │   │       ├── servlet/   # Servlet 控制器
@@ -203,7 +242,7 @@ ClothesDemo/
 │   │       ├── util/      # 工具类
 │   │       └── vo/        # 视图对象
 │   ├── src/main/resources/
-│   │   ├── db.properties  # 数据库配置
+│   │   ├── db.properties  # 数据库配置 ⚠️ 需要修改密码
 │   │   └── schema.sql    # 数据库建表脚本
 │   └── pom.xml
 │
@@ -245,40 +284,7 @@ ClothesDemo/
 
 ---
 
-## 七、开发指南
-
-### 前端开发
-
-```bash
-# 用户端
-cd ClothesUser
-npm install
-npm run dev
-
-# 管理后台
-cd ClothesAdmin
-npm install
-npm run dev
-```
-
-### 后端开发
-
-```bash
-cd ClothesBack
-
-# 编译
-mvn compile
-
-# 打包
-mvn clean package
-
-# 运行测试
-mvn test
-```
-
----
-
-## 八、常见问题
+## 七、常见问题
 
 ### Q1: 前端无法连接后端？
 
@@ -315,7 +321,7 @@ npm install
 
 ---
 
-## 九、数据库表结构
+## 八、数据库表结构
 
 详细设计请查看：[Doc/DB_DESIGN.md](Doc/DB_DESIGN.md)
 
@@ -333,6 +339,17 @@ npm install
 | `banner` | 轮播图表 |
 | `favorite` | 收藏表 |
 | `comment` | 评价表 |
+
+---
+
+## 九、AI 部署提示
+
+本项目专为 AI 辅助部署设计，AI 在部署时应：
+
+1. **必须询问**：数据库密码、MySQL 用户名（非 root 时）、自定义端口等配置
+2. **自动检测**：检测环境是否满足要求，不满足时提示用户安装
+3. **逐步引导**：按照检查清单逐步执行，每步完成后确认
+4. **错误处理**：遇到错误时分析原因并提供解决方案
 
 ---
 
