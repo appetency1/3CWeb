@@ -4,12 +4,14 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/user'
 import { orderApi } from '@/api/order'
+import { fullImgUrl } from '@/utils/img'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 const recentOrders = ref<any[]>([])
 const loadingOrders = ref(false)
+const userAvatar = computed(() => userStore.userInfo?.avatar || '')
 const userInitial = computed(() => (userStore.userInfo?.nickname || userStore.userInfo?.username || '?')[0].toUpperCase())
 
 const menuItems = [
@@ -66,7 +68,8 @@ onMounted(async () => {
       <aside class="sidebar">
         <div class="user-card">
           <div class="avatar-wrap">
-            <div class="avatar">{{ userInitial }}</div>
+            <img v-if="userAvatar" :src="fullImgUrl(userAvatar)" class="avatar-img" />
+            <div v-else class="avatar">{{ userInitial }}</div>
             <div class="avatar-ring"></div>
           </div>
           <div class="user-name">{{ userStore.userInfo?.nickname || userStore.userInfo?.username || '游客' }}</div>
@@ -269,6 +272,12 @@ onMounted(async () => {
   background: linear-gradient(135deg, var(--accent, #c45c4a), var(--accent-dark, #8b3a2a));
   display: flex; align-items: center; justify-content: center;
   color: white; font-size: 32px; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(196,92,74,0.3);
+}
+.avatar-img {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
   box-shadow: 0 4px 16px rgba(196,92,74,0.3);
 }
 .avatar-ring {
