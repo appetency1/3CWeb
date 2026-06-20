@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
+import { userApi } from '@/api/user'
 
 const router = useRouter()
 const route = useRoute()
@@ -44,6 +45,15 @@ function onSearch() {
     router.push({ name: 'search', query: { keyword: searchValue.value } })
   }
 }
+
+onMounted(async () => {
+  if (userStore.isLoggedIn && !userStore.userInfo) {
+    try {
+      const info: any = await userApi.info()
+      userStore.setUserInfo(info)
+    } catch { /* 静默 */ }
+  }
+})
 
 function isActive(name: string) {
   return route.name === name || route.path.includes('/' + name)
