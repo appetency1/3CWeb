@@ -62,28 +62,25 @@
 
 ### AI 配置后端（自动）
 
-当 AI 需要配置此项目时，**AI 应自动完成以下操作**，无需用户手动配置：
+当 AI 需要配置此项目时，**AI 应自动完成以下操作**：
 
 ```
 AI 自动执行步骤：
 
 □ 1. 读取用户本地数据库配置
    - 读取 ClothesBack/src/main/resources/db.properties
-   - 识别数据库连接信息（URL、用户名、密码）
+   - 获取：数据库用户名、密码、连接地址
 
-□ 2. 检查并创建数据库
-   - 检查数据库 clothes_demo 是否存在
-   - 如不存在，自动创建
+□ 2. 创建数据库（仅创建，不删除原有数据）
+   - 使用 db.properties 中的凭据连接 MySQL
+   - 执行：CREATE DATABASE IF NOT EXISTS clothes_demo ...
+   - ⚠️ 重要：不要执行 schema.sql 开头的 DROP DATABASE 语句！
 
 □ 3. 导入数据库表结构
-   - 执行 Doc/schema.sql 初始化数据库表
-   - 如有数据迁移脚本，执行 Doc/migrations/ 下的脚本
+   - ⚠️ 重要：手动执行建表语句，跳过 DROP DATABASE
+   - 或执行 Doc/migrations/ 下的增量迁移脚本
 
-□ 4. 验证后端配置
-   - 确认 db.properties 配置正确
-   - 确认 Maven 依赖已下载
-
-□ 5. 完成后提示用户
+□ 4. 完成后提示用户
    - 提示用户打开 IDEA
    - 提示用户运行 ClothesBack 项目
 ```
@@ -121,27 +118,55 @@ npm run dev
 
 ### 4.1 读取现有配置
 
-AI 应该读取以下文件获取用户本地配置：
-
 ```bash
-# 读取数据库配置文件
+# AI 必须读取此文件获取数据库连接信息
 cat ClothesBack/src/main/resources/db.properties
 ```
 
-### 4.2 创建数据库（如不存在）
-
-```bash
-# 从 db.properties 提取数据库连接信息
-# 然后执行：
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS clothes_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+**文件内容示例：**
+```properties
+jdbc.driver=com.mysql.cj.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/clothes_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+jdbc.user=root
+jdbc.password=你的密码
 ```
 
-### 4.3 导入表结构
+### 4.2 创建数据库（安全操作）
+
+⚠️ **重要警告**：`Doc/schema.sql` 开头有 `DROP DATABASE` 语句，**会删除整个数据库**！
+
+AI 必须**手动执行建表语句**，不要直接执行 schema.sql：
+
+```sql
+-- 从 db.properties 提取用户名和密码后执行：
+CREATE DATABASE IF NOT EXISTS clothes_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE clothes_demo;
+
+-- 然后手动执行建表语句（跳过 DROP DATABASE）：
+CREATE TABLE IF NOT EXISTS `admin` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `username` VARCHAR(50) NOT NULL COMMENT '登录账号',
+    `password` VARCHAR(100) NOT NULL COMMENT '密码',
+    `nickname` VARCHAR(50) COMMENT '昵称',
+    `avatar` VARCHAR(255) COMMENT '头像URL',
+    `email` VARCHAR(100) COMMENT '邮箱',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 0禁用 1正常',
+    `last_login` DATETIME COMMENT '最后登录时间',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
+
+-- 插入默认管理员
+INSERT INTO `admin` (`username`, `password`, `nickname`, `status`) VALUES 
+('admin', 'e10adc3949ba59abbe56e057f20f883e', '管理员', 1);
+```
+
+### 4.3 或者：使用迁移脚本（推荐）
 
 ```bash
-mysql -u root -p clothes_demo < Doc/schema.sql
-
-# 执行数据迁移（如有）
+# 执行增量迁移脚本（不会删除数据）
 mysql -u root -p clothes_demo < Doc/migrations/20260617_link_product_images.sql
 mysql -u root -p clothes_demo < Doc/migrations/20260618_fix_goods_cover.sql
 ```
@@ -152,8 +177,8 @@ mysql -u root -p clothes_demo < Doc/migrations/20260618_fix_goods_cover.sql
 # 验证数据库连接
 mysql -u root -p -e "USE clothes_demo; SHOW TABLES;"
 
-# 验证 Maven 依赖
-cd ClothesBack && mvn dependency:resolve
+# 验证管理员账号
+mysql -u root -p -e "USE clothes_demo; SELECT * FROM admin;"
 ```
 
 ### 4.5 完成配置
@@ -170,6 +195,10 @@ cd ClothesBack && mvn dependency:resolve
 3. 找到 src/main/java/org/example/clothesback/listener/AppListener.java
 4. 右键点击，选择 Run 'AppListener'
 5. 后端启动后访问：http://localhost:8080/ClothesBack_war
+
+管理后台登录账号：
+- 用户名：admin
+- 密码：123456
 
 如遇问题，请检查：
 - MySQL 服务是否启动
@@ -197,11 +226,11 @@ ClothesDemo/
 ├── ClothesAdmin/          # 管理后台前端
 │   ├── src/
 │   │   ├── api/          # API 接口定义
-│   │   ├── layouts/      # 布局组件
-│   │   ├── router/       # 路由配置
-│   │   ├── stores/       # Pinia 状态管理
-│   │   ├── views/        # 页面视图
-│   │   └── utils/        # 工具函数
+│   │   ├── layouts/       # 布局组件
+│   │   ├── router/        # 路由配置
+│   │   ├── stores/        # Pinia 状态管理
+│   │   ├── views/         # 页面视图
+│   │   └── utils/         # 工具函数
 │   ├── docs/             # 文档
 │   ├── public/           # 静态资源
 │   └── package.json
@@ -212,18 +241,18 @@ ClothesDemo/
 │   │       ├── common/    # 通用类 (Result, BizException)
 │   │       ├── config/    # 配置类
 │   │       ├── dao/       # 数据访问层
-│   │       ├── dto/       # 数据传输对象
-│   │       ├── entity/    # 实体类
-│   │       ├── filter/     # 过滤器 (CORS, 编码)
-│   │       ├── interceptor/# 拦截器
-│   │       ├── listener/  # 监听器 (启动入口)
-│   │       ├── servlet/   # Servlet 控制器
-│   │       ├── service/   # 业务逻辑层
-│   │       ├── util/      # 工具类
-│   │       └── vo/        # 视图对象
+│   │       ├── dto/        # 数据传输对象
+│   │       ├── entity/     # 实体类
+│   │       ├── filter/      # 过滤器 (CORS, 编码)
+│   │       ├── interceptor/ # 拦截器
+│   │       ├── listener/   # 监听器 (启动入口)
+│   │       ├── servlet/    # Servlet 控制器
+│   │       ├── service/    # 业务逻辑层
+│   │       ├── util/       # 工具类
+│   │       └── vo/         # 视图对象
 │   ├── src/main/resources/
-│   │   ├── db.properties  # 数据库配置（AI 自动读取配置）
-│   │   └── schema.sql    # 数据库建表脚本
+│   │   ├── db.properties  # 数据库配置 ⚠️ 重要配置
+│   │   └── schema.sql     # 数据库建表脚本 ⚠️ 危险：含 DROP DATABASE
 │   └── pom.xml
 │
 ├── Doc/                   # 项目文档
@@ -231,7 +260,7 @@ ClothesDemo/
 │   ├── BACKEND_GUIDE.md  # 后端开发指南
 │   ├── DB_DESIGN.md      # 数据库设计
 │   ├── FRONTEND_GUIDE.md # 前端开发指南
-│   └── migrations/       # 数据库迁移脚本
+│   └── migrations/        # 数据库迁移脚本（推荐使用）
 │
 └── README.md             # 本文件
 ```
@@ -287,6 +316,15 @@ netstat -ano | findstr :8080
 # 结束进程
 taskkill /PID <进程ID> /F
 ```
+
+### Q4: schema.sql 会删除数据库吗？
+
+⚠️ **会！** `schema.sql` 开头有 `DROP DATABASE IF EXISTS clothes_demo;`
+
+**正确做法：**
+- 只创建数据库，不执行 DROP DATABASE
+- 使用 `Doc/migrations/` 下的增量脚本进行迁移
+- 或者手动执行建表语句，跳过 DROP DATABASE
 
 ---
 
