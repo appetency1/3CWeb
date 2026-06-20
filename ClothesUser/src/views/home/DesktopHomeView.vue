@@ -117,7 +117,7 @@ async function loadBanners() {
       )
     }
   } catch { /* silent */ }
-  bannersLoaded.value = true
+  if (banners.value.length > 0) bannersLoaded.value = true
 }
 async function loadCategories() {
   try {
