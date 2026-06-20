@@ -82,7 +82,7 @@ onMounted(loadAddresses)
         </div>
 
         <div v-for="item in checkedItems" :key="`${item.goodsId}-${item.sku}`" class="cart-item">
-          <img :src="item.image" class="cart-item-img" @error="($event.target as HTMLImageElement).src = '/assets/placeholders/product-placeholder.svg'" />
+          <img :src="item.image" class="cart-item-img" alt="商品图" @error="($event.target as HTMLImageElement).src = '/assets/placeholders/product-placeholder.svg'" />
           <div class="cart-item-info">
             <h3>{{ item.name }}</h3>
             <div class="cart-item-meta">{{ item.sku || '默认规格' }}</div>

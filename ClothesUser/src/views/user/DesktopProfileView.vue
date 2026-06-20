@@ -141,7 +141,7 @@ onMounted(loadInfo)
         <aside class="profile-sidebar">
           <div class="avatar-upload-wrap" @click="openAvatarPicker">
             <div class="avatar-preview" style="cursor:pointer">
-              <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" />
+              <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" alt="用户头像" />
               <div v-else class="avatar-placeholder">{{ userAvatar }}</div>
               <div class="avatar-overlay">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

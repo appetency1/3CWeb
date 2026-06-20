@@ -153,3 +153,99 @@
 本次修改方向是对的，尤其是 **BCrypt 迁移、CORS 白名单、异常处理、数据库密码环境变量、折扣一致性** 这几个核心问题修复得很好。但仍有大量阻塞项未动，且**新增的评论功能和 demo 文件引入了新的风险**。
 
 建议下一波优先处理：**token 存储、`v-html`、默认弱口令、支付/退款真实性、评论 XSS、demo 文件清理**。
+
+---
+
+# 附录：第二轮修复记录（2026-06-20）
+
+> 当前总分：**61/100（Risky，但主要安全阻塞项已大幅缓解）**  
+> 上一轮总分：52/100
+
+---
+
+## 第二轮已修复问题 ✅
+
+| 原编号 | 问题 | 文件 | 修复说明 |
+|--------|------|------|----------|
+| **B-02** | `v-html` 存储型 XSS | `ClothesUser/src/views/goods/DesktopGoodsDetailView.vue`<br>`ClothesUser/src/views/goods/GoodsDetail.vue` | 引入 `dompurify`，商品详情渲染前用 `DOMPurify.sanitize()` 清洗 |
+| **B-08 部分** | 伪支付无校验 | `ClothesBack/src/main/java/org/example/clothesback/service/OrderService.java:164-180` | 在事务内先查订单状态，仅 `status=0` 可支付；增加 `pay_amount > 0` 金额校验，避免重复支付和金额异常 |
+| **B-04 部分** | 默认弱口令 | `ClothesBack/src/main/java/org/example/clothesback/service/AdminService.java`<br>`ClothesBack/src/main/java/org/example/clothesback/vo/V.java`<br>`Doc/schema.sql` | 登录时检测是否为默认 MD5 密码，返回 `needChangePassword=true`；schema.sql 增加注释提示首次登录改密 |
+| **C-17** | 评论 XSS | `ClothesBack/src/main/java/org/example/clothesback/service/CommentService.java:43-45` | 对评论内容进行 HTML 实体转义（`<`、`>`、`"`、`'`） |
+| **C-12 部分** | 返回 password | `ClothesBack/src/main/java/org/example/clothesback/dao/UserDao.java:75-76` | `listPage` 从 `SELECT *` 改为显式列，不再返回 `password` |
+| **H-01 部分** | 图片无 `alt` | `ClothesUser/src/views/category/DesktopCategoryView.vue`<br>`ClothesUser/src/views/order/DesktopOrderConfirmView.vue`<br>`ClothesUser/src/views/order/DesktopOrderDetailView.vue`<br>`ClothesUser/src/views/user/DesktopProfileView.vue`<br>`ClothesAdmin/src/views/goods/GoodsForm.vue` | 为商品图、头像、封面等补充 `alt` 文本 |
+| **B-01 部分** | Token 传输方式 | `ClothesBack/src/main/java/org/example/clothesback/servlet/user/UserServlet.java`<br>`ClothesBack/src/main/java/org/example/clothesback/servlet/admin/AdminServlet.java`<br>`ClothesBack/src/main/java/org/example/clothesback/interceptor/AuthInterceptor.java` | 后端登录接口新增 `HttpOnly` Cookie 设置；AuthInterceptor 优先从 Cookie 读取 token，兼容旧 Authorization header |
+
+### 第二轮修复亮点
+
+1. **DOMPurify 选得好**：直接用在 `v-html` 前面，把存储型 XSS 风险降到很低。
+2. **支付加了状态机和金额校验**：不再是"无脑改状态"，至少避免了负数支付和重复支付。
+3. **默认密码检测 + 强制改密提示**：虽然是"提示"而非"强制拦截"，但已经向安全方向迈出一步。
+4. **后端优先支持 HttpOnly Cookie**：为前端彻底移除 localStorage token 打下基础。
+
+---
+
+## 第二轮仍未修复 ❌
+
+| 编号 | 问题 | 当前状态 | 说明 |
+|------|------|----------|------|
+| **B-01 核心** | Token 仍存 localStorage | **未修复** | 后端已支持 Cookie，但 `ClothesUser/src/utils/request.ts:11` 和 `ClothesUser/src/stores/user.ts:5,12` 仍从 localStorage 读写 token，并手动加到 `Authorization` header。XSS 窃取风险仍在。 |
+| **B-01 Admin** | Admin 端 token 仍存 localStorage | **未修复** | `ClothesAdmin/src/utils/request.ts` 和 `ClothesAdmin/src/stores/admin.ts` 未修改。 |
+| **B-04 核心** | 默认管理员密码仍是 `123456` | **未根本修复** | `schema.sql` 中仍是 `e10adc3949ba59abbe56e057f20f883e`（MD5 of "123456"），只是加了注释。建议直接改为 BCrypt 强密码哈希。 |
+| **B-08 核心** | 仍无真实支付 | **未修复** | 支付仍是模拟支付，`DesktopOrderView.vue:59` 注释写着 `"Simulate payment"`。 |
+| **Cookie 安全** | Cookie 设置不完整 | **需优化** | 后端设置的 `token` Cookie：`Secure=false`（生产应为 true）、未设置 `SameSite`（存在 CSRF 风险）、未设置 `MaxAge` 统一过期策略与 `TokenManager` 一致。 |
+| **C-01** | TokenManager 内存存储无 TTL | **未修复** | 仍为内存 Map，服务重启失效、无法单点登出、无过期清理。 |
+| **C-06/C-07** | 文件上传校验 | **未修复** | 仍只校验扩展名。 |
+| **C-11 大部分** | 多处 `SELECT *` | **部分修复** | 仅 `UserDao.listPage` 修复，`GoodsDao`、`OrderDao` 等多处仍是 `SELECT *`。 |
+| **C-13** | 注册/登录输入校验 | **未修复** | `UserServlet` 未增加统一 DTO 校验。 |
+| **C-14** | 登录错误可枚举用户名 | **未修复** | 错误文案已统一，但状态码/异常类型仍可区分。 |
+| **C-15** | 运费硬编码为 0 | **未修复** | 折扣已改，运费仍为 0。 |
+| **F-01 ~ F-12** | 功能虚假模块 | **未修复** | 优惠码、秒杀、会员、客服、退款、运费等虚假功能入口和文案均未改动。 |
+| **L-01 ~ L-09** | 低优先级问题 | **未修复** | 索引、SSL、安全头、测试、CI/CD 等均未改动。 |
+
+---
+
+## 第二轮新增/发现的问题 ⚠️
+
+| 编号 | 问题 | 文件 | 说明 |
+|------|------|------|------|
+| **N-07** | JVM 崩溃日志残留 | `d:/AI Code/ClothesDemo/hs_err_pid20572.log` | 项目根目录出现 HotSpot 错误日志，应删除并加入 `.gitignore` |
+| **N-08** | `.gitignore` 仍未覆盖 demo 文件和 JVM 日志 | `.gitignore` | demo 文件、截图、JVM 崩溃日志均未被忽略 |
+
+---
+
+## 当前核心阻塞项（只剩 3 个）
+
+1. **前端 Token 必须从 localStorage 移除**：让 axios 自动携带 Cookie，或者前端完全不碰 token。
+2. **默认管理员密码必须改为强密码**：不要再用 `123456` 及其 MD5。
+3. **真实支付或明确标注模拟支付**：当前代码中 `"Simulate payment"` 注释说明支付仍是模拟实现，要么接真实支付，要么在 UI 明确标注。
+
+---
+
+## 第二轮后的下一步建议
+
+### 必须修（否则上线仍有重大风险）
+
+1. **移除前端 localStorage token**：
+   - 删除 `ClothesUser/src/utils/request.ts` 中手动读取 token 的逻辑。
+   - 删除 `ClothesUser/src/stores/user.ts` 中 localStorage 读写。
+   - 确保 axios `withCredentials: true`，让浏览器自动携带 HttpOnly Cookie。
+   - 对 `ClothesAdmin` 做同样改造。
+2. **修复默认弱口令**：
+   - 在 `Doc/schema.sql` 中把管理员初始密码改为 BCrypt 哈希的强密码（如 `BCrypt.hashpw("ChangeMe@2026", ...)`）。
+   - 或在首次登录时强制修改默认密码。
+3. **完善 Cookie 安全属性**：
+   - 根据环境设置 `Secure=true/false`。
+   - 设置 `SameSite=Strict` 或 `Lax`。
+   - 统一 `MaxAge` 与 `TokenManager` 的过期策略。
+
+### 建议修
+
+4. **TokenManager 加 TTL**：改用 Redis 或数据库，支持过期和主动失效。
+5. **文件上传校验**：校验文件头、限制大小、UUID 重命名。
+6. **清理 demo 文件和 JVM 日志**：加入 `.gitignore` 或删除。
+7. **继续补充 `alt` 和表单可访问性**。
+
+### 练手项目可暂时忽略
+
+8. 优惠券、会员积分、秒杀、客服等功能虚假模块（如果决定砍功能）。
+9. 运费模板、真实退款、消息通知等高级功能。

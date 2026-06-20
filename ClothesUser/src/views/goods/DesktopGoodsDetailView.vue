@@ -9,6 +9,7 @@ import { useCartStore } from '@/stores/cart'
 import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 import { http } from '@/utils/request'
 import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +18,7 @@ const cartStore = useCartStore()
 
 const loading = ref(true)
 const goods = ref<any>(null)
+const sanitizedDetail = computed(() => goods.value?.detail ? DOMPurify.sanitize(goods.value.detail) : '')
 const skus = ref<any[]>([])
 const activeImage = ref(0)
 const selectedSku = ref<any>(null)
@@ -399,7 +401,7 @@ watch(() => route.params.id, () => { loadAll() })
         <!-- 6. 商品详情 -->
         <div v-if="goods.detail" class="detail-card">
           <h3 class="card-h">商品详情</h3>
-          <div v-html="goods.detail" class="detail-html" />
+          <div v-html="sanitizedDetail" class="detail-html" />
         </div>
 
         <!-- 7. 评价 -->

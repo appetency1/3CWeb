@@ -280,7 +280,7 @@ onMounted(async () => {
             @click="goGoods(g.id)"
           >
             <div class="card-img-wrap">
-              <img :src="fullImgUrl(g.cover)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+              <img :src="fullImgUrl(g.cover)" :alt="g.name || '商品图'" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
               <div class="card-badges">
                 <span v-if="g.isHot" class="badge badge-hot">热卖</span>
                 <span v-if="g.isNew" class="badge badge-new">新品</span>

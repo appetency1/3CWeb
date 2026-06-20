@@ -28,6 +28,9 @@ public class AdminService {
             if (!MD5Utils.verify(dto.password(), storedPwd)) {
                 throw new BizException(400, "用户名或密码错误");
             }
+            // 检测是否为默认密码（MD5 of "123456" = e10adc3949ba59abbe56e057f20f883e）
+            boolean isDefaultPwd = "e10adc3949ba59abbe56e057f20f883e".equals(storedPwd);
+
             // 旧 MD5 密码登录成功时自动升级为 BCrypt
             if (MD5Utils.needsUpgrade(storedPwd)) {
                 adminDao.updatePassword(((Number) row.get("id")).longValue(), MD5Utils.hash(dto.password()));
@@ -45,7 +48,7 @@ public class AdminService {
                 "nickname", admin.getNickname() == null ? "" : admin.getNickname(),
                 "avatar", admin.getAvatar() == null ? "" : admin.getAvatar()
             );
-            return new LoginVO(token, userInfo);
+            return new LoginVO(token, userInfo, isDefaultPwd);
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "登录失败");
         }

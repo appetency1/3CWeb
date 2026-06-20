@@ -10,7 +10,11 @@ import java.util.Map;
 public final class V {
     private V() {}
 
-    public record LoginVO(String token, Map<String, Object> userInfo) {}
+    public record LoginVO(String token, Map<String, Object> userInfo, boolean needChangePassword) {
+        public LoginVO(String token, Map<String, Object> userInfo) {
+            this(token, userInfo, false);
+        }
+    }
 
     /** 购物车行,带商品/快照信息。 */
     public record CartItemVO(

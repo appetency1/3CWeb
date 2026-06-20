@@ -40,10 +40,6 @@ public class UserDao {
         return rows.isEmpty() ? null : rows.get(0);
     }
 
-    // listPage 返回不包含 password（只用于管理后台展示）
-    public List<Map<String, Object>> listPage(String keyword, Integer status, int offset, int size) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE 1=1");
-
     public int insert(String username, String password, String nickname, String phone, String email) throws SQLException {
         int n = JdbcUtils.update(
             "INSERT INTO user (username, password, nickname, phone, email, status) VALUES (?, ?, ?, ?, ?, 1)",
@@ -77,7 +73,7 @@ public class UserDao {
     }
 
     public List<Map<String, Object>> listPage(String keyword, Integer status, int offset, int size) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT * FROM user WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT id, username, nickname, avatar, phone, email, gender, birthday, status, create_time FROM user WHERE 1=1");
         java.util.List<Object> params = new java.util.ArrayList<>();
         if (keyword != null && !keyword.isBlank()) {
             sql.append(" AND (username LIKE ? OR nickname LIKE ? OR phone LIKE ?)");

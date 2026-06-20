@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast, showConfirmDialog, showToast } from 'vant'
 import { orderApi } from '@/api/order'
-import { fullImgUrl } from '@/utils/img'
 
 const router = useRouter()
 const active = ref(0)
@@ -111,7 +110,7 @@ onMounted(() => {
 
       <!-- 统计卡片 -->
       <div class="stats-bar">
-        <div v-for="(s, i) in stats" :key="s.label"
+        <div v-for="(s) in stats" :key="s.label"
           class="stat-card"
           :class="{ active: active === s.tabIdx }"
           @click="active = s.tabIdx"

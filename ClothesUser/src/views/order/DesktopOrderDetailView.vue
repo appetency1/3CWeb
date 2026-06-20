@@ -208,7 +208,7 @@ onUnmounted(() => { if (countdownTimer) clearInterval(countdownTimer) })
               </div>
               <div class="card-body">
                 <div v-for="(item, idx) in order.items" :key="item.id || idx" class="item-row" @click="router.push(`/goods/${item.goodsId}`)">
-                  <img :src="fullImgUrl(item.goodsCover)" class="item-thumb" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+                  <img :src="fullImgUrl(item.goodsCover)" class="item-thumb" :alt="item.goodsName || '商品图'" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
                   <div class="item-detail">
                     <div class="item-name">{{ item.goodsName }}</div>
                     <div class="item-spec">{{ item.spec || '默认规格' }}</div>

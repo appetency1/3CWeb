@@ -142,7 +142,7 @@ onMounted(async () => {
         <!-- 有图时显示预览 -->
         <div v-if="form.cover" class="cover-preview-wrap">
           <div class="cover-preview">
-            <img :src="imgUrl(form.cover)" class="cover-img" />
+            <img :src="imgUrl(form.cover)" alt="商品封面" class="cover-img" />
             <button class="cover-remove" @click="removeCover">✕</button>
           </div>
           <div class="cover-path">{{ form.cover }}</div>

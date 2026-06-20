@@ -253,6 +253,7 @@ CREATE TABLE `comment` (
 -- ============================================================
 -- 初始数据 - 管理员账号
 -- 密码: 123456  (MD5: e10adc3949ba59abbe56e057f20f883e)
+-- 部署后首次登录请立即修改密码，系统会自动升级为 BCrypt
 -- ============================================================
 INSERT INTO `admin` (`username`, `password`, `nickname`, `status`) VALUES
 ('admin', 'e10adc3949ba59abbe56e057f20f883e', 'Admin', 1);

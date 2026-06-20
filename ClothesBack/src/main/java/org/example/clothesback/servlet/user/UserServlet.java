@@ -49,12 +49,23 @@ public class UserServlet extends BaseServlet {
     private void doLogin(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         JSONObject body = readJson(req);
         LoginDTO dto = new LoginDTO(body.getString("username"), body.getString("password"));
-        writeOk(resp, "登录成功", userService.login(dto));
+        var vo = userService.login(dto);
+        // HttpOnly Cookie（XSS 无法窃取），后端两种方式都支持
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", vo.token());
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 3600);
+        resp.addCookie(cookie);
+        writeOk(resp, "登录成功", vo);
     }
 
     private void doLogout(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         if (AuthInterceptor.preHandle(req, resp)) {
             userService.logout(currentToken(req));
+            jakarta.servlet.http.Cookie c = new jakarta.servlet.http.Cookie("token", "");
+            c.setPath("/"); c.setMaxAge(0);
+            resp.addCookie(c);
             writeOk(resp, "退出成功", null);
         }
     }

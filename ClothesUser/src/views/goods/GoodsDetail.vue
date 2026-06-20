@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showLoadingToast, showFailToast, showToast } from 'vant'
+import DOMPurify from 'dompurify'
 import { publicApi } from '@/api/public'
 import { cartApi } from '@/api/cart'
 import { useUserStore } from '@/stores/user'
@@ -16,6 +17,7 @@ const cartStore = useCartStore()
 const id = Number(route.params.id)
 const loading = ref(true)
 const goods = ref<any>(null)
+const sanitizedDetail = computed(() => goods.value?.detail ? DOMPurify.sanitize(goods.value.detail) : '')
 const skus = ref<any[]>([])
 const activeImage = ref(0)
 const showSku = ref(false)
@@ -228,7 +230,7 @@ onMounted(async () => {
       <!-- Detail Images -->
       <div v-if="goods.detail" class="goods-detail-images">
         <div class="card-title" style="padding:16px 16px 8px">商品详情</div>
-        <div v-html="goods.detail" class="detail-html" />
+        <div v-html="sanitizedDetail" class="detail-html" />
       </div>
 
       <!-- Comments -->

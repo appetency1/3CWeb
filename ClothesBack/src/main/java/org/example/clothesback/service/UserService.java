@@ -72,7 +72,7 @@ public class UserService {
                 dto.nickname(), phone, dto.email());
             return login(new LoginDTO(dto.username(), dto.password()));
         } catch (SQLException e) {
-            throw new BizException(ResultCode.SERVER_ERROR, "注册失败");
+            throw new BizException(ResultCode.SERVER_ERROR, "注册失败: " + e.getMessage());
         }
     }
 

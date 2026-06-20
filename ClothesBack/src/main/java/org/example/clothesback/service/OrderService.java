@@ -163,12 +163,18 @@ public class OrderService {
 
     public void pay(Long userId, Long orderId) {
         try {
+            // 幂等：数据库事务内先查再改，状态=0 时才能支付，避免了重复支付
             JdbcUtils.transaction(conn -> {
                 Map<String, Object> o = orderDao.findById(orderId);
                 if (o == null) throw new BizException(ResultCode.NOT_FOUND, "订单不存在");
                 if (((Number) o.get("user_id")).longValue() != userId) throw new BizException(ResultCode.NOT_FOUND, "订单不存在");
                 int st = ((Number) o.get("status")).intValue();
                 if (st != 0) throw new BizException(409, "订单当前状态不支持支付");
+                // 金额校验：实付金额必须 > 0
+                BigDecimal payAmount = (BigDecimal) o.get("pay_amount");
+                if (payAmount == null || payAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new BizException(400, "订单金额异常");
+                }
                 orderDao.updateStatusWithTime(conn, orderId, 1, "pay_time");
             });
         } catch (SQLException e) {

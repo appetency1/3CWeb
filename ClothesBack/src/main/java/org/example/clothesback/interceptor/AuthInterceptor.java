@@ -16,8 +16,12 @@ import java.util.Map;
 public class AuthInterceptor {
 
     public static boolean preHandle(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        String header = req.getHeader("Authorization");
-        String token = stripBearer(header);
+        // 优先从 Cookie 取 token（HttpOnly Cookie 方式），兼容旧版 Authorization header
+        String token = readTokenFromCookie(req);
+        if (token == null) {
+            String header = req.getHeader("Authorization");
+            token = stripBearer(header);
+        }
         if (token == null) {
             writeUnauthorized(resp, "未登录");
             return false;
@@ -30,6 +34,19 @@ public class AuthInterceptor {
         req.setAttribute("currentUser", u);
         req.setAttribute("currentToken", token);
         return true;
+    }
+
+    /** 从 Cookie 中读取 token（名称为 token）。 */
+    private static String readTokenFromCookie(HttpServletRequest req) {
+        jakarta.servlet.http.Cookie[] cookies = req.getCookies();
+        if (cookies == null) return null;
+        for (var c : cookies) {
+            if ("token".equals(c.getName())) {
+                String val = c.getValue();
+                if (val != null && !val.isEmpty()) return val;
+            }
+        }
+        return null;
     }
 
     private static String stripBearer(String header) {
