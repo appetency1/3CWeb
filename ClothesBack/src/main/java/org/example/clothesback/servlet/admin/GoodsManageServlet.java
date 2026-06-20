@@ -66,6 +66,14 @@ public class GoodsManageServlet extends BaseServlet {
         writeOk(resp, data);
     }
 
+    /** 安全将 Object 转 Integer：接受 Boolean → 0/1，null → null，Number → int */
+    private Integer toInt(Object v) {
+        if (v == null) return null;
+        if (v instanceof Boolean) return ((Boolean) v) ? 1 : 0;
+        if (v instanceof Number) return ((Number) v).intValue();
+        try { return Integer.parseInt(v.toString()); } catch (Exception e) { return null; }
+    }
+
     private GoodsSaveDTO parseDto(JSONObject b) {
         JSONArray arr = b.getJSONArray("skus");
         List<GoodsSaveDTO.SkuDTO> skus = new ArrayList<>();
@@ -78,7 +86,7 @@ public class GoodsManageServlet extends BaseServlet {
             b.getLong("categoryId"), b.getString("name"), b.getString("brand"), b.getString("cover"),
             b.getString("images"), b.getString("description"), b.getString("detail"),
             b.getBigDecimal("price"), b.getBigDecimal("originalPrice"),
-            b.getInteger("stock"), b.getInteger("isHot"), b.getInteger("isNew"), skus);
+            toInt(b.get("stock")), toInt(b.get("isHot")), toInt(b.get("isNew")), skus);
     }
 
     private void create(HttpServletRequest req, HttpServletResponse resp) throws Exception {
