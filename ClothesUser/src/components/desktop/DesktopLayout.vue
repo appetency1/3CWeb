@@ -11,7 +11,9 @@ const cartStore = useCartStore()
 
 const searchValue = ref('')
 
-const userAvatar = computed(() => {
+const userAvatar = computed(() => userStore.userInfo?.avatar || '')
+
+const userAvatarLetter = computed(() => {
   const str = userStore.userInfo?.nickname || userStore.userInfo?.username || '?'
   return str[0].toUpperCase()
 })
@@ -110,7 +112,9 @@ function isCategoryActive(id: number) {
             </svg>
           </button>
           <div v-if="userStore.isLoggedIn" class="cl-user-chip" @click="goUser">
-            <div class="cl-user-avatar">{{ userAvatar }}</div>
+            <img v-if="userAvatar && userAvatar.startsWith('http')" :src="userAvatar" class="cl-user-avatar-img" />
+            <img v-else-if="userAvatar && userAvatar.startsWith('/assets/avatars/')" :src="userAvatar" class="cl-user-avatar-img" />
+            <div v-else class="cl-user-avatar">{{ userAvatarLetter }}</div>
             <span>{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</span>
           </div>
           <button v-else class="cl-login-btn" @click="goLogin">登录</button>
@@ -391,6 +395,14 @@ function isCategoryActive(id: number) {
   color: white;
   font-size: 12px;
   font-weight: 700;
+  flex-shrink: 0;
+}
+.cl-user-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .cl-login-btn {
