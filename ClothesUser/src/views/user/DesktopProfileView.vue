@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast, showToast } from 'vant'
 import { userApi } from '@/api/user'
+import { publicApi } from '@/api/public'
 import { useUserStore } from '@/stores/user'
 import DesktopLayout from '@/components/desktop/DesktopLayout.vue'
 
@@ -88,16 +89,8 @@ async function onAvatarUpload(e: Event) {
   try {
     const formData = new FormData()
     formData.append('file', file)
-    const token = localStorage.getItem('token')
-    const base = 'http://localhost:8080/ClothesBack_war'
-    const res = await fetch(`${base}/api/public/upload`, {
-      method: 'POST',
-      body: formData,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-    const data = await res.json()
-    if (data.code !== 0 && data.code !== 200) throw new Error(data.message || '上传失败')
-    const url = data.data.url
+    const data = await publicApi.upload(formData)
+    const url = data.url
     // 更新头像
     await userApi.updateInfo({ avatar: url } as any)
     userStore.setUserInfo({ ...userStore.userInfo, avatar: url })

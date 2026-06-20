@@ -86,10 +86,28 @@ function pct(orig: any, cur: any) {
   if (!o || o <= c) return 0
   return Math.round((1 - c / o) * 100)
 }
+function parseSpec(spec: any): Record<string, string> {
+  if (spec == null) return {}
+  if (typeof spec === 'object') return spec
+  try { return JSON.parse(spec) } catch { return {} }
+}
+
+/** 常见颜色名称 → 色值映射 */
+function colorMap(name: string): string {
+  const map: Record<string, string> = {
+    '红色': '#d43d3d', '奶茶色': '#c8a882', '白色': '#f0f0f0', '黑色': '#2a2a2a',
+    '粉色': '#f5a0b0', '蓝色': '#4a7db4', '绿色': '#5a9e6f', '黄色': '#e8c84a',
+    '灰色': '#8a8a8a', '紫色': '#8a5a9e', '棕色': '#8b6b4a', '米色': '#e8dcc8',
+    '卡其': '#c3a87a', '深蓝': '#1a3a5c', '杏色': '#e8b88a', '花色': '#d4a0a0',
+    '咖色': '#8a6a4a', '浅灰': '#c8c8c8', '深灰': '#5a5a5a', '藏青': '#1a2a4a',
+    '天蓝': '#87ceeb', '军绿': '#4a6a3a', '驼色': '#b88a5a', '酒红': '#6a2a3a',
+  }
+  return map[name] || '#ddd'
+}
+
 function specText(s: any) {
-  if (!s) return ''
-  if (typeof s.spec === 'string') return s.spec
-  try { return JSON.stringify(s.spec) } catch { return String(s.spec) }
+  const obj = parseSpec(s.spec)
+  return Object.values(obj).join(' / ') || '默认规格'
 }
 function parseImgs(json: any): string[] {
   if (!json) return []
@@ -335,9 +353,21 @@ watch(() => route.params.id, () => { loadAll() })
               :class="{ active: selectedSku?.id === s.id, disabled: Number(s.stock) <= 0 }"
               @click="Number(s.stock) > 0 && selectSku(s)"
             >
-              <span class="sku-spec">{{ specText(s) }}</span>
-              <span class="sku-price">¥{{ priceFmt(s.price) }}</span>
-              <span v-if="Number(s.stock) <= 0" class="sku-oos">缺货</span>
+              <div class="sku-specs">
+                <template v-for="(v, k) in parseSpec(s.spec)" :key="k">
+                  <span v-if="k === '颜色' || k === '颜色分类'" class="color-chip">
+                    <span class="color-dot" :style="{ background: colorMap(v) }"></span>
+                    {{ v }}
+                  </span>
+                  <span v-else class="spec-tag">{{ k }}: {{ v }}</span>
+                </template>
+                <span v-if="!s.spec || Object.keys(parseSpec(s.spec)).length === 0" class="sku-spec-text">默认规格</span>
+              </div>
+              <div class="sku-meta">
+                <span class="sku-price">¥{{ priceFmt(s.price) }}</span>
+                <span v-if="Number(s.stock) > 0" class="sku-stock">库存 {{ s.stock }}</span>
+                <span v-else class="sku-oos">缺货</span>
+              </div>
             </div>
           </div>
         </div>
@@ -560,15 +590,21 @@ watch(() => route.params.id, () => { loadAll() })
 
 .sku-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .sku-item {
-  display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1.5px solid #e8e5e0;
-  border-radius: 6px; font-size: 13px; color: #1a1a1a; cursor: pointer; transition: all 0.2s; min-width: 100px;
+  display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border: 1.5px solid #e8e5e0;
+  border-radius: 8px; font-size: 13px; color: #1a1a1a; cursor: pointer; transition: all 0.2s; min-width: 120px;
 }
 .sku-item:hover { border-color: #c45c4a; }
-.sku-item.active { border-color: #c45c4a; background: #fdf5f3; color: #c45c4a; }
+.sku-item.active { border-color: #c45c4a; background: #fdf5f3; }
 .sku-item.disabled { opacity: 0.4; cursor: not-allowed; }
-.sku-spec { font-size: 13px; }
-.sku-price { font-size: 12px; color: #c45c4a; font-weight: 600; }
-.sku-oos { font-size: 11px; color: #999; }
+.sku-specs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.sku-spec-text { font-size: 13px; color: #666; }
+.sku-meta { display: flex; align-items: center; gap: 8px; }
+.sku-price { font-size: 14px; color: #c45c4a; font-weight: 600; }
+.sku-stock { font-size: 11px; color: #999; }
+.sku-oos { font-size: 11px; color: #ccc; }
+.color-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #666; }
+.color-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; }
+.spec-tag { display: inline-block; font-size: 11px; color: #666; background: #f5f3f0; padding: 1px 6px; border-radius: 3px; }
 
 .qty-card { display: flex; align-items: center; gap: 20px; }
 .qty-card .card-h { margin-bottom: 0; border: none; padding: 0; }

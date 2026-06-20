@@ -76,5 +76,8 @@ export function uploadFile(file: File): Promise<string> {
 export function imgUrl(path: string): string {
   if (!path) return ''
   if (path.startsWith('http')) return path
+  // 前端静态资源（/assets/）从本机 Vite dev server 加载（proxy → ClothesUser）
+  if (path.startsWith('/assets/')) return path
+  // 后端上传资源（/uploads/）走后端静态文件服务
   return UPLOAD_BASE + path
 }

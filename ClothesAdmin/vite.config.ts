@@ -18,6 +18,12 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    proxy: {
+      '/assets': {
+        target: 'http://localhost:5173',
+        changeOrigin: true
+      }
+    }
   }
 })
