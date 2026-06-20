@@ -54,151 +54,131 @@
 | **Maven** | ≥ 3.8 | 后端项目管理 |
 | **MySQL** | ≥ 8.0 | 数据库 |
 | **Tomcat** | ≥ 10.1 | Servlet 容器 |
+| **IntelliJ IDEA** | 最新版 | 后端开发 IDE |
 
-### AI 部署指令
+---
 
-当 AI 需要部署此项目时，请按以下步骤执行：
+## 三、快速启动
 
-### 第一步：询问用户数据库配置
+### AI 配置后端（自动）
 
-在开始部署前，AI **必须询问用户**以下信息：
+当 AI 需要配置此项目时，**AI 应自动完成以下操作**，无需用户手动配置：
 
 ```
-请提供以下信息以完成部署：
+AI 自动执行步骤：
 
-1. MySQL 数据库密码是什么？
-   （注意：如果 MySQL 使用其他用户名而非 root，请一并告知）
+□ 1. 读取用户本地数据库配置
+   - 读取 ClothesBack/src/main/resources/db.properties
+   - 识别数据库连接信息（URL、用户名、密码）
 
-2. MySQL 连接地址是什么？
-   （默认：localhost:3306，如有不同请告知）
+□ 2. 检查并创建数据库
+   - 检查数据库 clothes_demo 是否存在
+   - 如不存在，自动创建
 
-3. 是否需要修改端口配置？
-   （后端默认：8080，前端用户端默认：5173，管理后台默认：5174）
+□ 3. 导入数据库表结构
+   - 执行 Doc/schema.sql 初始化数据库表
+   - 如有数据迁移脚本，执行 Doc/migrations/ 下的脚本
+
+□ 4. 验证后端配置
+   - 确认 db.properties 配置正确
+   - 确认 Maven 依赖已下载
+
+□ 5. 完成后提示用户
+   - 提示用户打开 IDEA
+   - 提示用户运行 ClothesBack 项目
 ```
 
-### 第二步：检查环境
+### 用户手动启动（只需两步）
 
-```bash
-# 检查 Node.js 版本
-node --version
+#### 第一步：打开 IDEA 运行后端
 
-# 检查 Java 版本
-java -version
+1. 用 IntelliJ IDEA 打开 `ClothesDemo/ClothesBack` 文件夹
+2. 等待 Maven 下载依赖完成
+3. 找到 `AppListener.java`，右键选择 **Run 'AppListener'**
+4. 后端启动后访问：`http://localhost:8080/ClothesBack_war`
 
-# 检查 Maven 版本
-mvn --version
+#### 第二步：启动前端
 
-# 检查 MySQL 是否运行
-mysql -u root -p -e "SELECT 1"
-```
-
-### 第三步：初始化数据库
-
-```bash
-# 登录 MySQL
-mysql -u root -p
-
-# 在 MySQL 中执行：
-CREATE DATABASE IF NOT EXISTS clothes_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-EXIT;
-```
-
-### 第四步：配置后端数据库连接
-
-**AI 必须询问用户获取数据库密码**，然后编辑 `ClothesBack/src/main/resources/db.properties`：
-
-```properties
-jdbc.driver=com.mysql.cj.jdbc.Driver
-jdbc.url=jdbc:mysql://localhost:3306/clothes_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-jdbc.user=root
-jdbc.password=【用户提供的密码】
-```
-
-### 第五步：导入数据库表结构
-
-```bash
-mysql -u root -p clothes_demo < Doc/schema.sql
-```
-
-### 第六步：启动后端
-
-```bash
-cd ClothesBack
-
-# 打包 WAR 文件
-mvn clean package
-
-# 复制 WAR 文件到 Tomcat
-# Linux/Mac:
-cp target/ClothesBack-1.0-SNAPSHOT.war /path/to/tomcat/webapps/
-
-# Windows:
-copy target\ClothesBack-1.0-SNAPSHOT.war C:\path\to\tomcat\webapps\
-
-# 启动 Tomcat，或在 IDE 中直接运行
-```
-
-后端启动后访问：`http://localhost:8080/ClothesBack_war`
-
-### 第七步：启动前端（用户端）
-
+**用户端：**
 ```bash
 cd ClothesUser
-
-# 安装依赖
 npm install
-
-# 启动开发服务器
 npm run dev
 ```
-
 访问：`http://localhost:5173`
 
-### 第八步：启动前端（管理后台）
-
+**管理后台：**
 ```bash
 cd ClothesAdmin
-
-# 安装依赖
 npm install
-
-# 启动开发服务器
 npm run dev
 ```
-
 访问：`http://localhost:5174`
 
 ---
 
-## 三、部署检查清单
+## 四、AI 配置后端详细指令
 
-在部署过程中，AI 应该按以下顺序检查：
+### 4.1 读取现有配置
+
+AI 应该读取以下文件获取用户本地配置：
+
+```bash
+# 读取数据库配置文件
+cat ClothesBack/src/main/resources/db.properties
+```
+
+### 4.2 创建数据库（如不存在）
+
+```bash
+# 从 db.properties 提取数据库连接信息
+# 然后执行：
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS clothes_demo CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+```
+
+### 4.3 导入表结构
+
+```bash
+mysql -u root -p clothes_demo < Doc/schema.sql
+
+# 执行数据迁移（如有）
+mysql -u root -p clothes_demo < Doc/migrations/20260617_link_product_images.sql
+mysql -u root -p clothes_demo < Doc/migrations/20260618_fix_goods_cover.sql
+```
+
+### 4.4 验证配置
+
+```bash
+# 验证数据库连接
+mysql -u root -p -e "USE clothes_demo; SHOW TABLES;"
+
+# 验证 Maven 依赖
+cd ClothesBack && mvn dependency:resolve
+```
+
+### 4.5 完成配置
+
+配置完成后，AI 应输出：
 
 ```
-□ 1. 环境检查
-  □ Node.js ≥ 18.0.0
-  □ Java ≥ JDK 17
-  □ Maven ≥ 3.8
-  □ MySQL 8.0+
+✅ 后端配置完成！
 
-□ 2. 数据库配置
-  □ 已创建数据库 clothes_demo
-  □ 已导入 Doc/schema.sql
-  □ 已配置 db.properties 中的密码
+请按以下步骤启动项目：
 
-□ 3. 后端启动
-  □ WAR 文件已部署到 Tomcat
-  □ Tomcat 已启动
-  □ API 可访问：curl http://localhost:8080/ClothesBack_war/api/public/banners
+1. 用 IntelliJ IDEA 打开项目 ClothesDemo/ClothesBack
+2. 等待 Maven 下载依赖（底部进度条）
+3. 找到 src/main/java/org/example/clothesback/listener/AppListener.java
+4. 右键点击，选择 Run 'AppListener'
+5. 后端启动后访问：http://localhost:8080/ClothesBack_war
 
-□ 4. 前端启动
-  □ ClothesUser 已安装依赖并启动
-  □ ClothesAdmin 已安装依赖并启动
+如遇问题，请检查：
+- MySQL 服务是否启动
+- db.properties 中的数据库密码是否正确
 ```
 
 ---
 
-## 四、项目结构
+## 五、项目结构
 
 ```
 ClothesDemo/
@@ -226,7 +206,7 @@ ClothesDemo/
 │   ├── public/           # 静态资源
 │   └── package.json
 │
-├── ClothesBack/           # 后端服务
+├── ClothesBack/           # 后端服务 ⚠️ 用 IDEA 打开并运行
 │   ├── src/main/java/
 │   │   └── org/example/clothesback/
 │   │       ├── common/    # 通用类 (Result, BizException)
@@ -236,13 +216,13 @@ ClothesDemo/
 │   │       ├── entity/    # 实体类
 │   │       ├── filter/     # 过滤器 (CORS, 编码)
 │   │       ├── interceptor/# 拦截器
-│   │       ├── listener/  # 监听器
+│   │       ├── listener/  # 监听器 (启动入口)
 │   │       ├── servlet/   # Servlet 控制器
 │   │       ├── service/   # 业务逻辑层
 │   │       ├── util/      # 工具类
 │   │       └── vo/        # 视图对象
 │   ├── src/main/resources/
-│   │   ├── db.properties  # 数据库配置 ⚠️ 需要修改密码
+│   │   ├── db.properties  # 数据库配置（AI 自动读取配置）
 │   │   └── schema.sql    # 数据库建表脚本
 │   └── pom.xml
 │
@@ -250,14 +230,15 @@ ClothesDemo/
 │   ├── API_DESIGN.md     # API 接口设计
 │   ├── BACKEND_GUIDE.md  # 后端开发指南
 │   ├── DB_DESIGN.md      # 数据库设计
-│   └── FRONTEND_GUIDE.md # 前端开发指南
+│   ├── FRONTEND_GUIDE.md # 前端开发指南
+│   └── migrations/       # 数据库迁移脚本
 │
 └── README.md             # 本文件
 ```
 
 ---
 
-## 五、默认账号
+## 六、默认账号
 
 | 端 | 账号 | 密码 | 说明 |
 |---|---|---|---|
@@ -265,7 +246,7 @@ ClothesDemo/
 
 ---
 
-## 六、API 文档
+## 七、API 文档
 
 详细 API 接口设计请查看：[Doc/API_DESIGN.md](Doc/API_DESIGN.md)
 
@@ -284,13 +265,12 @@ ClothesDemo/
 
 ---
 
-## 七、常见问题
+## 八、常见问题
 
 ### Q1: 前端无法连接后端？
 
-1. 检查后端是否启动：`curl http://localhost:8080/ClothesBack_war/api/public/banners`
+1. 检查后端是否启动
 2. 检查前端 `.env` 中的 API 地址配置
-3. 检查后端 `db.properties` 数据库密码是否正确
 
 ### Q2: 数据库连接失败？
 
@@ -308,20 +288,9 @@ netstat -ano | findstr :8080
 taskkill /PID <进程ID> /F
 ```
 
-### Q4: npm install 失败？
-
-```bash
-# 清除缓存
-npm cache clean --force
-
-# 删除 node_modules 和 package-lock.json 后重试
-rm -rf node_modules package-lock.json
-npm install
-```
-
 ---
 
-## 八、数据库表结构
+## 九、数据库表结构
 
 详细设计请查看：[Doc/DB_DESIGN.md](Doc/DB_DESIGN.md)
 
@@ -339,17 +308,6 @@ npm install
 | `banner` | 轮播图表 |
 | `favorite` | 收藏表 |
 | `comment` | 评价表 |
-
----
-
-## 九、AI 部署提示
-
-本项目专为 AI 辅助部署设计，AI 在部署时应：
-
-1. **必须询问**：数据库密码、MySQL 用户名（非 root 时）、自定义端口等配置
-2. **自动检测**：检测环境是否满足要求，不满足时提示用户安装
-3. **逐步引导**：按照检查清单逐步执行，每步完成后确认
-4. **错误处理**：遇到错误时分析原因并提供解决方案
 
 ---
 
