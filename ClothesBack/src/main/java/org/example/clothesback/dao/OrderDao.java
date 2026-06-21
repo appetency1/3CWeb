@@ -82,7 +82,7 @@ public class OrderDao {
     }
 
     public int updateStatusWithTime(Connection conn, Long id, int newStatus, String timeColumn) throws SQLException {
-        if (!Set.of("pay_time", "ship_time", "finish_time", "cancel_time").contains(timeColumn)) {
+        if (!Set.of("pay_time", "ship_time", "finish_time", "cancel_time", "refund_time").contains(timeColumn)) {
             throw new IllegalArgumentException("非法时间列: " + timeColumn);
         }
         return JdbcUtils.update(conn, "UPDATE orders SET status=?," + timeColumn + "=NOW() WHERE id=?", newStatus, id);

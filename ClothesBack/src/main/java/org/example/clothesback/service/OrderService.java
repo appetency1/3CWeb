@@ -270,7 +270,7 @@ public class OrderService {
                     skuDao.incrementStock(conn, skuId, qty);
                     goodsDao.recomputeStockAndSales(conn, goodsId);
                 }
-                orderDao.updateStatusWithTime(conn, orderId, 5, "cancel_time");
+                orderDao.updateStatusWithTime(conn, orderId, 5, "refund_time");
             });
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "退款失败");

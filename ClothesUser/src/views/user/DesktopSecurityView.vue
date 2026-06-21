@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, computed } from 'vue'
 import { showToast, showFailToast } from 'vant'
 import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
@@ -31,13 +31,15 @@ const securityItems = ref([
 
 
 function calcScore() {
-  let score = 0
-  const items = securityItems.value
-  if (items.find(i => i.id === 'pwd')?.status === 'ok') score += 30
-  if (items.find(i => i.id === 'phone')?.status === 'ok') score += 25
-  if (items.find(i => i.id === 'email')?.status === 'ok') score += 20
+  let score = 30 // 登录密码基础分
+  if (user.value?.phone) score += 35
+  if (user.value?.email) score += 35
   return score
 }
+
+const pwdPercent = computed(() => 30)
+const phonePercent = computed(() => user.value?.phone ? 35 : 0)
+const emailPercent = computed(() => user.value?.email ? 35 : 0)
 
 onMounted(async () => {
   // 如果 store 已有数据直接用，否则调 API
@@ -64,12 +66,6 @@ onMounted(async () => {
   setTimeout(() => {
     gaugeOffset.value = 502 * (1 - securityScore.value / 100)
   }, 400)
-  // 动画：状态条
-  document.querySelectorAll('.status-bar-fill').forEach((bar) => {
-    setTimeout(() => {
-      (bar as HTMLElement).style.width = (bar as HTMLElement).dataset.width || '0%'
-    }, 600)
-  })
 })
 
 // 修改密码
@@ -194,16 +190,16 @@ function onSecurityAction(id: string) {
           <div class="status-summary-title">安全状态概览</div>
           <div class="status-bars">
             <div class="status-bar-item">
-              <div class="status-bar-head"><span>密码强度</span><span>30%</span></div>
-              <div class="status-bar-track"><div class="status-bar-fill" data-width="30%" style="background:var(--accent)"></div></div>
+              <div class="status-bar-head"><span>密码强度</span><span>{{ pwdPercent }}%</span></div>
+              <div class="status-bar-track"><div class="status-bar-fill" :style="{ width: pwdPercent + '%', background: 'var(--accent)' }"></div></div>
             </div>
             <div class="status-bar-item">
-              <div class="status-bar-head"><span>手机绑定</span><span>{{ user?.phone ? '25%' : '0%' }}</span></div>
-              <div class="status-bar-track"><div class="status-bar-fill" data-width="0%" style="background:var(--success)"></div></div>
+              <div class="status-bar-head"><span>手机绑定</span><span>{{ phonePercent }}%</span></div>
+              <div class="status-bar-track"><div class="status-bar-fill" :style="{ width: phonePercent + '%', background: 'var(--success)' }"></div></div>
             </div>
             <div class="status-bar-item">
-              <div class="status-bar-head"><span>邮箱绑定</span><span>{{ user?.email ? '20%' : '0%' }}</span></div>
-              <div class="status-bar-track"><div class="status-bar-fill" data-width="0%" style="background:var(--info)"></div></div>
+              <div class="status-bar-head"><span>邮箱绑定</span><span>{{ emailPercent }}%</span></div>
+              <div class="status-bar-track"><div class="status-bar-fill" :style="{ width: emailPercent + '%', background: 'var(--info)' }"></div></div>
             </div>
 
           </div>
