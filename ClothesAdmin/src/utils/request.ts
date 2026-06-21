@@ -16,6 +16,14 @@ async function request<T = any>(
   }
 
   const res = await fetch(`${BASE_URL}${url}`, { ...options, headers, credentials: 'include' })
+
+  // 401 = 未登录/token失效 → 自动跳登录页
+  if (res.status === 401) {
+    const loginUrl = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search)
+    window.location.href = loginUrl
+    throw new Error('未登录')
+  }
+
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
   return res.json()
 }
