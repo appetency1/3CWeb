@@ -1,147 +1,119 @@
-# ClothesDemo - 服装商城系统
+# ClothesDemo — 服装电商全栈项目
 
-一个前后端分离的服装电商平台，包含用户端和管理后台。
+前后端分离的服装商城，含用户端、管理后台、AI 客服。
 
----
+## 技术栈
 
-## 一、项目概述
-
-| 模块 | 说明 | 端口 |
-|------|------|------|
-| ClothesUser | 用户端（移动端） | 5173 |
-| ClothesAdmin | 管理后台（桌面端） | 5174 |
-| ClothesBack | 后端 API 服务 | 8080 |
-
-### 技术栈
-
-- **前端**: Vue 3 + Vite + Vant 4 + TypeScript
-- **后端**: Jakarta Servlet 6.1 + 原生 JDBC + MySQL 8
-
----
-
-## 二、环境要求
-
-| 软件 | 版本 |
+| 模块 | 技术 |
 |------|------|
-| Node.js | ≥ 18.0.0 |
-| Java | ≥ JDK 17 |
-| Maven | ≥ 3.8 |
-| MySQL | ≥ 8.0 |
-| IntelliJ IDEA | 最新版 |
+| 用户前端 | Vue 3 + TypeScript + Vant 4 + Vite |
+| 管理后台 | Vue 3 + TypeScript + Vant 4 + Vite |
+| 后端 | Java 17 + Servlet 6.1 + JDBC + Fastjson2 |
+| 数据库 | MySQL 8.0+ |
+| AI 客服 | DeepSeek API（可选） |
 
----
+## 前置要求
 
-## 三、AI 部署指令
+- **Node.js** 18+
+- **Java** 17+
+- **Maven** 3.8+
+- **MySQL** 8.0+
+- **Tomcat** 10+ (或其它支持 Servlet 6.0 的容器)
 
-### 核心任务：配置后端数据库
+## 快速开始
 
-**⚠️ AI 只负责配置，不执行任何运行命令！**
-
-```
-AI 执行步骤：
-
-1. 读取 ClothesBack/src/main/resources/db.properties
-2. 测试数据库连接：mysql -u root -p密码 -e "SELECT 1"
-3. 如果连接失败：
-   - 询问用户正确的 MySQL 密码
-   - 更新 db.properties 中的数据库密码（首次部署请修改）
-4. 创建数据库：CREATE DATABASE IF NOT EXISTS clothes_demo
-5. 执行建表语句（跳过 schema.sql 的 DROP DATABASE 部分）
-6. 验证：SHOW TABLES
-7. 提示用户手动启动
-
-✅ AI 不要做：
-- ❌ 不要运行 npm install
-- ❌ 不要运行 npm run dev
-- ❌ 不要启动后端服务
-- ❌ 不要修改前端配置
-```
-
-### 读取配置文件
+### 1. 克隆项目
 
 ```bash
-cat ClothesBack/src/main/resources/db.properties
+git clone https://github.com/appetency1/ClothesDemo.git
+cd ClothesDemo
 ```
 
-**当前配置示例：**
+### 2. 创建数据库
+
+用 MySQL 客户端执行建库脚本：
+
+```bash
+mysql -u root -p < Doc/schema.sql
+```
+
+> 如果你的 MySQL root 有密码，执行后会提示输入密码。  
+> 默认数据库名：`clothes_demo`，建好后会自动创建所有表。
+
+### 3. 配置数据库连接
+
+打开 `ClothesBack/src/main/resources/db.properties`，把密码改成你的 MySQL 密码：
+
 ```properties
-jdbc.driver=com.mysql.cj.jdbc.Driver
-jdbc.url=jdbc:mysql://localhost:3306/clothes_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-jdbc.user=root
-# jdbc.password=你的生产数据库密码（请勿提交真实密码到仓库）
+jdbc.password=你的MySQL密码
 ```
 
----
+> 也可以在系统环境变量设 `DB_PASSWORD`，部署时自动覆盖。
 
-## 四、用户启动步骤
-
-### 后端（用户手动）
-
-```
-1. 用 IntelliJ IDEA 打开 ClothesDemo/ClothesBack
-2. 等待 Maven 下载依赖
-3. 右键 AppListener.java → Run
-4. 访问：http://localhost:8080/ClothesBack_war
-```
-
-### 前端（用户手动）
+### 4. 启动后端
 
 ```bash
-# 用户端
-cd ClothesUser && npm install && npm run dev
-
-# 管理后台
-cd ClothesAdmin && npm install && npm run dev
+mvn -f ClothesBack/pom.xml clean package
 ```
 
----
+把生成的 `ClothesBack/target/ClothesBack-1.0-SNAPSHOT.war` 复制到 Tomcat 的 `webapps/` 目录，启动 Tomcat。
 
-## 五、常见问题
+### 5. 启动前端（新开终端）
 
-### AI 部署失败怎么办？
-
-**AI 应该这样做：**
-
-1. 先用当前密码测试连接
-2. 如果失败，询问用户密码
-3. 更新配置文件
-4. 重新测试连接
-
-**询问模板：**
-```
-我无法连接您的 MySQL 数据库。
-请提供您的 MySQL root 密码，我将更新配置文件。
+**用户端：**
+```bash
+cd ClothesUser
+npm install
+npm run dev
+# 访问 http://localhost:5173
 ```
 
-### schema.sql 太危险？
+**管理后台：**
+```bash
+cd ClothesAdmin
+npm install
+npm run dev
+# 访问 http://localhost:5174
+```
 
-是的！`schema.sql` 开头有 `DROP DATABASE`，会删除整个数据库！
+### 6. 配置 AI 客服（可选）
 
-**AI 应该手动执行建表语句，跳过 DROP DATABASE。**
+打开 `ClothesBack/src/main/resources/app.properties`：
 
----
+```properties
+deepseek.api.key=你的DeepSeek API Key
+```
 
-## 六、默认账号
+也可以在系统环境变量设 `DEEPSEEK_API_KEY`，优先级更高。
+
+> 不配也不影响其他功能，只是 AI 客服不能用。
+
+### 7. 默认账号
 
 | 端 | 账号 | 密码 |
-|---|---|---|
-| 管理后台 | `admin` | （首次部署请修改默认密码） |
+|----|------|------|
+| 管理后台 | `admin` | `888888`（首次登录请修改） |
+| 用户端 | 自行注册 | — |
 
----
-
-## 七、项目结构
+## 项目结构
 
 ```
 ClothesDemo/
-├── ClothesUser/           # 用户端前端
-├── ClothesAdmin/          # 管理后台前端
-├── ClothesBack/           # 后端服务
+├── ClothesUser/          # 用户端前端（Vue 3 + Vant）
+├── ClothesAdmin/         # 管理后台前端（Vue 3 + Vant）
+├── ClothesBack/          # 后端服务（Java + Servlet）
 │   └── src/main/resources/
-│       └── db.properties  # ⚠️ AI 需要修改这个文件
-├── Doc/                   # 文档和迁移脚本
-└── README.md             # 本文件
+│       ├── db.properties      # 数据库连接配置
+│       └── app.properties     # 应用配置（CORS、上传、AI Key）
+├── Doc/
+│   └── schema.sql        # 数据库建表脚本
+└── README.md
 ```
 
----
+## 常见问题
 
-**最后更新：2026-06-20**
+**Q: 前端页面空白 / 接口 404？**  
+检查 Tomcat 是否在运行，后端 war 是否已部署。前后端默认端口：用户 5173、管理 5174、后端 8080。
+
+**Q: 管理后台频繁提示"未登录"？**  
+检查 `db.properties` 中的数据库连接是否正常，后端日志有无报错。
