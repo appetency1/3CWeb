@@ -1,0 +1,8 @@
+mangled: 鐣\udcaa绾辩潯瑁欑潯琛ｅ\udca5楄\udca3\udc85
+correct: 法式碎花雪纺连衣裙
+mangled repr: '鐣\udcaa绾辩潯瑁欑潯琛ｅ\udca5楄\udca3\udc85'
+correct repr: '法式碎花雪纺连衣裙'
+correct gbk bytes: b7a8cabdcbe9bba8d1a9b7c4c1acd2c2c8b9
+mangled code points: ['0x9423', '0xdcaa', '0x7efe', '0x8fa9', '0x6f6f', '0x7441', '0x6b11', '0x6f6f', '0x741b', '0xff45', '0xdca5', '0x6944', '0xdca3', '0xdc85']
+mangled utf16be bytes: 9423dcaa7efe8fa96f6f74416b116f6f741bff45dca56944dca3dc85
+match correct gbk: False

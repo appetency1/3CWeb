@@ -14,6 +14,7 @@ import org.example.clothesback.util.MapKeyConverter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 /**
@@ -44,6 +45,8 @@ public abstract class BaseServlet extends HttpServlet {
 
     private void handle(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         try {
+            req.setCharacterEncoding("UTF-8");
+            resp.setCharacterEncoding("UTF-8");
             doDispatch(req, resp);
         } catch (BizException e) {
             writeJson(resp, Result.error(e.getCode(), e.getMessage()));
@@ -69,6 +72,7 @@ public abstract class BaseServlet extends HttpServlet {
     }
 
     protected void writeJson(HttpServletResponse resp, Object data) throws IOException {
+        resp.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
         // 两阶段: 序列化 → 解析 → 转换 snake_case → 再序列化
         // 确保 POJO(Result/PageResult/VO)内部嵌套的 Map key 也被转换
