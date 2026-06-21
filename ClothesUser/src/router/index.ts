@@ -35,35 +35,73 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/views/user/DesktopLoginView.vue'),
     },
+    // 用户中心（布局 + 子路由）
     {
       path: '/user',
-      name: 'user',
       component: () => import('@/views/user/DesktopUserView.vue'),
       meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'user',
+          component: () => import('@/views/user/UserHome.vue'),
+        },
+        {
+          path: 'orders',
+          name: 'userOrders',
+          component: () => import('@/views/order/DesktopOrderView.vue'),
+        },
+        {
+          path: 'address',
+          name: 'userAddress',
+          component: () => import('@/views/user/DesktopAddressListView.vue'),
+        },
+        {
+          path: 'favorites',
+          name: 'userFavorites',
+          component: () => import('@/views/user/DesktopFavoritesView.vue'),
+        },
+        {
+          path: 'profile',
+          name: 'userProfile',
+          component: () => import('@/views/user/DesktopProfileView.vue'),
+        },
+        {
+          path: 'security',
+          name: 'userSecurity',
+          component: () => import('@/views/user/DesktopSecurityView.vue'),
+        },
+        {
+          path: 'service',
+          name: 'userService',
+          component: () => import('@/views/service/DesktopChatView.vue'),
+        },
+      ],
     },
+    // 旧路由重定向到 /user/ 子路由
     {
-      path: '/profile',
-      name: 'profile',
-      component: () => import('@/views/user/DesktopProfileView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/security',
-      name: 'security',
-      component: () => import('@/views/user/DesktopSecurityView.vue'),
-      meta: { requiresAuth: true },
+      path: '/order',
+      redirect: { name: 'userOrders' },
     },
     {
       path: '/address',
-      name: 'address',
-      component: () => import('@/views/user/DesktopAddressListView.vue'),
-      meta: { requiresAuth: true },
+      redirect: { name: 'userAddress' },
     },
     {
-      path: '/order',
-      name: 'order',
-      component: () => import('@/views/order/DesktopOrderView.vue'),
-      meta: { requiresAuth: true },
+      path: '/favorites',
+      redirect: { name: 'userFavorites' },
+    },
+    {
+      path: '/profile',
+      redirect: { name: 'userProfile' },
+    },
+    {
+      path: '/security',
+      redirect: { name: 'userSecurity' },
+    },
+    {
+      path: '/service',
+      redirect: { name: 'userService' },
     },
     {
       path: '/order/:id',
@@ -78,20 +116,9 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/favorites',
-      name: 'favorites',
-      component: () => import('@/views/user/DesktopFavoritesView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
       path: '/search',
       name: 'search',
       component: () => import('@/views/search/DesktopSearchView.vue'),
-    },
-    {
-      path: '/service',
-      name: 'service',
-      component: () => import('@/views/service/DesktopChatView.vue'),
     },
   ],
 })
