@@ -14,7 +14,7 @@
 | 1️⃣ | [BACKEND_GUIDE.md](./BACKEND_GUIDE.md) | 后端开发指南:技术栈、目录结构、编码规范、核心类模板 | **后端必读** |
 | 2️⃣ | [DB_DESIGN.md](./DB_DESIGN.md) | 数据库表结构设计:ER 图、字段说明、设计原则 | **后端必读** |
 | 3️⃣ | [API_DESIGN.md](./API_DESIGN.md) | 接口设计文档:统一响应、Token、接口清单、业务规则 | **后端 + 前端 必读** |
-| 4️⃣ | [schema.sql](./schema.sql) | 建库建表 SQL 脚本 + 初始数据 | **后端参考** |
+| 4️⃣ | [clothes_demo.sql](./clothes_demo.sql) | 完整数据库导出（含建表+初始数据） | **后端参考** |
 
 ---
 
@@ -41,7 +41,7 @@ ClothesDemo/
     ├── BACKEND_GUIDE.md   # 后端开发指南
     ├── DB_DESIGN.md       # 表设计
     ├── API_DESIGN.md      # 接口设计
-    └── schema.sql         # 建库脚本
+    └── clothes_demo.sql    # 完整数据库导出（建表+数据）
 ```
 
 ---
@@ -68,7 +68,7 @@ ClothesDemo/
 ### 1. 初始化数据库
 ```bash
 # 从项目根目录执行
-mysql -u root -p < Doc/schema.sql
+mysql -u root -p < Doc/clothes_demo.sql
 ```
 
 ### 2. 修改数据库配置
@@ -101,7 +101,7 @@ jdbc.password=你的密码
 
 - 📁 **所有说明/设计文档统一放在 `Doc/` 目录**,不再放到 `ClothesBack/src/main/resources/` 或其他位置
 - 📝 任何**新功能**或**接口改动**必须同步更新对应文档
-- 🔀 修改表结构必须改 `Doc/schema.sql` + `Doc/DB_DESIGN.md`
+- 🔀 修改表结构必须改 `Doc/clothes_demo.sql`（重新导出）+ `Doc/DB_DESIGN.md`
 - 🔌 修改接口必须改 `Doc/API_DESIGN.md`
 - 🏗️ 编码规范 / 目录结构有调整必须改 `Doc/BACKEND_GUIDE.md`
 

@@ -1,5 +1,27 @@
-# Vue 3 + TypeScript + Vite
+# ClothesDemo 用户端前端
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+基于 Vue 3 + TypeScript + Vant 4 + Vite 的电商用户端。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 启动
+
+```bash
+npm install
+npm run dev   # http://localhost:5173
+```
+
+## 后端配置
+
+编辑 `src/utils/request.ts` 中的 `VITE_API_BASE`（默认代理到 `http://localhost:8080`）。
+
+## 目录结构
+
+```
+src/
+├── api/        # 后端 API 调用封装
+├── stores/     # Pinia 状态管理（user / cart）
+├── types/      # TS 类型定义（model.d.ts / api.d.ts）
+├── utils/      # 工具函数（request.ts / img.ts）
+├── router/     # Vue Router 配置
+├── views/      # 页面组件（Desktop* 系列）
+└── components/ # 通用组件（DesktopLayout）
+```

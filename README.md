@@ -31,14 +31,13 @@ cd ClothesDemo
 
 ### 2. 创建数据库
 
-用 MySQL 客户端执行建库脚本：
+用 MySQL 客户端导入完整数据库：
 
 ```bash
-mysql -u root -p < Doc/schema.sql
+mysql -u root -p < Doc/clothes_demo.sql
 ```
 
-> 如果你的 MySQL root 有密码，执行后会提示输入密码。  
-> 默认数据库名：`clothes_demo`，建好后会自动创建所有表。
+> 默认数据库名：`clothes_demo`，包含完整表结构 + 64个商品数据。
 
 ### 3. 配置数据库连接
 
@@ -106,7 +105,7 @@ ClothesDemo/
 │       ├── db.properties      # 数据库连接配置
 │       └── app.properties     # 应用配置（CORS、上传、AI Key）
 ├── Doc/
-│   └── schema.sql        # 数据库建表脚本
+│   └── clothes_demo.sql   # 完整数据库导出（建表+数据）
 └── README.md
 ```
 

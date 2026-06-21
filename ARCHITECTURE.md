@@ -40,7 +40,7 @@ D:\AI Code\ClothesDemo\
 │           ├── user\Desktop{Login,User,Profile,AddressList}View.vue
 │           ├── order\Desktop{Order,OrderDetail,OrderConfirm}View.vue
 │           └── search\DesktopSearchView.vue
-└── Doc\                 # 文档（schema.sql / API_DESIGN / 各指南）
+└── Doc\                 # 文档（clothes_demo.sql / API_DESIGN / 各指南）
 ```
 
 ---
@@ -118,7 +118,7 @@ D:\AI Code\ClothesDemo\
 
 ---
 
-## 4. 数据库表（schema.sql）
+## 4. 数据库表（clothes_demo.sql）
 
 | 表 | 关键字段 |
 |---|---|

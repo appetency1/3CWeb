@@ -1,5 +1,23 @@
-# Vue 3 + TypeScript + Vite
+# ClothesDemo 管理后台前端
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+基于 Vue 3 + TypeScript + Vant 4 + Vite 的电商管理后台。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 启动
+
+```bash
+npm install
+npm run dev   # http://localhost:5174
+```
+
+## 后端配置
+
+编辑 `.env` 中的 `VITE_API_BASE`（默认代理到 `http://localhost:8080`）。
+
+## 功能
+
+- 仪表盘概览
+- 商品管理（CRUD + SKU 管理）
+- 分类管理
+- 订单管理
+- 轮播图管理
+- 用户管理
