@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
-import { showToast, showFailToast, showConfirmDialog } from 'vant'
+import { showToast, showFailToast } from 'vant'
 import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
 
@@ -26,21 +26,9 @@ const securityItems = ref([
   { id: 'pwd', icon: '🔑', name: '登录密码', value: '已设置', status: 'ok' as const, editable: true },
   { id: 'phone', icon: '📱', name: '手机绑定', value: '未绑定', status: 'warn' as const, editable: true },
   { id: 'email', icon: '✉️', name: '邮箱绑定', value: '未绑定', status: 'warn' as const, editable: true },
-  { id: '2fa', icon: '🔐', name: '两步验证', value: '未开启', status: 'warn' as const, editable: false },
 ])
 
-// 第三方账号
-const oauthAccounts = ref([
-  { name: '微信', icon: '💬', connected: false },
-  { name: '支付宝', icon: '💳', connected: false },
-  { name: 'Apple', icon: '🍎', connected: false },
-  { name: 'Google', icon: '🔵', connected: false },
-])
 
-// 登录设备
-const devices = ref([
-  { name: 'Chrome · Windows', icon: '🖥️', ip: '192.168.1.100', time: '当前会话', current: true },
-])
 
 function calcScore() {
   let score = 0
@@ -48,7 +36,6 @@ function calcScore() {
   if (items.find(i => i.id === 'pwd')?.status === 'ok') score += 30
   if (items.find(i => i.id === 'phone')?.status === 'ok') score += 25
   if (items.find(i => i.id === 'email')?.status === 'ok') score += 20
-  if (items.find(i => i.id === '2fa')?.status === 'ok') score += 25
   return score
 }
 
@@ -157,17 +144,9 @@ function onSecurityAction(id: string) {
   else if (id === 'email') openEmailModal()
 }
 
-function onLogoutAll() {
-  showConfirmDialog({ title: '提示', message: '确定要退出所有设备吗？这将使其他设备的登录失效。' })
-    .then(() => showToast('已退出其他设备'))
-    .catch(() => {})
-}
 
-function onDeleteAccount() {
-  showConfirmDialog({ title: '警告', message: '确定要注销账号吗？此操作不可撤销，所有数据将被永久删除。', confirmButtonText: '确认注销' })
-    .then(() => showToast('账号已注销'))
-    .catch(() => {})
-}
+
+
 </script>
 
 <template>
@@ -226,10 +205,7 @@ function onDeleteAccount() {
               <div class="status-bar-head"><span>邮箱绑定</span><span>{{ user?.email ? '20%' : '0%' }}</span></div>
               <div class="status-bar-track"><div class="status-bar-fill" data-width="0%" style="background:var(--info)"></div></div>
             </div>
-            <div class="status-bar-item">
-              <div class="status-bar-head"><span>两步验证</span><span>0%</span></div>
-              <div class="status-bar-track"><div class="status-bar-fill" data-width="0%" style="background:var(--warning)"></div></div>
-            </div>
+
           </div>
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-top:16px">
@@ -266,43 +242,8 @@ function onDeleteAccount() {
         </div>
       </div>
 
-      <!-- Connected Accounts -->
-      <div class="glass-card bento-item">
-        <div class="bento-header">
-          <div class="bento-title">第三方账号</div>
-        </div>
-        <div class="oauth-grid">
-          <div v-for="acct in oauthAccounts" :key="acct.name"
-            :class="['oauth-card', { connected: acct.connected }]">
-            <div class="oauth-icon">{{ acct.icon }}</div>
-            <div class="oauth-info">
-              <div class="oauth-name">{{ acct.name }}</div>
-              <div class="oauth-status">{{ acct.connected ? '已绑定' : '未绑定' }}</div>
-            </div>
-            <span class="oauth-action">{{ acct.connected ? '解绑' : '绑定' }}</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Devices -->
-      <div class="glass-card bento-item">
-        <div class="bento-header">
-          <div class="bento-title">登录设备</div>
-          <button class="btn btn-link" @click="onLogoutAll">退出其他设备</button>
-        </div>
-        <div class="device-timeline">
-          <div v-for="(d, i) in devices" :key="i" class="device-item">
-            <div class="device-icon">{{ d.icon }}</div>
-            <div class="device-info">
-              <div class="device-name">
-                {{ d.name }}
-                <span v-if="d.current" class="device-current">当前</span>
-              </div>
-              <div class="device-meta">{{ d.ip }} · {{ d.time }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </div>
 
     <!-- Danger Zone -->
@@ -318,7 +259,7 @@ function onDeleteAccount() {
             <div class="danger-desc">一旦注销，所有数据将被永久删除且无法恢复</div>
           </div>
         </div>
-        <button class="btn btn-danger" @click="onDeleteAccount">注销账号</button>
+        <button class="btn btn-danger" disabled style="opacity:0.4;cursor:not-allowed" title="功能开发中">注销账号（即将上线）</button>
       </div>
     </div>
 
