@@ -217,7 +217,8 @@ CREATE TABLE `goods`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_category_id`(`category_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
-  INDEX `idx_create_time`(`create_time` ASC) USING BTREE
+  INDEX `idx_create_time`(`create_time` ASC) USING BTREE,
+  FULLTEXT INDEX `ft_search`(`name`, `brand`, `description`) WITH PARSER `ngram`
 ) ENGINE = InnoDB AUTO_INCREMENT = 65 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品SPU表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -342,7 +343,8 @@ CREATE TABLE `orders`  (
   UNIQUE INDEX `uk_order_no`(`order_no` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
-  INDEX `idx_create_time`(`create_time` ASC) USING BTREE
+  INDEX `idx_create_time`(`create_time` ASC) USING BTREE,
+  FULLTEXT INDEX `ft_search`(`name`, `brand`, `description`) WITH PARSER `ngram`
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
