@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Homewear / loungewear icon -->
+  <rect width="48" height="48" rx="12" fill="#F0F9FF"/>
+  <!-- House roof -->
+  <path d="M8 22 L24 10 L40 22 L40 24 L8 24 Z" fill="#0EA5E9" opacity="0.25"/>
+  <!-- House body -->
+  <rect x="12" y="22" width="24" height="16" rx="2" fill="#0EA5E9" opacity="0.5"/>
+  <!-- Door -->
+  <rect x="20" y="30" width="8" height="8" rx="1" fill="#F0F9FF"/>
+  <!-- Pajama top (hanging in closet) -->
+  <path d="M16 12 Q16 16 18 16 Q20 16 20 14 L20 12" stroke="#0EA5E9" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M28 12 Q28 16 30 16 Q32 16 32 14 L32 12" stroke="#0EA5E9" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Hanger line -->
+  <line x1="22" y1="10" x2="26" y2="10" stroke="#0EA5E9" stroke-width="1.5"/>
+  <!-- Moon / comfy symbol -->
+  <path d="M35 8 C38 10 38 14 35 16 C37 14 37 10 35 8 Z" fill="#F59E0B" opacity="0.6"/>
+</svg>
