@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { orderApi } from '@/api/order'
 import { userApi } from '@/api/user'
 import { fullImgUrl } from '@/utils/img'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-
-const recentOrders = ref<any[]>([])
-const allOrdersForStats = ref<any[]>([])
-const loadingOrders = ref(false)
 const userAvatar = computed(() => userStore.userInfo?.avatar || '')
 const userInitial = computed(() => (userStore.userInfo?.nickname || userStore.userInfo?.username || '?')[0].toUpperCase())
 
@@ -30,17 +25,6 @@ const secondaryItems = [
   { icon: '🔒', label: '账号安全', name: 'userSecurity' },
 ]
 
-async function loadRecentOrders() {
-  loadingOrders.value = true
-  try {
-    const allData: any = await orderApi.list({ page: 1, size: 100 })
-    const list = allData?.list || allData || []
-    allOrdersForStats.value = list
-    recentOrders.value = list.slice(0, 3)
-  } catch { /* silent */ }
-  finally { loadingOrders.value = false }
-}
-
 function navigate(name: string) {
   router.push({ name })
 }
@@ -51,15 +35,16 @@ function onLogout() {
 }
 
 function isActive(name: string) {
-  if (name === 'user') return route.name === 'user'
-  return route.name?.toString().startsWith('user') && route.name !== 'user'
+  if (name === 'user') return route.path === '/user'
+  // 子路由: userOrders → 匹配 path /user/orders
+  const suffix = name.replace('user', '').toLowerCase() // 'orders', 'address'...
+  return route.path === '/user/' + suffix
 }
 
 onMounted(async () => {
   if (userStore.isLoggedIn && !userStore.userInfo) {
     try { const info: any = await userApi.info(); userStore.setUserInfo(info) } catch { /* silent */ }
   }
-  if (userStore.isLoggedIn) loadRecentOrders()
 })
 </script>
 
@@ -248,9 +233,26 @@ onMounted(async () => {
   min-height: 400px;
 }
 
-/* 隐藏嵌入的子页面中的重复 DesktopLayout header */
+/* 隐藏嵌入的子页面中的重复 DesktopLayout 元素 */
 .main-content :deep(.cl-header) { display: none; }
+.main-content :deep(.cl-promo) { display: none; }
+.main-content :deep(.cl-footer) { display: none; }
 .main-content :deep(.cl-topbar) { display: none; }
+/* 隐藏子页面自身的 page header（标题 + 副标题） */
+.main-content :deep(.page-header-order),
+.main-content :deep(.page-header-addr),
+.main-content :deep(.page-header),
+.main-content :deep(.fav-header) { display: none; }
+/* 隐藏个人资料页面的面包屑 */
+.main-content :deep(.breadcrumbs) { display: none; }
+/* 隐藏 AI 客服页面的自身 header */
+.main-content :deep(.chat-header) { display: none; }
+/* 调整子页面间距，去掉多余的顶部 padding */
+.main-content :deep(.order-page),
+.main-content :deep(.address-page),
+.main-content :deep(.fav-page),
+.main-content :deep(.security-page),
+.main-content :deep(.chat-page) { padding-top: 0; }
 
 @media (max-width: 1100px) {
   .profile-page { grid-template-columns: 240px 1fr; }
