@@ -61,6 +61,7 @@ export interface Address {
   district: string
   detail: string
   isDefault: number
+  tag?: string
 }
 
 export interface CartItem {

@@ -84,7 +84,7 @@ function openEdit(addr: Address) {
     district: addr.district,
     detail: addr.detail,
     isDefault: addr.isDefault || 0,
-    tag: '',
+    tag: addr.tag || '',
   }
   showModal.value = true
 }
@@ -114,6 +114,8 @@ async function saveAddress() {
       await addressApi.update(editingId.value, {
         receiver: f.receiver.trim(), phone: f.phone.trim(),
         province: f.province, city: f.city, district: f.district, detail: f.detail,
+        isDefault: f.isDefault,
+        tag: f.tag,
       })
       showToast('修改成功')
     } else {
@@ -121,6 +123,7 @@ async function saveAddress() {
         receiver: f.receiver.trim(), phone: f.phone.trim(),
         province: f.province, city: f.city, district: f.district, detail: f.detail,
         isDefault: f.isDefault,
+        tag: f.tag,
       })
       showToast('添加成功')
     }
@@ -191,6 +194,7 @@ onMounted(load)
             </div>
             <div class="address-tags">
               <span v-if="addr.isDefault === 1" class="tag tag-default">默认</span>
+              <span v-if="addr.tag" class="tag tag-default" style="background:var(--accent);color:#fff">{{ addr.tag }}</span>
             </div>
           </div>
           <div class="address-detail">

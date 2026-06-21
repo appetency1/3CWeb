@@ -29,8 +29,9 @@ public class AddressService {
                 } else if (dao.countByUser(userId) == 0) {
                     isDefault = 1; // 第一个地址自动设为默认
                 }
+                String tag = dto.tag() != null ? dto.tag().trim() : null;
                 dao.insert(conn, userId, dto.receiver().trim(), dto.phone().trim(),
-                    dto.province(), dto.city(), dto.district(), dto.detail(), isDefault);
+                    dto.province(), dto.city(), dto.district(), dto.detail(), isDefault, tag);
                 return JdbcUtils.queryLong(conn, "SELECT LAST_INSERT_ID()");
             });
             return dao.findById(id);
@@ -46,10 +47,11 @@ public class AddressService {
             if (own == null || ((Number) own.get("user_id")).longValue() != userId) {
                 throw new BizException(ResultCode.NOT_FOUND, "地址不存在");
             }
-            JdbcUtils.transaction(conn ->
+            JdbcUtils.transaction(conn -> {
+                String tag = dto.tag() != null ? dto.tag().trim() : null;
                 dao.update(conn, id, dto.receiver().trim(), dto.phone().trim(),
-                    dto.province(), dto.city(), dto.district(), dto.detail(), dto.isDefault())
-            );
+                    dto.province(), dto.city(), dto.district(), dto.detail(), dto.isDefault(), tag);
+            });
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "更新失败");
         }

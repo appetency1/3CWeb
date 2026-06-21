@@ -10,10 +10,14 @@ async function toggleStatus(u: any) {
   const action = u.status === 1 ? '禁用' : '启用'
   try {
     await showConfirmDialog({ title: '确认' + action, message: `确定要${action}用户「${u.username}」吗？` })
+  } catch { return }
+  try {
     await updateUserStatus(u.id, u.status === 1 ? 0 : 1)
     u.status = u.status === 1 ? 0 : 1
     showToast(action + '成功')
-  } catch { /* 用户取消或失败 */ }
+  } catch (e: any) {
+    showToast(e?.message || '操作失败')
+  }
 }
 
 onMounted(async () => {

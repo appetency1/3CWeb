@@ -260,6 +260,7 @@ public class OrderService {
                 if (o == null) throw new BizException(ResultCode.NOT_FOUND, "订单不存在");
                 int st = ((Number) o.get("status")).intValue();
                 if (st == 4) throw new BizException(409, "订单已取消");
+                if (st == 5) throw new BizException(409, "订单已退款");
                 if (st == 3) throw new BizException(409, "订单已完成");
                 if (st == 0) throw new BizException(409, "待付款订单直接取消即可");
                 List<Map<String, Object>> items = orderItemDao.listByOrder(orderId);

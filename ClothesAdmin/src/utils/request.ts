@@ -17,15 +17,20 @@ async function request<T = any>(
 
   const res = await fetch(`${BASE_URL}${url}`, { ...options, headers, credentials: 'include' })
 
-  // 401 = 未登录/token失效 → 自动跳登录页
-  if (res.status === 401) {
+  // 尝试解析响应体（即使是 500 也可能包含业务错误信息）
+  let body: any
+  try { body = await res.json() } catch { body = null }
+
+  // 业务错误 → 跳登录页（不管 HTTP 状态码）
+  const authMsgs = ['未登录', 'token失效', 'token无效', '请先登录']
+  if (body && (body.code === 401 || body.code === 403 || authMsgs.some((m: string) => body.message?.includes(m)))) {
     const loginUrl = '/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search)
     window.location.href = loginUrl
-    throw new Error('未登录')
+    throw new Error(body.message || '未登录')
   }
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-  return res.json()
+  if (!res.ok) throw new Error(body?.message || `HTTP ${res.status}: ${res.statusText}`)
+  return body
 }
 
 /**

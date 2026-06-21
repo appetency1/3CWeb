@@ -25,18 +25,18 @@ public class AddressDao {
     }
 
     public int insert(Connection conn, Long userId, String receiver, String phone,
-                      String province, String city, String district, String detail, int isDefault) throws SQLException {
+                      String province, String city, String district, String detail, int isDefault, String tag) throws SQLException {
         return JdbcUtils.update(conn,
-            "INSERT INTO address (user_id, receiver, phone, province, city, district, detail, is_default) " +
-            "VALUES (?,?,?,?,?,?,?,?)",
-            userId, receiver, phone, province, city, district, detail, isDefault);
+            "INSERT INTO address (user_id, receiver, phone, province, city, district, detail, is_default, tag) " +
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            userId, receiver, phone, province, city, district, detail, isDefault, tag);
     }
 
     public int update(Connection conn, Long id, String receiver, String phone,
-                      String province, String city, String district, String detail, int isDefault) throws SQLException {
+                      String province, String city, String district, String detail, int isDefault, String tag) throws SQLException {
         return JdbcUtils.update(conn,
-            "UPDATE address SET receiver=?, phone=?, province=?, city=?, district=?, detail=?, is_default=? WHERE id=?",
-            receiver, phone, province, city, district, detail, isDefault, id);
+            "UPDATE address SET receiver=?, phone=?, province=?, city=?, district=?, detail=?, is_default=?, tag=? WHERE id=?",
+            receiver, phone, province, city, district, detail, isDefault, tag, id);
     }
 
     public int clearDefault(Connection conn, Long userId) throws SQLException {
