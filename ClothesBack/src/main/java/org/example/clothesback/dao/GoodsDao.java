@@ -35,8 +35,7 @@ public class GoodsDao {
             sql.append(" AND").append(buildCategoryClause(catIds, params));
         }
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND name LIKE ?");
-            params.add("%" + keyword + "%");
+            sql.append(" AND (").append(buildKeywordClause(keyword, params)).append(")");
         }
         sql.append(" ORDER BY ").append(buildOrderBy(sort));
         sql.append(" LIMIT ? OFFSET ?");
@@ -52,7 +51,9 @@ public class GoodsDao {
             List<Long> catIds = expandCategoryIds(categoryId);
             sql.append(" AND").append(buildCategoryClause(catIds, params));
         }
-        if (keyword != null && !keyword.isBlank()) { sql.append(" AND name LIKE ?"); params.add("%" + keyword + "%"); }
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (").append(buildKeywordClause(keyword, params)).append(")");
+        }
         return JdbcUtils.queryLong(sql.toString(), params.toArray());
     }
 
@@ -148,6 +149,44 @@ public class GoodsDao {
         }
         clause.append(")");
         return clause.toString();
+    }
+
+    /**
+     * 构建关键词搜索子句：同时搜索 name / brand / description。
+     * 中文按单字拆开（"裙子" → LIKE '%裙%' OR LIKE '%子%'），
+     * 英文按空格分词。
+     */
+    private String buildKeywordClause(String keyword, List<Object> params) {
+        String[] terms = splitTerms(keyword);
+        List<String> fields = List.of("name", "brand", "description");
+        StringBuilder clause = new StringBuilder();
+        for (int i = 0; i < terms.length; i++) {
+            if (i > 0) clause.append(" OR ");
+            clause.append("(");
+            for (int j = 0; j < fields.size(); j++) {
+                if (j > 0) clause.append(" OR ");
+                clause.append(fields.get(j)).append(" LIKE ?");
+                params.add("%" + terms[i] + "%");
+            }
+            clause.append(")");
+        }
+        return clause.toString();
+    }
+
+    /** 中文按单字拆分，英文按空格分词 */
+    private String[] splitTerms(String keyword) {
+        if (keyword == null || keyword.isBlank()) return new String[0];
+        // 检测是否包含中文
+        boolean hasChinese = keyword.chars().anyMatch(c -> c >= 0x4E00 && c <= 0x9FFF);
+        if (hasChinese) {
+            // 中文：拆成单个汉字
+            return keyword.codePoints()
+                .filter(c -> c >= 0x4E00 && c <= 0x9FFF)
+                .mapToObj(c -> new String(new int[]{c}, 0, 1))
+                .toArray(String[]::new);
+        }
+        // 英文：按空格分词
+        return keyword.trim().split("\\s+");
     }
 
     private String buildOrderBy(String sort) {

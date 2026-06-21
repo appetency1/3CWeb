@@ -8,6 +8,7 @@ import { fullImgUrl, IMG_PLACEHOLDER } from '@/utils/img'
 const router = useRouter()
 const searchValue = ref((router.currentRoute.value.query.keyword as string) || '')
 const goodsList = ref<any[]>([])
+const recommendList = ref<any[]>([])
 const loading = ref(false)
 const finished = ref(false)
 const page = ref(1)
@@ -32,6 +33,7 @@ async function doSearch() {
   if (!kw) return
   saveHistory(kw)
   goodsList.value = []
+  recommendList.value = []
   page.value = 1
   finished.value = false
   await loadGoods()
@@ -48,6 +50,11 @@ async function loadGoods() {
     else goodsList.value.push(...list)
     finished.value = list.length < size
     page.value++
+    // 搜索为空时加载热门推荐
+    if (page.value === 2 && goodsList.value.length === 0) {
+      const hot: any = await publicApi.hotGoods()
+      recommendList.value = hot || []
+    }
   } catch (e: any) { showFailToast('搜索失败'); finished.value = true }
   finally { loading.value = false }
 }
@@ -108,7 +115,29 @@ onMounted(() => {
         </div>
 
         <div v-if="!goodsList.length && !loading && searchValue" class="desktop-empty">
-          <div class="empty-icon"><img src="/assets/brand/empty-search.svg" style="width:80px;height:80px" alt="" /></div><p>未找到"{{ searchValue }}"相关商品</p>
+          <div class="empty-icon"><img src="/assets/brand/empty-search.svg" style="width:80px;height:80px" alt="" /></div>
+          <p>未找到"{{ searchValue }}"相关商品</p>
+          <p style="font-size:13px;color:#999;margin-top:8px">试试其他关键词，或看看下面的推荐</p>
+        </div>
+
+        <!-- 空结果推荐 -->
+        <div v-if="!goodsList.length && recommendList.length && !loading" style="margin-top:20px">
+          <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">热门推荐</h3>
+          <div class="desktop-search-results-grid">
+            <a v-for="item in recommendList" :key="item.id"
+              class="desktop-goods-card" href="#"
+              @click.prevent="goGoods(item.id)">
+              <img :src="fullImgUrl(item.cover)" class="desktop-goods-img" loading="lazy"
+                @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+              <div class="desktop-goods-body">
+                <p class="desktop-goods-name">{{ item.name }}</p>
+                <div class="desktop-goods-price">
+                  <span class="unit">¥</span>{{ item.price }}
+                  <span v-if="item.originalPrice" class="desktop-goods-original">¥{{ item.originalPrice }}</span>
+                </div>
+              </div>
+            </a>
+          </div>
         </div>
 
         <div v-if="!searchValue && !goodsList.length" class="desktop-empty">
