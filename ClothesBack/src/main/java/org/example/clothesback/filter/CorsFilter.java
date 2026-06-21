@@ -46,7 +46,9 @@ public class CorsFilter implements Filter {
         HttpServletRequest httpReq = (HttpServletRequest) req;
 
         String origin = httpReq.getHeader("Origin");
-        if (origin != null && allowedOrigins.contains(origin)) {
+        // 精确匹配白名单 OR 任意 localhost:port 都放行（开发用）
+        if (origin != null && (allowedOrigins.contains(origin)
+            || origin.matches("^https?://localhost:\\d+$"))) {
             resp.setHeader("Access-Control-Allow-Origin", origin);
         }
         resp.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");

@@ -17,11 +17,11 @@ export default defineConfig({
     }
   },
   server: {
-    port: 5174,
+    port: 7071,
     host: '0.0.0.0',
     proxy: {
       '/assets': {
-        target: 'http://localhost:5173',
+        target: 'http://localhost:7070',
         changeOrigin: true
       }
     }
