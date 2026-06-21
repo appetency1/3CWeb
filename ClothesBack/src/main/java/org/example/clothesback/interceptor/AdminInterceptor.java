@@ -28,7 +28,14 @@ public class AdminInterceptor {
             writeForbidden(resp, 401, "未登录");
             return false;
         }
-        Admin a = TokenManager.get(token);
+        Admin a = null;
+        try {
+            a = TokenManager.get(token);
+        } catch (Exception e) {
+            // TokenManager 读取异常（文件损坏/类型转换等），视为 token 失效
+            writeForbidden(resp, 401, "token失效");
+            return false;
+        }
         if (a == null) {
             writeForbidden(resp, 401, "token失效");
             return false;

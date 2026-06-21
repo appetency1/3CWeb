@@ -26,7 +26,13 @@ public class AuthInterceptor {
             writeUnauthorized(resp, "未登录");
             return false;
         }
-        User u = TokenManager.get(token);
+        User u = null;
+        try {
+            u = TokenManager.get(token);
+        } catch (Exception e) {
+            writeUnauthorized(resp, "token失效");
+            return false;
+        }
         if (u == null) {
             writeUnauthorized(resp, "token失效");
             return false;

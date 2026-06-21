@@ -535,7 +535,7 @@ onMounted(() => {
 .rating label:before { content: '\2605'; }
 .rating input:checked ~ label,
 .rating label:hover,
-.rating label:hover ~ label { color: #6f00ff; }
+.rating label:hover ~ label { color: #ff8c00; }
 
 @media (max-width: 768px) {
   .order-page { padding: 16px 20px 40px; }
