@@ -26,6 +26,7 @@ const statusMap: Record<string, { text: string; cls: string }> = {
   '2': { text: '待收货', cls: 'tag-info' },
   '3': { text: '已完成', cls: 'tag-success' },
   '4': { text: '已取消', cls: 'tag-muted' },
+  '5': { text: '已退款', cls: 'tag-muted' },
 }
 
 function statusTag(s: number | string) {

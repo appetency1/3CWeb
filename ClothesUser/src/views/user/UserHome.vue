@@ -33,7 +33,7 @@ async function loadOrders() {
 }
 
 function orderStatusText(s: number) {
-  const map: Record<number, string> = { 0: '待付款', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已取消' }
+  const map: Record<number, string> = { 0: '待付款', 1: '待发货', 2: '待收货', 3: '已完成', 4: '已取消', 5: '已退款' }
   return map[s] || '未知'
 }
 function orderStatusClass(s: number) {
