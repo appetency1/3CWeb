@@ -22,7 +22,13 @@ public class AddressService {
         validate(dto);
         try {
             Long id = JdbcUtils.transactionResult(conn -> {
-                int isDefault = (dao.countByUser(userId) == 0) ? 1 : 0;
+                int isDefault = dto.isDefault();
+                // 如果显式设为默认，先清空其他地址的默认状态
+                if (isDefault == 1) {
+                    dao.clearDefault(conn, userId);
+                } else if (dao.countByUser(userId) == 0) {
+                    isDefault = 1; // 第一个地址自动设为默认
+                }
                 dao.insert(conn, userId, dto.receiver().trim(), dto.phone().trim(),
                     dto.province(), dto.city(), dto.district(), dto.detail(), isDefault);
                 return JdbcUtils.queryLong(conn, "SELECT LAST_INSERT_ID()");
@@ -42,7 +48,7 @@ public class AddressService {
             }
             JdbcUtils.transaction(conn ->
                 dao.update(conn, id, dto.receiver().trim(), dto.phone().trim(),
-                    dto.province(), dto.city(), dto.district(), dto.detail())
+                    dto.province(), dto.city(), dto.district(), dto.detail(), dto.isDefault())
             );
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "更新失败");

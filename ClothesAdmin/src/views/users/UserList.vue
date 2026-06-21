@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getUserList } from '@/api/user'
+import { showConfirmDialog, showToast } from 'vant'
+import { getUserList, updateUserStatus } from '@/api/user'
 
 const users = ref<any[]>([])
 const loading = ref(false)
+
+async function toggleStatus(u: any) {
+  const action = u.status === 1 ? '禁用' : '启用'
+  try {
+    await showConfirmDialog({ title: '确认' + action, message: `确定要${action}用户「${u.username}」吗？` })
+    await updateUserStatus(u.id, u.status === 1 ? 0 : 1)
+    u.status = u.status === 1 ? 0 : 1
+    showToast(action + '成功')
+  } catch { /* 用户取消或失败 */ }
+}
 
 onMounted(async () => {
   loading.value = true
@@ -33,14 +44,15 @@ onMounted(async () => {
               <th>手机号</th>
               <th>状态</th>
               <th>注册时间</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="loading">
-              <td colspan="6" style="text-align:center;color:#999;padding:60px 0">加载中...</td>
+              <td colspan="7" style="text-align:center;color:#999;padding:60px 0">加载中...</td>
             </tr>
             <tr v-else-if="users.length === 0">
-              <td colspan="6" style="text-align:center;color:#999;padding:60px 0">暂无用户数据</td>
+              <td colspan="7" style="text-align:center;color:#999;padding:60px 0">暂无用户数据</td>
             </tr>
             <tr v-for="u in users" :key="u.id">
               <td><span style="font-family:'JetBrains Mono',monospace;color:#666;font-size:12px">{{ u.id }}</span></td>
@@ -53,6 +65,12 @@ onMounted(async () => {
                 </span>
               </td>
               <td style="color:#666;font-size:12px">{{ u.createTime || '-' }}</td>
+              <td>
+                <button :class="['btn', u.status === 1 ? 'btn-warning' : 'btn-success']"
+                  @click="toggleStatus(u)">
+                  {{ u.status === 1 ? '禁用' : '启用' }}
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>

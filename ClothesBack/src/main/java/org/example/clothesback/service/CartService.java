@@ -28,8 +28,13 @@ public class CartService {
         try {
             Map<String, Object> sku = skuDao.findById(dto.skuId());
             if (sku == null) throw new BizException(ResultCode.NOT_FOUND, "SKU不存在");
-            Long goodsId = ((Number) sku.get("goods_id")).longValue();
+            // 库存校验
+            int stock = ((Number) sku.get("stock")).intValue();
+            if (stock < 1) throw new BizException(400, "该商品已售罄");
             Map<String, Object> existing = cartDao.findByUserAndSku(userId, dto.skuId());
+            int existingQty = existing != null ? ((Number) existing.get("quantity")).intValue() : 0;
+            if (existingQty + qty > stock) throw new BizException(400, "库存不足，最多可购买" + stock + "件");
+            Long goodsId = ((Number) sku.get("goods_id")).longValue();
             if (existing != null) {
                 cartDao.addQuantity(userId, dto.skuId(), qty);
             } else {

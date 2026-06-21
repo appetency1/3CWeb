@@ -42,7 +42,8 @@ public class AddressServlet extends BaseServlet {
     private void create(Long userId, HttpServletRequest req, HttpServletResponse resp) throws Exception {
         JSONObject b = readJson(req);
         AddressDTO dto = new AddressDTO(b.getString("receiver"), b.getString("phone"),
-            b.getString("province"), b.getString("city"), b.getString("district"), b.getString("detail"));
+            b.getString("province"), b.getString("city"), b.getString("district"), b.getString("detail"),
+            b.getIntValue("isDefault", 0));
         java.util.Map<String, Object> address = service.create(userId, dto);
         writeOk(resp, "新增成功", address);
     }
@@ -50,7 +51,8 @@ public class AddressServlet extends BaseServlet {
     private void update(Long userId, Long id, HttpServletRequest req, HttpServletResponse resp) throws Exception {
         JSONObject b = readJson(req);
         AddressDTO dto = new AddressDTO(b.getString("receiver"), b.getString("phone"),
-            b.getString("province"), b.getString("city"), b.getString("district"), b.getString("detail"));
+            b.getString("province"), b.getString("city"), b.getString("district"), b.getString("detail"),
+            b.getIntValue("isDefault", 0));
         service.update(userId, id, dto);
         writeOk(resp, "修改成功", null);
     }

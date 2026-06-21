@@ -33,10 +33,10 @@ public class AddressDao {
     }
 
     public int update(Connection conn, Long id, String receiver, String phone,
-                      String province, String city, String district, String detail) throws SQLException {
+                      String province, String city, String district, String detail, int isDefault) throws SQLException {
         return JdbcUtils.update(conn,
-            "UPDATE address SET receiver=?, phone=?, province=?, city=?, district=?, detail=? WHERE id=?",
-            receiver, phone, province, city, district, detail, id);
+            "UPDATE address SET receiver=?, phone=?, province=?, city=?, district=?, detail=?, is_default=? WHERE id=?",
+            receiver, phone, province, city, district, detail, isDefault, id);
     }
 
     public int clearDefault(Connection conn, Long userId) throws SQLException {
