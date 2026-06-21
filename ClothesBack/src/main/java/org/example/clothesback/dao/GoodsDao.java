@@ -152,41 +152,33 @@ public class GoodsDao {
     }
 
     /**
-     * 构建关键词搜索子句：同时搜索 name / brand / description。
-     * 中文按单字拆开（"裙子" → LIKE '%裙%' OR LIKE '%子%'），
-     * 英文按空格分词。
+     * 关键词搜索：FULLTEXT（ngram 中文分词）+ LIKE 单字兜底。
+     *
+     * 先走 MATCH AGAINST（快、有相关性排序）：
+     *   "连衣裙" → 命中 ngram 分词 "连衣" "衣裙"
+     *   "T恤"   → 命中英文全文索引
+     * 再 OR 上单字 LIKE 拆分做兜底：
+     *   "裙子"  → LIKE '%裙%' OR LIKE '%子%' → 找到"连衣裙""百褶裙"等
      */
     private String buildKeywordClause(String keyword, List<Object> params) {
-        String[] terms = splitTerms(keyword);
-        List<String> fields = List.of("name", "brand", "description");
+        // 1) FULLTEXT MATCH（ngram 分词，按相关性排序）
         StringBuilder clause = new StringBuilder();
-        for (int i = 0; i < terms.length; i++) {
-            if (i > 0) clause.append(" OR ");
-            clause.append("(");
-            for (int j = 0; j < fields.size(); j++) {
-                if (j > 0) clause.append(" OR ");
-                clause.append(fields.get(j)).append(" LIKE ?");
-                params.add("%" + terms[i] + "%");
-            }
-            clause.append(")");
+        clause.append("MATCH(name, brand, description) AGAINST(? IN BOOLEAN MODE)");
+        // BOOLEAN MODE 下 + 表示必须包含，* 是通配符
+        // 中文 ngram(2) 会自动按双字分词
+        params.add("+" + keyword + "*");
+
+        // 2) LIKE 单字兜底（解决 ngram 无论如何也匹配不到的情况）
+        String[] chars = keyword.codePoints()
+            .filter(c -> c >= 0x4E00 && c <= 0x9FFF)
+            .mapToObj(c -> new String(new int[]{c}, 0, 1))
+            .toArray(String[]::new);
+        for (String ch : chars) {
+            clause.append(" OR name LIKE ? OR brand LIKE ? OR description LIKE ?");
+            String like = "%" + ch + "%";
+            params.add(like); params.add(like); params.add(like);
         }
         return clause.toString();
-    }
-
-    /** 中文按单字拆分，英文按空格分词 */
-    private String[] splitTerms(String keyword) {
-        if (keyword == null || keyword.isBlank()) return new String[0];
-        // 检测是否包含中文
-        boolean hasChinese = keyword.chars().anyMatch(c -> c >= 0x4E00 && c <= 0x9FFF);
-        if (hasChinese) {
-            // 中文：拆成单个汉字
-            return keyword.codePoints()
-                .filter(c -> c >= 0x4E00 && c <= 0x9FFF)
-                .mapToObj(c -> new String(new int[]{c}, 0, 1))
-                .toArray(String[]::new);
-        }
-        // 英文：按空格分词
-        return keyword.trim().split("\\s+");
     }
 
     private String buildOrderBy(String sort) {
