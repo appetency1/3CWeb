@@ -19,8 +19,12 @@ instance.interceptors.response.use(
       if (body.code === 0 || body.code === 200) {
         return body.data as any
       }
-      if (body.code === 401) {
+      if (body.code === 401 || body.code === 403) {
         showToast('登录已失效')
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+          const redirect = encodeURIComponent(window.location.pathname + window.location.search)
+          window.location.href = `/login?redirect=${redirect}`
+        }
         return Promise.reject(new Error(body.message || '未登录'))
       }
       showFailToast(body.message || '请求失败')

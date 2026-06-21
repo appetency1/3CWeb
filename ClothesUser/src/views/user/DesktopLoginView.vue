@@ -759,15 +759,15 @@ onUnmounted(() => { tiltCleanup?.() })
 .success.show { opacity: 1; pointer-events: auto; }
 
 .loader-wrap {
-  --bg: #f3f0ec;
-  --primary1: #fff;
-  --primary2: #f4d9d4;
-  --fg-t: rgba(255, 255, 255, 0.25);
+  --bg: #b05c4f;
+  --primary1: #f3f0ec;
+  --primary2: #e8c4bf;
+  --fg-t: rgba(26, 24, 22, 0.15);
   --trans-dur: 0.3s;
-  width: 180px; height: 180px;
+  width: 360px; height: 360px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #c46a5c, #b05c4f);
-  box-shadow: 0 28px 72px rgba(176, 92, 79, 0.28);
+  box-shadow: 0 32px 96px rgba(176, 92, 79, 0.32);
   display: flex; align-items: center; justify-content: center;
   margin-bottom: 24px;
   transform: scale(1);
@@ -787,7 +787,7 @@ onUnmounted(() => { tiltCleanup?.() })
   position: relative;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  transform: rotateX(30deg) rotateZ(45deg) scale(0.45);
+  transform: rotateX(30deg) rotateZ(45deg) scale(1.3);
   width: 14em;
   height: 14em;
   color: white;

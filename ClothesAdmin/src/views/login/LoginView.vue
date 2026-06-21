@@ -12,6 +12,7 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 const showPwd = ref(false)
+const successShow = ref(false)
 
 const cardRef = ref<HTMLElement | null>(null)
 let tiltCleanup: (() => void) | null = null
@@ -28,7 +29,10 @@ async function onLogin() {
     })
     const data = unwrap(res)
     adminStore.setAdminInfo(data.userInfo)
-    router.replace('/dashboard')
+    successShow.value = true
+    setTimeout(() => {
+      router.replace('/dashboard')
+    }, 1600)
   } catch (e: any) {
     showFailToast(e?.message || '登录失败')
   } finally {
@@ -127,6 +131,14 @@ onUnmounted(() => { tiltCleanup?.() })
       </div>
     </div>
   </div>
+
+  <!-- 登录成功等待层 -->
+  <Teleport to="body">
+    <div class="success" :class="{ show: successShow }">
+      <div class="loader"></div>
+      <div class="success__text">登录成功，正在进入管理后台…</div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -521,6 +533,76 @@ onUnmounted(() => { tiltCleanup?.() })
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 登录成功等待层 ── */
+.success {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #f5f3f0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.success.show { opacity: 1; pointer-events: auto; }
+
+.success__text {
+  margin-top: 90px;
+  font-size: 15px; color: #666;
+  letter-spacing: 0.5px; font-weight: 500;
+}
+
+.loader {
+  position: relative;
+  width: 120px;
+  height: 90px;
+  transform: scale(1.8);
+}
+
+.loader:before {
+  content: "";
+  position: absolute;
+  bottom: 30px;
+  left: 50px;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: #c45c4a;
+  animation: loading-bounce 0.5s ease-in-out infinite alternate;
+}
+
+.loader:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 7px;
+  width: 45px;
+  border-radius: 4px;
+  box-shadow: 0 5px 0 #2a2523, -35px 50px 0 #2a2523, -70px 95px 0 #2a2523;
+  animation: loading-step 1s ease-in-out infinite;
+}
+
+@keyframes loading-bounce {
+  0% { transform: scale(1, 0.7); }
+  40% { transform: scale(0.8, 1.2); }
+  60% { transform: scale(1, 1); }
+  100% { bottom: 140px; }
+}
+
+@keyframes loading-step {
+  0% {
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0),
+            0 10px 0 #2a2523,
+            -35px 50px 0 #2a2523,
+            -70px 90px 0 #2a2523;
+  }
+  100% {
+    box-shadow: 0 10px 0 #2a2523,
+            -35px 50px 0 #2a2523,
+            -70px 90px 0 #2a2523,
+            -70px 90px 0 rgba(0, 0, 0, 0);
+  }
+}
 
 @media (max-width: 900px) {
   .login-frame { grid-template-columns: 1fr; gap: 40px; text-align: center; }
