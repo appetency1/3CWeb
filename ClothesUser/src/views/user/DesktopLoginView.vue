@@ -49,6 +49,7 @@ async function handleLogin() {
   try {
     const data: any = await userApi.login({ username: login.username, password: login.password })
     userStore.setUserInfo(data.userInfo)
+    if (data.token) userStore.setToken(data.token)
     successShow.value = true
     loading.value = false
     setTimeout(() => {

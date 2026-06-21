@@ -4,6 +4,7 @@ import { userApi } from '@/api/user'
 
 export const useUserStore = defineStore('user', () => {
   const userInfo = ref<any>(null)
+  const token = ref<string | null>(localStorage.getItem('token'))
   const initialized = ref(false)
 
   const isLoggedIn = computed(() => !!userInfo.value)
@@ -25,9 +26,16 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = info
   }
 
-  function logout() {
-    userInfo.value = null
+  function setToken(t: string) {
+    token.value = t
+    localStorage.setItem('token', t)
   }
 
-  return { userInfo, isLoggedIn, initialized, init, setUserInfo, logout }
+  function logout() {
+    userInfo.value = null
+    token.value = null
+    localStorage.removeItem('token')
+  }
+
+  return { userInfo, token, isLoggedIn, initialized, init, setUserInfo, setToken, logout }
 })

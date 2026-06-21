@@ -9,6 +9,12 @@ const instance: AxiosInstance = axios.create({
 })
 
 instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // 如果 localStorage 有 token，优先用 Authorization header
+  // 后端 AuthInterceptor 支持 Cookie + Authorization 两种方式
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
   return config
 })
 

@@ -106,9 +106,9 @@ function openAreaPicker() {
 
 async function saveAddress() {
   const f = form.value
-  if (!f.receiver.trim()) { showToast({ message: '请填写收货人', duration: 2000 }); return }
-  if (!f.phone.trim()) { showToast({ message: '请填写手机号', duration: 2000 }); return }
-  if (!f.province.trim() || !f.city.trim()) { showToast({ message: '请填写地区信息', duration: 2000 }); return }
+  if (!f.receiver.trim()) { showFailToast('请填写收货人'); return }
+  if (!f.phone.trim()) { showFailToast('请填写手机号'); return }
+  if (!f.province.trim() || !f.city.trim()) { showFailToast('请选择地区'); return }
   try {
     if (editingId.value) {
       await addressApi.update(editingId.value, {
@@ -117,7 +117,8 @@ async function saveAddress() {
         isDefault: f.isDefault,
         tag: f.tag,
       })
-      showToast({ message: '修改成功', duration: 1500 })
+      showModal.value = false
+      await load()
     } else {
       await addressApi.add({
         receiver: f.receiver.trim(), phone: f.phone.trim(),
@@ -125,13 +126,13 @@ async function saveAddress() {
         isDefault: f.isDefault,
         tag: f.tag,
       })
-      showToast({ message: '添加成功', duration: 1500 })
+      showModal.value = false
+      await load()
     }
-    showModal.value = false
-    await load()
   } catch (e: any) {
-    // 401 由 axios 全局拦截器处理（跳登录），不要重复弹
-    if (e?.response?.status !== 401) {
+    // 401/403 由 axios 全局拦截器处理（自动弹 toast + 跳登录），不重复处理
+    const status = e?.response?.status
+    if (status !== 401 && status !== 403) {
       showFailToast(e?.message || '操作失败')
     }
   }
