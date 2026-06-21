@@ -96,7 +96,7 @@ onMounted(async () => {
 
           <div class="menu-divider"></div>
 
-          <div class="menu-item" :class="{ active: route.name === 'userService' }" @click="navigate('userService')">
+          <div class="menu-item" @click="router.push('/service')">
             <span class="menu-icon">💬</span>
             <span>联系客服</span>
           </div>

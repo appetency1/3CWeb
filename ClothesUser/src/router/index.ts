@@ -71,12 +71,13 @@ const router = createRouter({
           name: 'userSecurity',
           component: () => import('@/views/user/DesktopSecurityView.vue'),
         },
-        {
-          path: 'service',
-          name: 'userService',
-          component: () => import('@/views/service/DesktopChatView.vue'),
-        },
       ],
+    },
+    // 客服独立全屏页面（不嵌入侧栏）
+    {
+      path: '/service',
+      name: 'service',
+      component: () => import('@/views/service/DesktopChatView.vue'),
     },
     // 旧路由重定向到 /user/ 子路由
     {
