@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast, showConfirmDialog, showToast } from 'vant'
 import { orderApi } from '@/api/order'
+import { userApi } from '@/api/user'
+import { fullImgUrl } from '@/utils/img'
 
 const router = useRouter()
 const active = ref(0)
@@ -67,8 +69,14 @@ function payOrder(order: any) {
   })
 }
 
-function confirmReceive(order: any) {
-  router.push(`/order/${order.id}`)
+async function confirmReceive(order: any) {
+  try {
+    await showConfirmDialog({ title: '确认收货', message: '确定已收到商品吗？', confirmButtonText: '确认收货' })
+    await orderApi.confirm(order.id)
+    showToast('已确认收货')
+    order.status = 3
+    loadStats()
+  } catch { /* 取消或失败 */ }
 }
 
 async function cancelOrder(order: any) {
@@ -99,6 +107,37 @@ async function loadStats() {
 }
 
 // 切换 Tab 时重新请求列表，但统计不受影响
+const showReview = ref(false)
+const reviewRating = ref(5)
+const reviewContent = ref('')
+const reviewSubmitting = ref(false)
+let reviewingOrder: any = null
+
+function openReview(order: any) {
+  reviewingOrder = order
+  showReview.value = true
+  reviewRating.value = 5
+  reviewContent.value = ''
+}
+
+async function submitReview() {
+  if (!reviewContent.value.trim()) { showToast('请填写评价内容'); return }
+  if (!reviewingOrder) return
+  reviewSubmitting.value = true
+  try {
+    await userApi.createComment({
+      orderId: reviewingOrder.id,
+      goodsId: reviewingOrder.items?.[0]?.goodsId || 0,
+      content: reviewContent.value,
+      rating: reviewRating.value,
+    })
+    showToast('评价成功')
+    showReview.value = false
+    reviewingOrder = null
+  } catch (e: any) { showFailToast(e?.message || '评价失败') }
+  finally { reviewSubmitting.value = false }
+}
+
 watch(active, () => { page.value = 1; orders.value = []; finished.value = false; fetchOrders() })
 
 onMounted(() => {
@@ -160,20 +199,37 @@ onMounted(() => {
           </div>
 
           <div class="order-body" @click="router.push(`/order/${order.id}`)">
-            <div class="order-main">
-              <div class="order-row">
-                <span class="order-row-label">订单金额</span>
-                <span class="order-row-amount">¥{{ (order.payAmount || order.totalAmount || 0).toFixed(2) }}</span>
+            <div class="order-items">
+              <div
+                v-for="(item, idx) in (order.items || []).slice(0, 3)"
+                :key="item.id || idx"
+                class="order-item"
+              >
+                <img :src="fullImgUrl(item.goodsCover)" class="order-item-img" />
+                <div class="order-item-info">
+                  <p class="order-item-name">{{ item.goodsName }}</p>
+                  <p class="order-item-sku">{{ item.spec || '默认规格' }} x {{ item.quantity }}</p>
+                </div>
+                <div class="order-item-right">
+                  <span class="order-item-price">¥{{ Number(item.price || 0).toFixed(2) }}</span>
+                </div>
               </div>
-              <div v-if="order.discountAmount > 0" class="order-row discount">
-                <span class="order-row-label">优惠</span>
-                <span class="order-row-discount">-¥{{ Number(order.discountAmount).toFixed(2) }}</span>
-              </div>
-              <div class="order-row freight">
-                <span class="order-row-label">运费</span>
-                <span class="order-row-freight">{{ order.freightAmount > 0 ? '¥' + Number(order.freightAmount).toFixed(2) : '免运费' }}</span>
+              <div v-if="(order.items || []).length > 3" class="order-more">
+                还有 {{ order.items.length - 3 }} 件商品
               </div>
             </div>
+          </div>
+
+          <div class="order-summary">
+            <span class="summary-left">
+              共 {{ order.items?.length || 0 }} 件
+              <template v-if="order.discountAmount > 0">
+                ，优惠 <span class="summary-discount">-¥{{ Number(order.discountAmount).toFixed(2) }}</span>
+              </template>
+            </span>
+            <span class="summary-right">
+              合计：<span class="summary-amount">¥{{ (order.payAmount || order.totalAmount || 0).toFixed(2) }}</span>
+            </span>
           </div>
 
           <!-- 操作栏 -->
@@ -186,9 +242,44 @@ onMounted(() => {
                 立即付款
               </button>
               <button v-if="order.status === 2" class="btn btn-primary-order" @click="confirmReceive(order)">确认收货</button>
-              <button v-if="order.status === 3" class="btn btn-review" @click="router.push(`/order/${order.id}`)">去评价</button>
+              <button v-if="order.status === 3" class="btn btn-review" @click="openReview(order)">去评价</button>
             </span>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评价弹窗 -->
+    <div v-if="showReview" class="review-overlay" @click.self="showReview = false">
+      <div class="review-modal">
+        <div class="review-header">
+          <h3>评价商品</h3>
+          <button class="review-close" @click="showReview = false">✕</button>
+        </div>
+        <div class="review-body">
+          <div class="review-field">
+            <label class="review-label">评分</label>
+            <div class="rating">
+              <input value="5" name="rating" id="star5" type="radio" v-model="reviewRating" />
+              <label for="star5"></label>
+              <input value="4" name="rating" id="star4" type="radio" v-model="reviewRating" />
+              <label for="star4"></label>
+              <input value="3" name="rating" id="star3" type="radio" v-model="reviewRating" />
+              <label for="star3"></label>
+              <input value="2" name="rating" id="star2" type="radio" v-model="reviewRating" />
+              <label for="star2"></label>
+              <input value="1" name="rating" id="star1" type="radio" v-model="reviewRating" />
+              <label for="star1"></label>
+            </div>
+          </div>
+          <div class="review-field">
+            <label class="review-label">评价内容</label>
+            <textarea v-model="reviewContent" class="review-textarea" placeholder="分享您的购物体验，对其他买家很有帮助" rows="4" maxlength="500"></textarea>
+          </div>
+        </div>
+        <div class="review-footer">
+          <button class="btn btn-outline" @click="showReview = false">取消</button>
+          <button class="btn btn-primary" @click="submitReview" :disabled="reviewSubmitting">{{ reviewSubmitting ? '提交中...' : '提交评价' }}</button>
         </div>
       </div>
     </div>
@@ -289,12 +380,27 @@ onMounted(() => {
 }
 .order-body:hover { background: #fcfaf8; }
 
-.order-main { display: flex; flex-direction: column; gap: 10px; }
-.order-row { display: flex; justify-content: space-between; align-items: center; }
-.order-row-label { font-size: 13px; color: var(--text-muted, #9a9a9a); }
-.order-row-amount { font-size: 22px; font-weight: 700; color: var(--accent, #c45c4a); letter-spacing: -0.5px; }
-.order-row.discount .order-row-discount { font-size: 13px; color: var(--success, #2d8a5e); font-weight: 600; }
-.order-row.freight .order-row-freight { font-size: 13px; color: var(--text-secondary, #6b6b6b); }
+.order-items { display: flex; flex-direction: column; gap: 16px; }
+.order-item { display: flex; align-items: center; gap: 16px; }
+.order-item-img {
+  width: 72px; height: 72px; border-radius: 12px; object-fit: cover;
+  background: var(--bg-secondary, #f5f3f0); flex-shrink: 0;
+}
+.order-item-info { flex: 1; min-width: 0; }
+.order-item-name { font-size: 14px; font-weight: 600; color: var(--text-primary, #1a1a1a); line-height: 1.5; margin-bottom: 6px; }
+.order-item-sku { font-size: 12px; color: var(--text-muted, #9a9a9a); }
+.order-item-right { flex-shrink: 0; text-align: right; }
+.order-item-price { font-size: 14px; font-weight: 700; color: var(--text-primary, #1a1a1a); }
+.order-more { font-size: 12px; color: var(--text-muted, #9a9a9a); text-align: right; }
+
+.order-summary {
+  padding: 14px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border-light, #f3f1ed);
+  font-size: 13px; color: var(--text-secondary, #6b6b6b);
+}
+.summary-discount { color: var(--success, #2d8a5e); font-weight: 600; margin-left: 4px; }
+.summary-amount { font-size: 18px; font-weight: 700; color: var(--accent, #c45c4a); margin-left: 4px; }
 
 /* 操作栏 */
 .order-footer {
@@ -375,6 +481,61 @@ onMounted(() => {
   font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .btn-primary-dark:hover { background: #333; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+/* ===== CSS 星星评分 ===== */
+.review-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+}
+.review-modal {
+  background: #fff; border-radius: 16px;
+  width: 440px; max-width: 90vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+.review-header {
+  padding: 20px 24px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #eee;
+}
+.review-header h3 { font-size: 18px; font-weight: 600; }
+.review-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: #f5f5f5; cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.review-body { padding: 24px; }
+.review-field { margin-bottom: 20px; }
+.review-label {
+  font-size: 13px; font-weight: 600; color: #333;
+  margin-bottom: 10px; display: block;
+}
+.review-textarea {
+  width: 100%; border: 1px solid #e0ddd8; border-radius: 10px;
+  padding: 12px 16px; font-size: 14px; line-height: 1.6;
+  resize: none; outline: none; font-family: inherit;
+}
+.review-textarea:focus { border-color: var(--accent, #c45c4a); }
+.review-footer {
+  padding: 16px 24px;
+  display: flex; gap: 12px; justify-content: flex-end;
+  border-top: 1px solid #eee;
+}
+
+.rating { display: inline-flex; flex-direction: row-reverse; }
+.rating input { display: none; }
+.rating label {
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.3s;
+  font-size: 32px;
+  padding: 0 2px;
+}
+.rating label:before { content: '\2605'; }
+.rating input:checked ~ label,
+.rating label:hover,
+.rating label:hover ~ label { color: #6f00ff; }
 
 @media (max-width: 768px) {
   .order-page { padding: 16px 20px 40px; }

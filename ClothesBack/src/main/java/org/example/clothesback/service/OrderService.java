@@ -141,6 +141,19 @@ public class OrderService {
             int offset = (page - 1) * size;
             List<Map<String, Object>> rows = orderDao.listByUser(userId, status, offset, size);
             long total = orderDao.countByUser(userId, status);
+            // 批量查询订单项并挂载到对应订单
+            if (!rows.isEmpty()) {
+                List<Long> orderIds = rows.stream()
+                    .map(o -> ((Number) o.get("id")).longValue()).toList();
+                List<Map<String, Object>> allItems = orderItemDao.listByOrderIds(orderIds);
+                Map<Long, List<Map<String, Object>>> itemsByOrder = allItems.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(
+                        it -> ((Number) it.get("order_id")).longValue()));
+                for (Map<String, Object> o : rows) {
+                    Long id = ((Number) o.get("id")).longValue();
+                    o.put("items", itemsByOrder.getOrDefault(id, new ArrayList<>()));
+                }
+            }
             return new PageResult<>(rows, total, page, size);
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "查询失败");
