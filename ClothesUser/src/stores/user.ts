@@ -1,15 +1,24 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { userApi } from '@/api/user'
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref(localStorage.getItem('token') || '')
   const userInfo = ref<any>(null)
+  const initialized = ref(false)
 
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!userInfo.value)
 
-  function setToken(val: string) {
-    token.value = val
-    localStorage.setItem('token', val)
+  /** 从 HttpOnly Cookie 恢复会话：尝试获取用户信息 */
+  async function init() {
+    if (initialized.value) return
+    try {
+      const info: any = await userApi.info()
+      userInfo.value = info
+    } catch {
+      // Cookie 无效或未登录，保持 userInfo = null
+    } finally {
+      initialized.value = true
+    }
   }
 
   function setUserInfo(info: any) {
@@ -17,10 +26,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function logout() {
-    token.value = ''
     userInfo.value = null
-    localStorage.removeItem('token')
   }
 
-  return { token, userInfo, isLoggedIn, setToken, setUserInfo, logout }
+  return { userInfo, isLoggedIn, initialized, init, setUserInfo, logout }
 })

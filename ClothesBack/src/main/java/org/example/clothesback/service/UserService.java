@@ -12,6 +12,7 @@ import org.example.clothesback.util.BeanUtils;
 import org.example.clothesback.util.MD5Utils;
 import org.example.clothesback.util.TokenManager;
 import org.example.clothesback.vo.V.LoginVO;
+import org.example.clothesback.vo.V.LoginResult;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -19,17 +20,17 @@ import java.util.Map;
 public class UserService {
     private final UserDao userDao = new UserDao();
 
-    public LoginVO login(LoginDTO dto) {
+    public LoginResult login(LoginDTO dto) {
         try {
             if (dto.username() == null || dto.username().isBlank()
                 || dto.password() == null || dto.password().isBlank()) {
                 throw new BizException(ResultCode.BAD_REQUEST, "用户名和密码不能为空");
             }
             Map<String, Object> row = userDao.findByUsernameWithPwd(dto.username().trim());
-            if (row == null) throw new BizException(ResultCode.BAD_REQUEST, "用户名或密码错误");
+            if (row == null) throw new BizException(401, "用户名或密码错误");
             String storedPwd = String.valueOf(row.get("password"));
             if (!MD5Utils.verify(dto.password(), storedPwd)) {
-                throw new BizException(ResultCode.BAD_REQUEST, "用户名或密码错误");
+                throw new BizException(401, "用户名或密码错误");
             }
             // 旧 MD5 密码登录成功时自动升级为 BCrypt
             if (MD5Utils.needsUpgrade(storedPwd)) {
@@ -49,13 +50,13 @@ public class UserService {
                 "phone", user.getPhone() == null ? "" : user.getPhone(),
                 "email", user.getEmail() == null ? "" : user.getEmail()
             );
-            return new LoginVO(token, userInfo);
+            return new LoginResult(new LoginVO(userInfo), token);
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "登录失败");
         }
     }
 
-    public LoginVO register(RegisterDTO dto) {
+    public LoginResult register(RegisterDTO dto) {
         try {
             if (dto.username() == null || dto.username().isBlank()) throw new BizException(400, "用户名不能为空");
             if (dto.username().length() < 3 || dto.username().length() > 50) throw new BizException(400, "用户名长度3-50");
@@ -72,7 +73,7 @@ public class UserService {
                 dto.nickname(), phone, dto.email());
             return login(new LoginDTO(dto.username(), dto.password()));
         } catch (SQLException e) {
-            throw new BizException(ResultCode.SERVER_ERROR, "注册失败: " + e.getMessage());
+            throw new BizException(ResultCode.SERVER_ERROR, "注册失败");
         }
     }
 
@@ -89,8 +90,18 @@ public class UserService {
     }
 
     public void updateProfile(Long userId, UpdateUserDTO dto) {
+        // 手机号格式校验（中国大陆手机号）
+        String phone = dto.phone();
+        if (phone != null && !phone.isBlank() && !phone.matches("^1[3-9]\\d{9}$")) {
+            throw new BizException(400, "手机号格式不正确");
+        }
+        // 邮箱格式校验
+        String email = dto.email();
+        if (email != null && !email.isBlank() && !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new BizException(400, "邮箱格式不正确");
+        }
         try {
-            int n = userDao.updateProfile(userId, dto.nickname(), dto.avatar(), dto.phone(),
+            int n = userDao.updateProfile(userId, dto.nickname(), dto.avatar(), phone,
                 dto.email(), dto.gender(), dto.birthday());
             if (n == 0) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
         } catch (SQLException e) {

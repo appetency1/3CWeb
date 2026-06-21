@@ -56,8 +56,15 @@ async function fetchOrders() {
 }
 
 function payOrder(order: any) {
-  // Simulate payment
-  router.push(`/order/${order.id}`)
+  loading.value = true
+  orderApi.pay(order.id).then(() => {
+    showToast('支付成功')
+    router.push(`/order/${order.id}`)
+  }).catch((e: any) => {
+    showFailToast(e?.message || '支付失败')
+  }).finally(() => {
+    loading.value = false
+  })
 }
 
 function confirmReceive(order: any) {

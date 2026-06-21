@@ -43,21 +43,30 @@ public class UserServlet extends BaseServlet {
             body.getString("nickname"),
             body.getString("phone"),
             body.getString("email"));
-        writeOk(resp, "注册成功", userService.register(dto));
+        var regResult = userService.register(dto);
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", regResult.token());
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 3600);
+        cookie.setAttribute("SameSite", "Strict");
+        resp.addCookie(cookie);
+        writeOk(resp, "注册成功", regResult.loginVO());
     }
 
     private void doLogin(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         JSONObject body = readJson(req);
         LoginDTO dto = new LoginDTO(body.getString("username"), body.getString("password"));
-        var vo = userService.login(dto);
-        // HttpOnly Cookie（XSS 无法窃取），后端两种方式都支持
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", vo.token());
+        var result = userService.login(dto);
+        // HttpOnly Cookie（XSS 无法窃取）
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", result.token());
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 3600);
+        cookie.setAttribute("SameSite", "Strict");
         resp.addCookie(cookie);
-        writeOk(resp, "登录成功", vo);
+        writeOk(resp, "登录成功", result.loginVO());
     }
 
     private void doLogout(HttpServletRequest req, HttpServletResponse resp) throws Exception {

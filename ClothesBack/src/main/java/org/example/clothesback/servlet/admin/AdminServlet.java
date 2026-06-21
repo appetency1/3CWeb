@@ -32,14 +32,15 @@ public class AdminServlet extends BaseServlet {
     private void doLogin(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         JSONObject b = readJson(req);
         LoginDTO dto = new LoginDTO(b.getString("username"), b.getString("password"));
-        var vo = adminService.login(dto);
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", vo.token());
+        var result = adminService.login(dto);
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", result.token());
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 3600);
+        cookie.setAttribute("SameSite", "Strict");
         resp.addCookie(cookie);
-        writeOk(resp, "登录成功", vo);
+        writeOk(resp, "登录成功", result.loginVO());
     }
 
     private void doLogout(HttpServletRequest req, HttpServletResponse resp) throws Exception {

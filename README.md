@@ -44,7 +44,7 @@ AI 执行步骤：
 2. 测试数据库连接：mysql -u root -p密码 -e "SELECT 1"
 3. 如果连接失败：
    - 询问用户正确的 MySQL 密码
-   - 更新 db.properties 中的 jdbc.password
+   - 更新 db.properties 中的数据库密码（首次部署请修改）
 4. 创建数据库：CREATE DATABASE IF NOT EXISTS clothes_demo
 5. 执行建表语句（跳过 schema.sql 的 DROP DATABASE 部分）
 6. 验证：SHOW TABLES
@@ -68,7 +68,7 @@ cat ClothesBack/src/main/resources/db.properties
 jdbc.driver=com.mysql.cj.jdbc.Driver
 jdbc.url=jdbc:mysql://localhost:3306/clothes_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
 jdbc.user=root
-jdbc.password=000000
+# jdbc.password=你的生产数据库密码（请勿提交真实密码到仓库）
 ```
 
 ---
@@ -125,7 +125,7 @@ cd ClothesAdmin && npm install && npm run dev
 
 | 端 | 账号 | 密码 |
 |---|---|---|
-| 管理后台 | `admin` | `123456` |
+| 管理后台 | `admin` | （首次部署请修改默认密码） |
 
 ---
 

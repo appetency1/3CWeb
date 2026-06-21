@@ -23,7 +23,6 @@ async function handleLogin() {
   loginLoading.value = true
   try {
     const data: any = await userApi.login(loginForm.value)
-    userStore.setToken(data.token)
     userStore.setUserInfo(data.userInfo)
     const redirect = (route.query.redirect as string) || '/'
     router.replace(redirect)

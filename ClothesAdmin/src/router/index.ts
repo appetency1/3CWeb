@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAdminStore } from '@/stores/admin'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 
 const router = createRouter({
@@ -63,14 +64,17 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('admin_token')
-  if (to.meta.requiresAuth && !token) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
-  } else if (to.name === 'login' && token) {
-    next({ name: 'dashboard' })
-  } else {
-    next()
+// 路由守卫：先等 init 完成（Cookie 会话恢复），再决定放行还是跳登录
+router.beforeEach(async (to) => {
+  const adminStore = useAdminStore()
+  if (!adminStore.initialized) {
+    await adminStore.init()
+  }
+  if (to.meta.requiresAuth && !adminStore.isLoggedIn) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.name === 'login' && adminStore.isLoggedIn) {
+    return { name: 'dashboard' }
   }
 })
 

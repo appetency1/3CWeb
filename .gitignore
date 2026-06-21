@@ -33,3 +33,16 @@ target/
 
 # OS files
 Thumbs.db
+
+# Sensitive config (production secrets)
+.env
+.env.development
+.env.production
+*.properties.local
+
+# Demo/scratch files
+demos/
+account-security-demo.html
+ai-service-demo.html
+materials-preview.html
+*.bak.vue

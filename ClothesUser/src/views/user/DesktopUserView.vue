@@ -51,7 +51,7 @@ async function loadRecentOrders() {
 }
 
 function navigate(path: string) {
-  if (path === '/security' || path === '/service') { return }
+  // /security 已有路由，不再拦截
   router.push(path)
 }
 

@@ -10,11 +10,14 @@ import java.util.Map;
 public final class V {
     private V() {}
 
-    public record LoginVO(String token, Map<String, Object> userInfo, boolean needChangePassword) {
-        public LoginVO(String token, Map<String, Object> userInfo) {
-            this(token, userInfo, false);
+    public record LoginVO(Map<String, Object> userInfo, boolean needChangePassword) {
+        public LoginVO(Map<String, Object> userInfo) {
+            this(userInfo, false);
         }
     }
+
+    /** 登录结果：LoginVO 给前端（无 token），token 给 Servlet 设 Cookie */
+    public record LoginResult(LoginVO loginVO, String token) {}
 
     /** 购物车行,带商品/快照信息。 */
     public record CartItemVO(

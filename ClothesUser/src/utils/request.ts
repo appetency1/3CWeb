@@ -5,11 +5,10 @@ import type { ApiResponse } from '@/types/api'
 const instance: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE,
   timeout: 15000,
+  withCredentials: true,
 })
 
 instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem('token')
-  if (token) config.headers.set('Authorization', `Bearer ${token}`)
   return config
 })
 
@@ -21,7 +20,6 @@ instance.interceptors.response.use(
         return body.data as any
       }
       if (body.code === 401) {
-        localStorage.removeItem('token')
         showToast('登录已失效')
         return Promise.reject(new Error(body.message || '未登录'))
       }
@@ -36,7 +34,6 @@ instance.interceptors.response.use(
     // 拦截器会同时清 token,后续请求就不会再带坏 token
     if (status === 401) {
       const serverMsg = err?.response?.data?.message
-      localStorage.removeItem('token')
       showToast(serverMsg === 'token失效' ? '登录已失效,请重新登录' : '请先登录')
       // 跳登录页(只在非登录页时跳)
       if (typeof window !== 'undefined' && window.location.pathname !== '/login') {

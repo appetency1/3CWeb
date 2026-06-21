@@ -10,15 +10,12 @@ async function request<T = any>(
   url: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const token = localStorage.getItem('admin_token')
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>)
   }
-  if (token) headers['Authorization'] = 'Bearer ' + token
 
-  const res = await fetch(`${BASE_URL}${url}`, { ...options, headers })
+  const res = await fetch(`${BASE_URL}${url}`, { ...options, headers, credentials: 'include' })
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
   return res.json()
 }
@@ -61,10 +58,7 @@ const UPLOAD_BASE = BASE_URL.replace(/\/api$/, '')
 export function uploadFile(file: File): Promise<string> {
   const form = new FormData()
   form.append('file', file)
-  const token = localStorage.getItem('admin_token')
-  const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = 'Bearer ' + token
-  return fetch(`${UPLOAD_BASE}/api/public/upload`, { method: 'POST', body: form, headers })
+  return fetch(`${UPLOAD_BASE}/api/public/upload`, { method: 'POST', body: form, credentials: 'include' })
     .then(r => r.json())
     .then((resp: any) => {
       if (resp.code !== 0 && resp.code !== 200) throw new Error(resp.message || '上传失败')

@@ -9,6 +9,7 @@ import org.example.clothesback.util.BeanUtils;
 import org.example.clothesback.util.MD5Utils;
 import org.example.clothesback.util.TokenManager;
 import org.example.clothesback.vo.V.LoginVO;
+import org.example.clothesback.vo.V.LoginResult;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -17,19 +18,19 @@ import java.util.Map;
 public class AdminService {
     private final AdminDao adminDao = new AdminDao();
 
-    public LoginVO login(LoginDTO dto) {
+    public LoginResult login(LoginDTO dto) {
         try {
             if (dto.username() == null || dto.password() == null) {
                 throw new BizException(400, "用户名和密码不能为空");
             }
             Map<String, Object> row = adminDao.findByUsernameWithPwd(dto.username().trim());
-            if (row == null) throw new BizException(400, "用户名或密码错误");
+            if (row == null) throw new BizException(401, "用户名或密码错误");
             String storedPwd = String.valueOf(row.get("password"));
             if (!MD5Utils.verify(dto.password(), storedPwd)) {
-                throw new BizException(400, "用户名或密码错误");
+                throw new BizException(401, "用户名或密码错误");
             }
-            // 检测是否为默认密码（MD5 of "123456" = e10adc3949ba59abbe56e057f20f883e）
-            boolean isDefaultPwd = "e10adc3949ba59abbe56e057f20f883e".equals(storedPwd);
+            // 检测是否为默认密码（MD5 of "888888" = 21218cca77804d2ba1922c33e0151105）
+            boolean isDefaultPwd = "21218cca77804d2ba1922c33e0151105".equals(storedPwd);
 
             // 旧 MD5 密码登录成功时自动升级为 BCrypt
             if (MD5Utils.needsUpgrade(storedPwd)) {
@@ -48,7 +49,7 @@ public class AdminService {
                 "nickname", admin.getNickname() == null ? "" : admin.getNickname(),
                 "avatar", admin.getAvatar() == null ? "" : admin.getAvatar()
             );
-            return new LoginVO(token, userInfo, isDefaultPwd);
+            return new LoginResult(new LoginVO(userInfo, isDefaultPwd), token);
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "登录失败");
         }

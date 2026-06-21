@@ -48,6 +48,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/security',
+      name: 'security',
+      component: () => import('@/views/user/DesktopSecurityView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/address',
       name: 'address',
       component: () => import('@/views/user/DesktopAddressListView.vue'),
@@ -82,16 +88,22 @@ const router = createRouter({
       name: 'search',
       component: () => import('@/views/search/DesktopSearchView.vue'),
     },
+    {
+      path: '/service',
+      name: 'service',
+      component: () => import('@/views/service/DesktopChatView.vue'),
+    },
   ],
 })
 
-// Auth guard
-router.beforeEach((to, _from, next) => {
+// Auth guard — Cookie 认证，先等 init 完成再判断
+router.beforeEach(async (to) => {
   const userStore = useUserStore()
+  if (to.meta.requiresAuth && !userStore.initialized) {
+    await userStore.init()
+  }
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
-  } else {
-    next()
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
 })
 

@@ -27,7 +27,6 @@ async function onLogin() {
       username: username.value, password: password.value,
     })
     const data = unwrap(res)
-    adminStore.setToken(data.token)
     adminStore.setAdminInfo(data.userInfo)
     router.replace('/dashboard')
   } catch (e: any) {

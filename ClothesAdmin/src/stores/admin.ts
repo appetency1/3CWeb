@@ -1,15 +1,25 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { get } from '@/utils/request'
 
 export const useAdminStore = defineStore('admin', () => {
-  const token = ref(localStorage.getItem('admin_token') || '')
   const adminInfo = ref<any>(null)
+  const initialized = ref(false)
 
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => !!adminInfo.value)
 
-  function setToken(val: string) {
-    token.value = val
-    localStorage.setItem('admin_token', val)
+  /** 从 HttpOnly Cookie 恢复管理后台会话 */
+  async function init() {
+    if (initialized.value) return
+    try {
+      const res = await get<any>('/admin/info')
+      // get() 返回的是 ApiResponse，需要 unwrap 内部 data
+      adminInfo.value = res.data || res
+    } catch {
+      // Cookie 无效，保持 null
+    } finally {
+      initialized.value = true
+    }
   }
 
   function setAdminInfo(info: any) {
@@ -17,10 +27,8 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   function logout() {
-    token.value = ''
     adminInfo.value = null
-    localStorage.removeItem('admin_token')
   }
 
-  return { token, adminInfo, isLoggedIn, setToken, setAdminInfo, logout }
+  return { adminInfo, isLoggedIn, initialized, init, setAdminInfo, logout }
 })

@@ -6,8 +6,8 @@
 --  MySQL 版本: 8.0+
 -- ============================================================
 
-DROP DATABASE IF EXISTS clothes_demo;
-CREATE DATABASE clothes_demo DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci;
+-- 生产环境请勿执行 DROP DATABASE，手动建库后直接 USE
+CREATE DATABASE IF NOT EXISTS clothes_demo DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci;
 USE clothes_demo;
 
 -- ============================================================
@@ -252,11 +252,11 @@ CREATE TABLE `comment` (
 
 -- ============================================================
 -- 初始数据 - 管理员账号
--- 密码: 123456  (MD5: e10adc3949ba59abbe56e057f20f883e)
+-- 密码: 888888  (MD5: 21218cca77804d2ba1922c33e0151105)
 -- 部署后首次登录请立即修改密码，系统会自动升级为 BCrypt
 -- ============================================================
 INSERT INTO `admin` (`username`, `password`, `nickname`, `status`) VALUES
-('admin', 'e10adc3949ba59abbe56e057f20f883e', 'Admin', 1);
+('admin', '21218cca77804d2ba1922c33e0151105', 'Admin', 1);
 
 -- ============================================================
 -- 初始数据 - 分类

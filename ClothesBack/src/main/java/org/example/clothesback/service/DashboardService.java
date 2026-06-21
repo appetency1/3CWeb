@@ -25,6 +25,8 @@ public class DashboardService {
             out.put("todayOrders", JdbcUtils.queryLong(
                 "SELECT COUNT(*) FROM orders WHERE create_time >= ? AND create_time < ?", start, end));
             out.put("todaySales", sumSales("AND create_time >= ? AND create_time < ?"));
+            out.put("todayUsers", JdbcUtils.queryLong(
+                "SELECT COUNT(*) FROM user WHERE create_time >= ? AND create_time < ?", start, end));
             return out;
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "查询失败");

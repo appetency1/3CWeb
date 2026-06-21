@@ -6,7 +6,7 @@ import { getOrderList } from '@/api/order'
 
 const router = useRouter()
 
-const stats = ref({ totalSales: 0, orderCount: 0, userCount: 0, goodsCount: 0 })
+const stats = ref({ totalSales: 0, orderCount: 0, userCount: 0, goodsCount: 0, todaySales: 0, todayOrders: 0, todayUsers: 0 })
 const orderList = ref<any[]>([])
 const today = ref('')
 
@@ -19,6 +19,18 @@ const barData = [
   { label: '周六', value: 0 },
   { label: '周日', value: 0 },
 ]
+
+const statusMap: Record<string, { text: string; cls: string }> = {
+  '0': { text: '待付款', cls: 'tag-warning' },
+  '1': { text: '待发货', cls: 'tag-primary' },
+  '2': { text: '待收货', cls: 'tag-info' },
+  '3': { text: '已完成', cls: 'tag-success' },
+  '4': { text: '已取消', cls: 'tag-muted' },
+}
+
+function statusTag(s: number | string) {
+  return statusMap[String(s)] || { text: '未知', cls: 'tag-muted' }
+}
 
 function goOrders() { router.push({ name: 'orders' }) }
 
@@ -267,15 +279,15 @@ function initCardEffects() {
       <div class="bento-card" data-bento>
         <div class="card__content">
           <div class="card__label">今日营收</div>
-          <div class="card__value">¥{{ stats.totalSales?.toLocaleString() || '0' }}</div>
+          <div class="card__value">¥{{ stats.todaySales?.toLocaleString() || '0' }}</div>
           <div class="card__trend up">+12.5% 较昨日</div>
         </div>
       </div>
 
       <div class="bento-card" data-bento>
         <div class="card__content">
-          <div class="card__label">订单数量</div>
-          <div class="card__value">{{ stats.orderCount || 0 }}</div>
+          <div class="card__label">今日订单</div>
+          <div class="card__value">{{ stats.todayOrders || 0 }}</div>
           <div class="card__trend up">+8.2% 较昨日</div>
         </div>
       </div>
@@ -283,7 +295,7 @@ function initCardEffects() {
       <div class="bento-card" data-bento>
         <div class="card__content">
           <div class="card__label">新增用户</div>
-          <div class="card__value">{{ stats.userCount || 0 }}</div>
+          <div class="card__value">{{ stats.todayUsers || 0 }}</div>
           <div class="card__trend down">-2.1% 较昨日</div>
         </div>
       </div>
@@ -366,8 +378,8 @@ function initCardEffects() {
             <td class="cell-mono">{{ o.orderNo || o.no }}</td>
             <td>{{ o.goods }}</td>
             <td>{{ o.customer }}</td>
-            <td class="cell-mono">¥{{ o.amount }}</td>
-            <td><span :class="['tag', o.statusClass || 'tag-muted']">{{ o.statusText || o.status }}</span></td>
+            <td class="cell-mono">¥{{ Number(o.payAmount || o.amount || 0).toFixed(2) }}</td>
+            <td><span :class="['tag', statusTag(o.status).cls]">{{ statusTag(o.status).text }}</span></td>
             <td class="cell-subtle">{{ o.createTime || o.time }}</td>
           </tr>
         </tbody>

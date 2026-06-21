@@ -121,6 +121,5 @@ export interface UserInfo {
 }
 
 export interface LoginVO {
-  token: string
   userInfo: UserInfo
 }

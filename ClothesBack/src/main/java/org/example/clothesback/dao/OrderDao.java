@@ -42,11 +42,16 @@ public class OrderDao {
     }
 
     public List<Map<String, Object>> listAdmin(Integer status, String keyword, int offset, int size) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT * FROM orders WHERE 1=1");
+        StringBuilder sql = new StringBuilder(
+            "SELECT o.id,o.order_no AS orderNo,o.user_id,o.pay_amount AS payAmount," +
+            "o.total_amount AS totalAmount,o.status,o.create_time AS createTime," +
+            "u.nickname AS customer," +
+            "(SELECT GROUP_CONCAT(oi.goods_name SEPARATOR '、') FROM order_item oi WHERE oi.order_id = o.id) AS goods " +
+            "FROM orders o LEFT JOIN user u ON o.user_id = u.id WHERE 1=1");
         List<Object> params = new java.util.ArrayList<>();
-        if (status != null) { sql.append(" AND status=?"); params.add(status); }
-        if (keyword != null && !keyword.isBlank()) { sql.append(" AND order_no LIKE ?"); params.add("%" + keyword + "%"); }
-        sql.append(" ORDER BY id DESC LIMIT ? OFFSET ?");
+        if (status != null) { sql.append(" AND o.status=?"); params.add(status); }
+        if (keyword != null && !keyword.isBlank()) { sql.append(" AND o.order_no LIKE ?"); params.add("%" + keyword + "%"); }
+        sql.append(" ORDER BY o.id DESC LIMIT ? OFFSET ?");
         params.add(size); params.add(offset);
         return JdbcUtils.query(sql.toString(), params.toArray());
     }

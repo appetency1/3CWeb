@@ -15,11 +15,14 @@ import java.util.Map;
 public class AdminInterceptor {
 
     public static boolean preHandle(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        String header = req.getHeader("Authorization");
-        String token = null;
-        if (header != null) {
-            String h = header.trim();
-            if (h.regionMatches(true, 0, "Bearer ", 0, 7)) token = h.substring(7).trim();
+        // 优先从 Cookie 取 token（HttpOnly Cookie 方式）
+        String token = readTokenFromCookie(req);
+        if (token == null) {
+            String header = req.getHeader("Authorization");
+            if (header != null) {
+                String h = header.trim();
+                if (h.regionMatches(true, 0, "Bearer ", 0, 7)) token = h.substring(7).trim();
+            }
         }
         if (token == null) {
             writeForbidden(resp, 401, "未登录");
@@ -45,5 +48,18 @@ public class AdminInterceptor {
         try (PrintWriter w = resp.getWriter()) {
             w.write(JSON.toJSONString(Map.of("code", code, "message", msg, "data", null)));
         }
+    }
+
+    /** 从 Cookie 中读取 token（名称为 token）。 */
+    private static String readTokenFromCookie(HttpServletRequest req) {
+        jakarta.servlet.http.Cookie[] cookies = req.getCookies();
+        if (cookies == null) return null;
+        for (var c : cookies) {
+            if ("token".equals(c.getName())) {
+                String val = c.getValue();
+                if (val != null && !val.isEmpty()) return val;
+            }
+        }
+        return null;
     }
 }

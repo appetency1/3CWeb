@@ -84,6 +84,7 @@ function isCategoryActive(id: number) {
             <a :class="['cl-nav-item', isCategoryActive(1) ? 'active' : '']" @click="goCategory(1)">男装</a>
             <a :class="['cl-nav-item', isCategoryActive(3) ? 'active' : '']" @click="goCategory(3)">鞋靴</a>
             <a :class="['cl-nav-item', isCategoryActive(4) ? 'active' : '']" @click="goCategory(4)">配饰</a>
+            <a :class="['cl-nav-item', isActive('service') ? 'active' : '']" @click="router.push('/service')">客服</a>
           </nav>
         </div>
 
