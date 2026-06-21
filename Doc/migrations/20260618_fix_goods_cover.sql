@@ -1,7 +1,7 @@
 -- ============================================================
 -- 修复 goods 表 cover 字段：占位图路径 → 真实商品图片路径
 -- 执行前确认图片文件已存在于 ClothesUser/public/assets/products/
--- ================================================0000============
+-- ========================================================
 
 UPDATE goods SET cover='/assets/products/goods-1-molan-di-mian-t.jpg' WHERE id=1;
 UPDATE goods SET cover='/assets/products/goods-2-tiao-wen-polo.jpg' WHERE id=2;
