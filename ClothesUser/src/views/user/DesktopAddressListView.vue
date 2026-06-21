@@ -10,6 +10,8 @@ const showModal = ref(false)
 const editingId = ref<number | null>(null)
 const showAreaPicker = ref(false)
 
+const selectedProvince = ref<any>(null)
+const selectedCity = ref<any>(null)
 const areaValues = ref<any[]>([])
 const areaColumns = [
   { text: '北京市', children: [{ text: '北京市', children: [{ text: '东城区' }, { text: '西城区' }, { text: '朝阳区' }, { text: '海淀区' }, { text: '丰台区' }, { text: '石景山区' }, { text: '通州区' }, { text: '大兴区' }, { text: '昌平区' }, { text: '顺义区' }, { text: '房山区' }, { text: '门头沟区' }, { text: '怀柔区' }, { text: '平谷区' }, { text: '密云区' }, { text: '延庆区' }] }] },
@@ -89,19 +91,38 @@ function openEdit(addr: Address) {
   showModal.value = true
 }
 
-function onAreaConfirm({ selectedOptions }: any) {
-  if (selectedOptions.length >= 1) form.value.province = selectedOptions[0]?.text || ''
-  if (selectedOptions.length >= 2) form.value.city = selectedOptions[1]?.text || ''
-  if (selectedOptions.length >= 3) form.value.district = selectedOptions[2]?.text || ''
-  showAreaPicker.value = false
+function openAreaPicker() {
+  selectedProvince.value = areaColumns.find(p => p.text === form.value.province) || null
+  selectedCity.value = null
+  if (selectedProvince.value) {
+    selectedCity.value = (selectedProvince.value.children || []).find((c: any) => c.text === form.value.city) || null
+  }
+  showAreaPicker.value = true
 }
 
-function openAreaPicker() {
-  areaValues.value = []
-  if (form.value.province) areaValues.value.push({ text: form.value.province } as any)
-  if (form.value.city) areaValues.value.push({ text: form.value.city } as any)
-  if (form.value.district) areaValues.value.push({ text: form.value.district } as any)
-  showAreaPicker.value = true
+function selectProvince(p: any) {
+  selectedProvince.value = p
+  selectedCity.value = null
+  form.value.province = p.text
+  form.value.city = ''
+  form.value.district = ''
+}
+
+function selectCity(c: any) {
+  selectedCity.value = c
+  form.value.city = c.text
+  form.value.district = ''
+}
+
+function selectDistrict(d: any) {
+  form.value.district = d.text
+}
+
+function confirmArea() {
+  if (!form.value.province) { showFailToast('请选择省份'); return }
+  if (!form.value.city) { showFailToast('请选择城市'); return }
+  if (!form.value.district) { showFailToast('请选择区/县'); return }
+  showAreaPicker.value = false
 }
 
 async function saveAddress() {
@@ -290,10 +311,51 @@ onMounted(load)
       </div>
     </div>
 
-    <!-- 地区选择器 -->
-    <van-popup v-model:show="showAreaPicker" position="bottom" round :style="{ maxHeight: '50vh' }">
-      <van-picker :columns="areaColumns" :columns-field-names="{ text: 'text', children: 'children' }" @confirm="onAreaConfirm" @cancel="showAreaPicker = false" title="选择地区" toolbar-position="top" />
-    </van-popup>
+    <!-- 地区选择器 (网页版) -->
+    <div v-if="showAreaPicker" class="area-modal-overlay" @click.self="showAreaPicker = false">
+      <div class="area-modal">
+        <div class="area-modal-header">
+          <h3>选择地区</h3>
+          <button class="area-modal-close" @click="showAreaPicker = false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="area-columns">
+          <div class="area-col">
+            <div class="area-col-title">省份</div>
+            <div class="area-list">
+              <button v-for="p in areaColumns" :key="p.text"
+                :class="['area-item', { active: form.province === p.text }]"
+                @click="selectProvince(p)"
+              >{{ p.text }}</button>
+            </div>
+          </div>
+          <div class="area-col" v-if="selectedProvince">
+            <div class="area-col-title">城市</div>
+            <div class="area-list">
+              <button v-for="c in selectedProvince.children || []" :key="c.text"
+                :class="['area-item', { active: form.city === c.text }]"
+                @click="selectCity(c)"
+              >{{ c.text }}</button>
+            </div>
+          </div>
+          <div class="area-col" v-if="selectedCity">
+            <div class="area-col-title">区/县</div>
+            <div class="area-list">
+              <button v-for="d in selectedCity.children || []" :key="d.text"
+                :class="['area-item', { active: form.district === d.text }]"
+                @click="selectDistrict(d)"
+              >{{ d.text }}</button>
+            </div>
+          </div>
+        </div>
+        <div class="area-modal-footer">
+          <button class="btn btn-primary" @click="confirmArea">确定</button>
+        </div>
+      </div>
+    </div>
   </DesktopLayout>
 </template>
 
@@ -474,6 +536,67 @@ onMounted(load)
 .btn-outline:hover { border-color: var(--text-primary, #1a1a1a); color: var(--text-primary, #1a1a1a); }
 .btn-primary { background: var(--bg-dark, #1a1a1a); color: white; }
 .btn-primary:hover { background: #333; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+
+/* ── 地区选择器(网页版) ── */
+.area-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; z-index: 1100;
+}
+
+.area-modal {
+  background: #fff; border-radius: 16px; width: 680px; max-width: 92vw;
+  max-height: 80vh; display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.15);
+}
+
+.area-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 28px 18px; border-bottom: 1px solid #f0eeeb;
+}
+
+.area-modal-header h3 { font-size: 17px; font-weight: 600; margin: 0; color: #1a1a1a; }
+
+.area-modal-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: #f5f3f0; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; color: #666;
+}
+
+.area-modal-close:hover { background: #e8e5e0; }
+
+.area-columns {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
+  background: #f0eeeb; flex: 1; min-height: 0; overflow: hidden;
+}
+
+.area-col {
+  background: #fff; display: flex; flex-direction: column; min-height: 0;
+}
+
+.area-col-title {
+  padding: 14px 20px 10px; font-size: 12px; font-weight: 600;
+  color: #999; text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px solid #f5f3f0; flex-shrink: 0;
+}
+
+.area-list {
+  overflow-y: auto; flex: 1; padding: 4px 0;
+}
+
+.area-item {
+  display: block; width: 100%; text-align: left; padding: 10px 20px;
+  border: none; background: transparent; font-size: 14px;
+  color: #444; cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+
+.area-item:hover { background: #faf9f7; color: #1a1a1a; }
+.area-item.active { background: #fdf1ef; color: #c45c4a; font-weight: 600; }
+
+.area-modal-footer {
+  padding: 16px 28px; border-top: 1px solid #f0eeeb;
+  display: flex; justify-content: flex-end;
+}
 
 @media (max-width: 768px) {
   .address-page { padding: 16px 20px 40px; }

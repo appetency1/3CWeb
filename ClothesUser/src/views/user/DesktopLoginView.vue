@@ -81,6 +81,10 @@ function switchTo(target: 'login' | 'register') {
   isLogin.value = target === 'login'
 }
 
+function showForgotPwd() {
+  showToast({ message: '请联系客服重置密码: admin@clothes-demo.com', duration: 3000 })
+}
+
 onMounted(() => {
   const card = cardRef.value
   if (!card) return
@@ -159,7 +163,7 @@ onUnmounted(() => { tiltCleanup?.() })
             </div>
             <div class="options">
               <label class="checkbox"><input type="checkbox" checked /><span>记住我</span></label>
-              <a href="#" class="link" @click.prevent>忘记密码？</a>
+              <a href="#" class="link" @click.prevent="showForgotPwd">忘记密码？</a>
             </div>
             <button type="submit" class="btn" :class="{ loading }" :disabled="loading" @click="onRipple">
               <span class="btn__text">登 录</span>
