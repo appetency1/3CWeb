@@ -336,10 +336,10 @@ function initCardEffects() {
             <div class="donut-chart">
               <svg viewBox="0 0 160 160">
                 <circle class="donut-track" cx="80" cy="80" r="70"></circle>
-                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--accent)" data-start="0" data-percent="35"></circle>
-                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--gold)" data-start="35" data-percent="25"></circle>
-                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--green)" data-start="60" data-percent="20"></circle>
-                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--border-hover)" data-start="80" data-percent="20"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--neon-blue)" data-start="0" data-percent="35"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--neon-violet)" data-start="35" data-percent="25"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--neon-pink)" data-start="60" data-percent="20"></circle>
+                <circle class="donut-segment" cx="80" cy="80" r="70" stroke="var(--neon-green)" data-start="80" data-percent="20"></circle>
               </svg>
               <div class="donut-center">
                 <div class="donut-center__label">Total</div>
@@ -347,10 +347,10 @@ function initCardEffects() {
               </div>
             </div>
             <div class="legend">
-              <div class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span><span>上装</span><span class="legend-pct">35%</span></div>
-              <div class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span><span>裙装</span><span class="legend-pct">25%</span></div>
-              <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span><span>裤装</span><span class="legend-pct">20%</span></div>
-              <div class="legend-item"><span class="legend-dot" style="background:var(--border-hover)"></span><span>配饰</span><span class="legend-pct">20%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--neon-blue)"></span><span>手机</span><span class="legend-pct">35%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--neon-violet)"></span><span>笔记本</span><span class="legend-pct">25%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--neon-pink)"></span><span>平板</span><span class="legend-pct">20%</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--neon-green)"></span><span>配件</span><span class="legend-pct">20%</span></div>
             </div>
           </div>
         </div>
@@ -411,7 +411,7 @@ function initCardEffects() {
   inset: 0;
   opacity: 0.02;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
+  mix-blend-mode: screen;
 }
 
 .global-spotlight {
@@ -419,7 +419,7 @@ function initCardEffects() {
   width: 1000px; height: 1000px;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(176,92,79,0.32) 0%, rgba(176,92,79,0.18) 14%, rgba(176,92,79,0.08) 26%, transparent 50%);
+  background: radial-gradient(circle, rgba(0,240,255,0.15) 0%, rgba(0,240,255,0.08) 14%, rgba(0,240,255,0.03) 26%, transparent 50%);
   z-index: 1;
   opacity: 0;
   transform: translate(-50%, -50%);
@@ -435,24 +435,41 @@ function initCardEffects() {
   z-index: 2;
 }
 .header__title {
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
-  font-size: 42px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
   margin-bottom: 6px;
-  color: #1a1816;
+  color: var(--text);
 }
 .header__subtitle {
   font-size: 14px;
-  color: #706a64;
+  color: var(--text2);
 }
 .header__date {
-  font-size: 13px;
-  color: #a9a39d;
+  font-size: 12px;
+  color: var(--neon-green);
   padding: 8px 14px;
-  background: #fff;
-  border: 1px solid #e6e1dc;
+  background: rgba(0,255,163,0.08);
+  border: 1px solid rgba(0,255,163,0.2);
   border-radius: 100px;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header__date::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green-glow);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
 }
 
 /* ── Bento Grid ── */
@@ -462,17 +479,15 @@ function initCardEffects() {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: minmax(160px, auto);
-  gap: 24px;
+  gap: 20px;
 }
 
 .bento-card {
   position: relative;
-  background: #ffffff;
-  border: 1px solid #e6e1dc;
-  border-top: 2px solid rgba(176,92,79,0.35);
-  border-radius: 24px;
-  padding: 28px;
-  box-shadow: 0 4px 24px rgba(26,24,22,0.04);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
   overflow: hidden;
   transform-style: preserve-3d;
   transition: box-shadow 0.4s cubic-bezier(0.22,1,0.36,1), border-color 0.3s;
@@ -482,38 +497,29 @@ function initCardEffects() {
   --glow-radius: 280px;
 }
 
-.bento-card:hover {
-  border-color: rgba(176,92,79,0.55);
-  box-shadow: 0 20px 60px rgba(176,92,79,0.12);
-}
-
 .bento-card::before {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 24px;
-  padding: 2px;
-  background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
-    rgba(176,92,79, calc(0.7 * var(--glow-intensity))),
-    rgba(176,92,79, calc(0.35 * var(--glow-intensity))) 35%,
-    rgba(176,92,79, calc(0.12 * var(--glow-intensity))) 55%,
-    transparent 75%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 3;
+  top: 0; left: 24px; right: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+  opacity: 0.5;
+}
+
+.bento-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px rgba(0,240,255,0.05);
+  transform: translateY(-2px);
 }
 
 .bento-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 24px;
+  border-radius: 20px;
   background: radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y),
-    rgba(176,92,79, calc(0.1 * var(--glow-intensity))),
-    rgba(176,92,79, calc(0.04 * var(--glow-intensity))) 45%,
+    rgba(0,240,255, calc(0.1 * var(--glow-intensity))),
+    rgba(0,240,255, calc(0.04 * var(--glow-intensity))) 45%,
     transparent 65%);
   pointer-events: none;
   z-index: 1;
@@ -537,19 +543,21 @@ function initCardEffects() {
 }
 
 .card__label {
-  font-size: 12px;
-  color: #a9a39d;
-  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 12px;
 }
 
 .card__value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 34px;
+  font-family: var(--font-mono);
+  font-size: 32px;
   font-weight: 500;
-  color: #1a1816;
+  color: var(--text);
   margin-bottom: 14px;
+  letter-spacing: 1px;
 }
 
 .card__trend {
@@ -559,12 +567,14 @@ function initCardEffects() {
   width: fit-content;
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
-.card__trend.up { color: #4a7c59; background: rgba(74,124,89,0.08); }
-.card__trend.down { color: #b05c4f; background: rgba(176,92,79,0.08); }
-.card__trend.neutral { color: #c9a227; background: rgba(201,162,39,0.08); }
+.card__trend.up { color: var(--neon-green); background: rgba(0,255,163,0.08); border: 1px solid rgba(0,255,163,0.15); }
+.card__trend.down { color: var(--neon-pink); background: rgba(255,42,138,0.08); border: 1px solid rgba(255,42,138,0.15); }
+.card__trend.neutral { color: var(--neon-blue); background: rgba(0,240,255,0.08); border: 1px solid rgba(0,240,255,0.15); }
 
 /* ── Chart ── */
 .chart-header {
@@ -574,18 +584,21 @@ function initCardEffects() {
   margin-bottom: 24px;
 }
 .chart-title {
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 600;
-  color: #1a1816;
+  letter-spacing: 1px;
+  color: var(--text2);
 }
 .chart-period {
-  font-size: 12px;
-  color: #a9a39d;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text3);
   padding: 4px 10px;
-  border: 1px solid #e6e1dc;
-  border-radius: 100px;
-  background: #faf8f6;
+  border-radius: 6px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
 }
 
 .bar-chart {
@@ -595,6 +608,18 @@ function initCardEffects() {
   gap: 16px;
   height: 160px;
   padding-top: 20px;
+  position: relative;
+}
+.bar-chart::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  bottom: 24px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(0deg, transparent calc(100% - 1px), rgba(138,138,168,0.05) calc(100% - 1px)),
+    linear-gradient(0deg, transparent calc(50% - 1px), rgba(138,138,168,0.05) calc(50% - 1px));
+  background-size: 100% 100%;
 }
 
 .bar-group {
@@ -610,7 +635,7 @@ function initCardEffects() {
 .bar {
   width: 100%;
   max-width: 36px;
-  background: linear-gradient(180deg, rgba(176,92,79,0.22) 0%, rgba(176,92,79,0.08) 100%);
+  background: linear-gradient(180deg, rgba(0,240,255,0.5), rgba(0,240,255,0.08));
   border-radius: 6px 6px 0 0;
   transition: height 0.4s cubic-bezier(0.22,1,0.36,1);
   position: relative;
@@ -620,13 +645,19 @@ function initCardEffects() {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: #b05c4f;
+  background: var(--neon-blue);
   border-radius: 6px 6px 0 0;
+}
+.bar:hover {
+  background: linear-gradient(180deg, rgba(0,240,255,0.7), rgba(0,240,255,0.15));
+  box-shadow: 0 0 20px rgba(0,240,255,0.15);
 }
 
 .bar-label {
-  font-size: 11px;
-  color: #a9a39d;
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 1px;
 }
 
 /* ── Donut ── */
@@ -643,11 +674,10 @@ function initCardEffects() {
   height: 180px;
   position: relative;
   transform: rotate(-90deg);
-  filter: drop-shadow(0 8px 24px rgba(176,92,79,0.1));
 }
 .donut-chart svg { width: 100%; height: 100%; overflow: visible; }
 
-.donut-track { fill: none; stroke: #e6e1dc; stroke-width: 22; }
+.donut-track { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 22; }
 
 .donut-segment {
   fill: none;
@@ -657,7 +687,7 @@ function initCardEffects() {
   transition: filter 0.3s, transform 0.3s;
   transform-origin: 80px 80px;
 }
-.donut-segment:hover { filter: brightness(1.08) drop-shadow(0 0 8px currentColor); transform: scale(1.04); }
+.donut-segment:hover { filter: brightness(1.1) drop-shadow(0 0 8px currentColor); transform: scale(1.04); }
 
 .donut-center {
   position: absolute;
@@ -670,16 +700,17 @@ function initCardEffects() {
   pointer-events: none;
 }
 .donut-center__label {
-  font-size: 11px;
-  color: #a9a39d;
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 .donut-center__value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 28px;
   font-weight: 500;
-  color: #1a1816;
+  color: var(--text);
   margin-top: 2px;
 }
 
@@ -693,46 +724,52 @@ function initCardEffects() {
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #706a64;
+  color: var(--text2);
 }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 .legend-pct {
   margin-left: auto;
-  font-family: 'JetBrains Mono', monospace;
-  color: #1a1816;
+  font-family: var(--font-mono);
+  color: var(--text);
 }
 
 /* ── Orders ── */
 .orders-section {
   position: relative;
   z-index: 2;
-  background: #ffffff;
-  border: 1px solid #e6e1dc;
-  border-radius: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
   margin-top: 24px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(26,24,22,0.04);
 }
 
 .orders-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 28px;
-  border-bottom: 1px solid #e6e1dc;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
 }
 .orders-header h3 {
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', serif;
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 600;
-  color: #1a1816;
+  letter-spacing: 1px;
+  color: var(--text2);
 }
 .orders-more {
-  font-size: 13px;
-  color: #b05c4f;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--neon-blue);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 1px;
   transition: opacity 0.2s;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
 }
 .orders-more:hover { opacity: 0.7; }
 
@@ -744,24 +781,25 @@ function initCardEffects() {
 .orders-table th {
   text-align: left;
   padding: 14px 24px;
+  font-family: var(--font-display);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: #a9a39d;
+  color: var(--text3);
   font-weight: 500;
-  border-bottom: 1px solid #e6e1dc;
+  border-bottom: 1px solid var(--border);
 }
 .orders-table td {
   padding: 18px 24px;
-  border-bottom: 1px solid #e6e1dc;
-  color: #1a1816;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 .orders-table tr { transition: background 0.2s; }
-.orders-table tr:hover td { background: #faf8f6; }
+.orders-table tr:hover td { background: var(--bg-hover); }
 .orders-table tr:last-child td { border-bottom: none; }
 
-.cell-mono { font-family: 'JetBrains Mono', monospace; color: #706a64; font-size: 12px; }
-.cell-subtle { color: #a9a39d; font-size: 12px; }
+.cell-mono { font-family: var(--font-mono); color: var(--text2); font-size: 12px; }
+.cell-subtle { color: var(--text3); font-size: 12px; }
 
 .tag {
   display: inline-block;
@@ -769,26 +807,28 @@ function initCardEffects() {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.5px;
+  border-radius: 4px;
 }
-.tag-primary { background: rgba(176,92,79,0.1); color: #d47a6a; }
-.tag-success { background: rgba(74,124,89,0.1); color: #4a7c59; }
-.tag-warning { background: rgba(201,162,39,0.1); color: #c9a227; }
-.tag-muted { background: #f0eeeb; color: #999; }
+.tag-primary { background: rgba(0,240,255,0.1); color: var(--neon-blue); }
+.tag-success { background: rgba(0,255,163,0.1); color: var(--neon-green); }
+.tag-warning { background: rgba(255,42,138,0.1); color: var(--neon-pink); }
+.tag-info { background: rgba(184,41,247,0.1); color: var(--neon-violet); }
+.tag-muted { background: rgba(90,90,120,0.15); color: var(--text3); }
 
 /* ── Magic particles & ripple ── */
 :deep(.particle) {
   position: absolute;
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: rgba(176,92,79, 1);
-  box-shadow: 0 0 10px 2px rgba(176,92,79, 0.55);
+  background: var(--neon-blue);
+  box-shadow: 0 0 10px 2px var(--neon-blue-glow);
   pointer-events: none;
   z-index: 4;
 }
 :deep(.ripple) {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(176,92,79,0.35) 0%, rgba(176,92,79,0.15) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(0,240,255,0.35) 0%, rgba(0,240,255,0.15) 40%, transparent 70%);
   pointer-events: none;
   z-index: 5;
   transform: scale(0);

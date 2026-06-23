@@ -137,7 +137,7 @@ onMounted(async () => {
   align-self: start;
 }
 .user-card {
-  background: var(--bg-card, #fff);
+  background: var(--bg-card);
   border: 1px solid var(--border, #e8e5e0);
   border-radius: var(--radius-lg, 12px);
   padding: 32px 24px;
@@ -152,7 +152,7 @@ onMounted(async () => {
 .avatar {
   width: 80px; height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent, #c45c4a), var(--accent-dark, #8b3a2a));
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   display: flex; align-items: center; justify-content: center;
   color: white; font-size: 32px; font-weight: 600;
   box-shadow: 0 4px 16px rgba(196,92,74,0.3);
@@ -174,7 +174,7 @@ onMounted(async () => {
 }
 .user-level {
   display: inline-flex; align-items: center; gap: 4px;
-  background: linear-gradient(135deg, #f5e6c8, #e8d5a8);
+  background: linear-gradient(135deg, rgba(0,240,255,0.08), rgba(170,102,255,0.06));
   color: #8b6914; font-size: 11px; font-weight: 600;
   padding: 4px 12px; border-radius: 20px;
   letter-spacing: 0.5px;
@@ -186,7 +186,7 @@ onMounted(async () => {
 }
 .user-meta-item { text-align: center; }
 .user-meta-item .num {
-  font-size: 18px; font-weight: 700; color: var(--accent, #c45c4a);
+  font-size: 18px; font-weight: 700; color: var(--accent);
   display: block;
 }
 .user-meta-item .label {
@@ -195,7 +195,7 @@ onMounted(async () => {
 
 /* 菜单 */
 .menu-card {
-  background: var(--bg-card, #fff);
+  background: var(--bg-card);
   border: 1px solid var(--border, #e8e5e0);
   border-radius: var(--radius-lg, 12px);
   overflow: hidden;
@@ -210,20 +210,20 @@ onMounted(async () => {
   border-left: 3px solid transparent;
 }
 .menu-item:hover {
-  background: var(--accent-bg, #fdf5f3);
-  color: var(--accent, #c45c4a);
-  border-left-color: var(--accent, #c45c4a);
+  background: var(--bg-elevated);
+  color: var(--accent);
+  border-left-color: var(--accent);
 }
 .menu-item.active {
-  background: var(--accent-bg, #fdf5f3);
-  color: var(--accent, #c45c4a);
-  border-left-color: var(--accent, #c45c4a);
+  background: var(--bg-elevated);
+  color: var(--accent);
+  border-left-color: var(--accent);
   font-weight: 600;
 }
 .menu-icon { width: 20px; text-align: center; font-size: 16px; }
-.menu-divider { height: 1px; background: var(--border, #e8e5e0); margin: 4px 16px; }
-.menu-logout { color: var(--accent, #c45c4a); }
-.menu-logout:hover { background: #fdf2f0; }
+.menu-divider { height: 1px; background: var(--border); margin: 4px 16px; }
+.menu-logout { color: var(--accent); }
+.menu-logout:hover { background: var(--bg-elevated); }
 
 /* 右侧主内容 */
 .main-content {
@@ -234,10 +234,9 @@ onMounted(async () => {
 }
 
 /* 隐藏嵌入的子页面中的重复 DesktopLayout 元素 */
-.main-content :deep(.cl-header) { display: none; }
-.main-content :deep(.cl-promo) { display: none; }
-.main-content :deep(.cl-footer) { display: none; }
-.main-content :deep(.cl-topbar) { display: none; }
+.main-content :deep(.navbar) { display: none; }
+.main-content :deep(.topbar) { display: none; }
+.main-content :deep(.footer) { display: none; }
 /* 隐藏子页面自身的 page header（标题 + 副标题） */
 .main-content :deep(.page-header-order),
 .main-content :deep(.page-header-addr),

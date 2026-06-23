@@ -42,8 +42,15 @@ const priceRanges = [
 ] as const
 
 function priceFmt(p: any) { return Number(p || 0).toFixed(2) }
-function pct(orig: any, cur: any) {
-  const o = Number(orig), c = Number(cur)
+function displayPrice(g: any) {
+  if (g.min_price && g.max_price && Number(g.min_price) !== Number(g.max_price)) {
+    return '¥' + priceFmt(g.min_price) + ' - ¥' + priceFmt(g.max_price)
+  }
+  return '¥' + priceFmt(g.price || g.min_price)
+}
+function discountPct(g: any) {
+  const o = Number(g.originalPrice || g.max_price)
+  const c = Number(g.price || g.min_price)
   if (!o || o <= c) return 0
   return Math.round((1 - c / o) * 100)
 }
@@ -284,8 +291,8 @@ onMounted(async () => {
               <div class="card-badges">
                 <span v-if="g.isHot" class="badge badge-hot">热卖</span>
                 <span v-if="g.isNew" class="badge badge-new">新品</span>
-                <span v-if="pct(g.originalPrice, g.price) > 0" class="badge badge-discount">
-                  -{{ pct(g.originalPrice, g.price) }}%
+                <span v-if="discountPct(g) > 0" class="badge badge-discount">
+                  -{{ discountPct(g) }}%
                 </span>
               </div>
               <div v-if="Number(g.stock) <= 0" class="oos">缺货</div>
@@ -294,7 +301,7 @@ onMounted(async () => {
               <div v-if="g.brand" class="card-brand">{{ g.brand }}</div>
               <div class="card-name">{{ g.name }}</div>
               <div class="card-price-row">
-                <span class="card-price">¥{{ priceFmt(g.price) }}</span>
+                <span class="card-price">{{ displayPrice(g) }}</span>
                 <span v-if="g.originalPrice" class="card-orig">¥{{ priceFmt(g.originalPrice) }}</span>
               </div>
               <div class="card-meta">
@@ -314,108 +321,108 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.cat-page { background: #faf9f7; min-height: auto; padding-bottom: 0; }
+.cat-page { background: var(--bg-primary); min-height: auto; padding-bottom: 0; }
 
 /* ===== Hero ===== */
 .cat-hero {
-  background: linear-gradient(135deg, #f5e6d8 0%, #e8d4c4 100%);
+  background: linear-gradient(135deg, #0a0a14, #12122a);
   padding: 40px 0;
 }
 .cat-hero-inner {
   max-width: 1400px; margin: 0 auto; padding: 0 40px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.cat-hero-text { color: #1a1a1a; }
+.cat-hero-text { color: var(--text-primary); }
 .ch-tag {
-  display: inline-block; padding: 4px 12px; background: #c45c4a; color: #fff;
+  display: inline-block; padding: 4px 12px; background: var(--accent); color: var(--text-primary);
   font-size: 11px; font-weight: 700; letter-spacing: 2px; border-radius: 4px; margin-bottom: 12px;
 }
 .cat-hero-text h1 { font-size: 36px; font-weight: 600; margin-bottom: 8px; letter-spacing: 1px; }
-.cat-hero-text p { font-size: 14px; color: #666; }
+.cat-hero-text p { font-size: 14px; color: var(--text-secondary); }
 .cat-hero-emoji { font-size: 80px; opacity: 0.5; }
 
 /* ===== 一级 tab ===== */
-.cat-tabs { background: #fff; border-bottom: 1px solid #e8e5e0; }
+.cat-tabs { background: var(--bg-card); border-bottom: 1px solid var(--border); }
 .cat-tabs-inner {
   max-width: 1400px; margin: 0 auto; padding: 0 40px;
   display: flex; gap: 0; overflow-x: auto; scrollbar-width: none;
 }
 .cat-tabs-inner::-webkit-scrollbar { display: none; }
 .cat-tab {
-  padding: 16px 24px; font-size: 14px; font-weight: 500; color: #666; cursor: pointer;
+  padding: 16px 24px; font-size: 14px; font-weight: 500; color: var(--text-secondary); cursor: pointer;
   white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.2s;
 }
-.cat-tab:hover { color: #c45c4a; }
-.cat-tab.active { color: #c45c4a; border-bottom-color: #c45c4a; font-weight: 600; }
+.cat-tab:hover { color: var(--accent); }
+.cat-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
 /* ===== 子分类 chip ===== */
-.sub-cats { background: #faf9f7; border-bottom: 1px solid #e8e5e0; }
+.sub-cats { background: var(--bg-primary); border-bottom: 1px solid var(--border); }
 .sub-cats-inner {
   max-width: 1400px; margin: 0 auto; padding: 14px 40px;
   display: flex; flex-wrap: wrap; gap: 8px;
 }
 .sub-chip {
-  padding: 6px 16px; font-size: 13px; color: #666; background: #fff; border: 1px solid #e8e5e0;
+  padding: 6px 16px; font-size: 13px; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border);
   border-radius: 16px; cursor: pointer; transition: all 0.2s;
 }
-.sub-chip:hover { color: #c45c4a; border-color: #c45c4a; }
-.sub-chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.sub-chip:hover { color: var(--accent); border-color: var(--border-hover); }
+.sub-chip.active { background: #1a1a1a; color: var(--text-primary); border-color: #1a1a1a; }
 
 /* ===== Body ===== */
 .cat-body { max-width: 1400px; margin: 0 auto; padding: 24px 40px; display: grid; grid-template-columns: 200px 1fr; gap: 32px; }
 
 .cat-side { display: flex; flex-direction: column; gap: 16px; }
-.side-block { background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; padding: 16px; }
+.side-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
 .side-h { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0ede8; }
 .side-item {
-  display: block; padding: 8px 12px; font-size: 13px; color: #666; cursor: pointer;
+  display: block; padding: 8px 12px; font-size: 13px; color: var(--text-secondary); cursor: pointer;
   border-radius: 4px; transition: all 0.2s; margin-bottom: 2px;
 }
-.side-item:hover { background: #f5f3f0; color: #1a1a1a; }
-.side-item.active { background: #fdf5f3; color: #c45c4a; font-weight: 500; }
-.side-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #666; cursor: pointer; }
-.side-check input { width: 16px; height: 16px; accent-color: #c45c4a; }
-.side-tip-text { font-size: 12px; color: #999; line-height: 1.7; }
+.side-item:hover { background: var(--bg-elevated); color: var(--accent); }
+.side-item.active { background: rgba(0,240,255,0.1); color: var(--accent); font-weight: 500; }
+.side-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+.side-check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.side-tip-text { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
 
 .sort-bar {
-  display: flex; gap: 8px; background: #fff; border: 1px solid #e8e5e0; border-radius: 8px;
+  display: flex; gap: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
   padding: 8px; margin-bottom: 20px;
 }
 .sort-item {
-  padding: 8px 18px; font-size: 13px; color: #666; cursor: pointer; border-radius: 6px;
+  padding: 8px 18px; font-size: 13px; color: var(--text-secondary); cursor: pointer; border-radius: 6px;
   transition: all 0.2s;
 }
-.sort-item:hover { color: #c45c4a; }
-.sort-item.active { background: #1a1a1a; color: #fff; }
+.sort-item:hover { color: var(--accent); }
+.sort-item.active { background: #1a1a1a; color: var(--text-primary); }
 
 .cat-main { min-width: 0; }
 
 .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
 .card {
-  background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; overflow: hidden;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
   cursor: pointer; transition: all 0.25s;
 }
-.card:hover { border-color: #c45c4a; box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
-.card-img-wrap { position: relative; aspect-ratio: 1; background: #f5f3f0; overflow: hidden; }
+.card:hover { border-color: var(--border-hover); box-shadow: 0 8px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.card-img-wrap { position: relative; aspect-ratio: 1; background: var(--bg-secondary); overflow: hidden; }
 .card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
 .card:hover .card-img { transform: scale(1.05); }
 .card-badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; }
-.badge { padding: 3px 7px; font-size: 10px; font-weight: 700; border-radius: 3px; color: #fff; }
-.badge-discount { background: #c45c4a; }
+.badge { padding: 3px 7px; font-size: 10px; font-weight: 700; border-radius: 3px; color: var(--text-primary); }
+.badge-discount { background: var(--accent); }
 .badge-hot { background: #d4920a; }
 .badge-new { background: #2d8a5e; }
-.oos { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; letter-spacing: 4px; }
+.oos { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; letter-spacing: 4px; }
 .card-info { padding: 10px 12px 12px; }
-.card-brand { font-size: 11px; font-weight: 600; color: #c45c4a; letter-spacing: 0.5px; margin-bottom: 4px; }
+.card-brand { font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; margin-bottom: 4px; }
 .card-name { font-size: 13px; color: #1a1a1a; line-height: 1.4; margin-bottom: 6px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
-.card-price { font-size: 17px; font-weight: 700; color: #c45c4a; }
-.card-orig { font-size: 11px; color: #999; text-decoration: line-through; }
-.card-meta { display: flex; gap: 8px; font-size: 11px; color: #999; }
+.card-price { font-size: 17px; font-weight: 700; color: var(--accent); }
+.card-orig { font-size: 11px; color: var(--text-muted); text-decoration: line-through; }
+.card-meta { display: flex; gap: 8px; font-size: 11px; color: var(--text-muted); }
 
-.empty { text-align: center; padding: 80px 0; color: #999; }
+.empty { text-align: center; padding: 80px 0; color: var(--text-muted); }
 .empty-icon { font-size: 64px; opacity: 0.4; margin-bottom: 12px; }
-.loading, .finished { text-align: center; padding: 30px 0; color: #999; font-size: 13px; }
+.loading, .finished { text-align: center; padding: 30px 0; color: var(--text-muted); font-size: 13px; }
 
 @media (max-width: 1200px) { .grid-5 { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 768px) {

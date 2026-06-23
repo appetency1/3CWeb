@@ -24,7 +24,7 @@ let sparks: any[] = []
 let sparkAnimId: number | null = null
 
 const sparkConfig = {
-  sparkColor: '#c45c4a',
+  sparkColor: '#00f0ff',
   sparkCount: 10,
   sparkRadius: 40,
   sparkSize: 14,

@@ -100,7 +100,7 @@ onMounted(() => {
         <div class="desktop-search-sidebar-title" style="margin-top:20px">热门搜索</div>
         <div class="desktop-search-history">
           <span
-            v-for="kw in ['连衣裙', 'T恤', '牛仔裤', '外套', '卫衣', '衬衫']"
+            v-for="kw in ['手机', '笔记本', '耳机', '平板', '手表', '相机']"
             :key="kw"
             class="desktop-search-tag"
             @click="searchValue = kw; doSearch()"

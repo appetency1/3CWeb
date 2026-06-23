@@ -144,7 +144,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   <div class="admin-app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-logo" @click="goHome">Clothes<span>.</span></div>
+      <div class="sidebar-logo" @click="goHome">Digit<span>.</span></div>
       <ul class="nav-list">
         <li
           v-for="item in menus"
@@ -272,75 +272,80 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   display: flex;
   width: 100%;
   height: 100%;
-  font-family: 'Sora', 'Noto Sans SC', -apple-system, sans-serif;
-  background: #f5f3f0;
-  color: #1a1a1a;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* ── Sidebar ── */
 .sidebar {
   width: 240px;
   flex-shrink: 0;
-  background: #f5f3f0;
-  border-right: 1px solid #e8e5e0;
+  background: linear-gradient(180deg, rgba(10,10,18,0.95) 0%, rgba(10,10,18,0.88) 100%);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 40px 0 24px;
+  padding: 0 0 24px;
+  backdrop-filter: blur(24px) saturate(1.2);
 }
 
 .sidebar-logo {
-  padding: 0 32px 40px;
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+  padding: 28px 24px 32px;
+  font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
+  font-weight: 700;
+  letter-spacing: 4px;
   position: relative;
   cursor: pointer;
-  color: #1a1a1a;
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .sidebar-logo::after {
   content: '';
   position: absolute;
-  left: 32px;
-  right: 32px;
+  left: 24px;
+  right: 24px;
   bottom: 16px;
   height: 1px;
-  background: linear-gradient(to right, #e8e5e0, transparent);
+  background: linear-gradient(to right, var(--neon-blue), transparent);
 }
 
-.sidebar-logo span { color: #c45c4a; }
+.sidebar-logo span { -webkit-text-fill-color: var(--neon-blue); color: var(--neon-blue); }
 
 .nav-list {
   list-style: none;
   flex: 1;
-  padding-top: 8px;
+  padding: 8px 16px 0;
   margin: 0;
 }
 
 .nav-item {
-  padding: 14px 32px;
+  padding: 14px 16px;
   font-size: 13px;
-  color: #666;
+  font-weight: 500;
+  color: var(--text2);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 14px;
-  border-left: 2px solid transparent;
+  border-radius: 14px;
   transition: all 0.3s;
   letter-spacing: 0.3px;
-  margin: 2px 0;
+  margin: 4px 0;
 }
 
 .nav-item:hover {
-  color: #1a1a1a;
-  background: rgba(0,0,0,0.03);
+  background: var(--bg-hover);
+  color: var(--text);
 }
 
 .nav-item.active {
-  color: #1a1a1a;
-  background: #ffffff;
-  border-left-color: #c45c4a;
+  background: linear-gradient(90deg, rgba(0,240,255,0.08), rgba(0,240,255,0.02));
+  color: var(--neon-blue);
+  box-shadow: 0 0 24px rgba(0,240,255,0.06), inset 0 0 0 1px rgba(0,240,255,0.12);
 }
 
 .nav-icon {
@@ -355,41 +360,52 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .nav-item:hover .nav-icon { opacity: 0.85; }
 
 .sidebar-footer {
-  padding: 20px 32px 0;
-  border-top: 1px solid #e8e5e0;
-  margin: 0 24px;
+  padding: 16px;
+  margin: 0 16px;
+  border-top: 1px solid var(--border);
 }
 
 .user-mini {
   display: flex;
   align-items: center;
   gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.user-mini:hover {
+  border-color: var(--border-hover);
 }
 
 .user-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #faf9f7;
-  border: 1px solid #e8e5e0;
+  background: linear-gradient(135deg, var(--neon-violet), var(--neon-pink));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 15px;
-  color: #b8963f;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
   flex-shrink: 0;
+  box-shadow: 0 0 12px var(--neon-violet-glow);
 }
 
 .user-name {
   font-size: 13px;
-  font-weight: 500;
-  color: #1a1a1a;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .user-role {
   font-size: 11px;
-  color: #999;
+  color: var(--text3);
   margin-top: 2px;
 }
 
@@ -403,23 +419,27 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .topbar {
   height: 72px;
-  background: #ffffff;
-  border-bottom: 1px solid #e8e5e0;
+  background: linear-gradient(180deg, rgba(10,10,18,0.9) 0%, rgba(10,10,18,0.7) 100%);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 90;
 }
 
 .breadcrumb {
   font-size: 13px;
-  color: #666;
+  color: var(--text3);
 }
 
 .breadcrumb strong {
-  color: #1a1a1a;
-  font-weight: 500;
+  color: var(--neon-blue);
+  font-weight: 600;
 }
 
 .topbar-actions {
@@ -434,35 +454,32 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 1px solid #e8e5e0;
-  color: #666;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
   cursor: pointer;
   transition: all 0.25s;
+  border-radius: 12px;
 }
 
 .icon-btn:hover {
-  border-color: #999;
-  color: #1a1a1a;
+  border-color: var(--neon-blue);
+  color: var(--neon-blue);
+  box-shadow: 0 0 16px rgba(0,240,255,0.1);
 }
 
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 40px;
+  padding: 32px 40px;
 }
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #e8e5e0; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #999; }
 
 /* ── Search Modal ── */
 .search-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   padding-top: 15vh;
@@ -472,10 +489,11 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .search-modal {
   width: 540px;
   max-width: 90vw;
-  background: #fff;
-  border-radius: 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 28px 32px 24px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,240,255,0.05);
   height: fit-content;
 }
 
@@ -483,7 +501,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 2px solid #1a1a1a;
+  border-bottom: 2px solid var(--neon-blue);
   padding-bottom: 10px;
 }
 
@@ -494,26 +512,26 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   font-size: 18px;
   font-family: inherit;
   background: transparent;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
-.search-input::placeholder { color: #bbb; }
+.search-input::placeholder { color: var(--text3); }
 
 .search-cancel {
   background: none;
   border: none;
   font-size: 13px;
-  color: #666;
+  color: var(--text2);
   cursor: pointer;
   padding: 4px 8px;
 }
 
-.search-cancel:hover { color: #1a1a1a; }
+.search-cancel:hover { color: var(--neon-blue); }
 
 .search-hint {
   margin-top: 14px;
   font-size: 12px;
-  color: #999;
+  color: var(--text3);
 }
 
 /* ── Notification Dropdown ── */
@@ -524,10 +542,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   top: calc(100% + 8px);
   right: 0;
   width: 320px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
-  border: 1px solid #e8e5e0;
+  background: var(--bg-raised);
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 20px rgba(0,240,255,0.04);
+  border: 1px solid var(--border);
   z-index: 999;
   overflow: hidden;
 }
@@ -536,14 +554,14 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   padding: 16px 20px 12px;
   font-size: 14px;
   font-weight: 500;
-  border-bottom: 1px solid #f0eeeb;
-  color: #1a1a1a;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
 .notif-empty {
   padding: 36px 20px;
   text-align: center;
-  color: #999;
+  color: var(--text3);
   font-size: 13px;
 }
 
@@ -554,19 +572,19 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .notif-item {
   padding: 14px 20px;
   font-size: 13px;
-  color: #666;
-  border-bottom: 1px solid #f0eeeb;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.notif-item:hover { background: #faf9f7; }
+.notif-item:hover { background: var(--bg-hover); }
 
 .notif-item-text { display: block; }
 .notif-item-time {
   display: block;
   font-size: 11px;
-  color: #bbb;
+  color: var(--text3);
   margin-top: 4px;
 }
 

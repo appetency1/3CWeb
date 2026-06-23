@@ -18,11 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Token 管理:登录态存储在文件中，服务重启不丢失。
- * 文件路径: ${user.home}/.clothes_tokens.json
+ * 文件路径: ${user.home}/.digit_tokens.json
  */
 public final class TokenManager {
     private static final ConcurrentHashMap<String, Object> STORE = new ConcurrentHashMap<>();
-    private static final Path FILE_PATH = Paths.get(System.getProperty("user.home"), ".clothes_tokens.json");
+    private static final Path FILE_PATH = Paths.get(System.getProperty("user.home"), ".digit_tokens.json");
     private static final UserDao USER_DAO = new UserDao();
     private static final AdminDao ADMIN_DAO = new AdminDao();
     private static boolean loaded = false;

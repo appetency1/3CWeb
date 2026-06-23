@@ -1,24 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 600" preserveAspectRatio="xMidYMid slice">
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="600" viewBox="0 0 1920 600">
   <defs>
-    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E8F8F5"/>
-      <stop offset="100%" stop-color="#D0F0E8"/>
-    </linearGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">linear-gradient(135deg, #0f3443, #0f3443, #34e89e)</linearGradient>
   </defs>
-  <rect width="1920" height="600" fill="url(#bg3)"/>
-  <ellipse cx="1500" cy="100" rx="700" ry="500" fill="rgba(16,185,129,0.08)"/>
-  <ellipse cx="300" cy="550" rx="500" ry="350" fill="rgba(16,185,129,0.06)"/>
-  <g opacity="0.2" fill="#10B981">
-    <path d="M1700 50 Q1720 150 1700 250 Q1680 150 1700 50 Z"/>
-    <path d="M1750 100 Q1770 200 1750 300 Q1730 200 1750 100 Z"/>
-    <path d="M1650 80 Q1670 180 1650 280 Q1630 180 1650 80 Z"/>
-  </g>
-  <rect x="80" y="140" width="520" height="320" rx="16" fill="rgba(255,255,255,0.75)"/>
-  <rect x="120" y="175" width="96" height="28" rx="14" fill="#10B981"/>
-  <text x="168" y="194" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle">浪漫之选</text>
-  <text x="120" y="265" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="48" font-weight="800" fill="#1E2433">优雅连衣裙</text>
-  <text x="120" y="330" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="36" font-weight="600" fill="#1E2433" opacity="0.7">海滨风情</text>
-  <rect x="120" y="380" width="160" height="48" rx="24" fill="#10B981"/>
-  <text x="200" y="411" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="700" fill="white" text-anchor="middle">立即查看</text>
-  <text x="120" y="450" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="14" fill="#9CA3AF">轻盈飘逸 · 赴一场夏日约会</text>
+  <rect width="1920" height="600" fill="url(#bg)"/>
+  <rect x="80" y="80" width="640" height="440" rx="32" fill="rgba(255,255,255,0.04)"/>
+  <text x="200" y="240" font-size="160" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji">⌚</text>
+  <text x="400" y="340" font-size="56" font-weight="bold" fill="white" text-anchor="middle" font-family="system-ui,sans-serif">Ying Ying Sheng Yan</text>
+  <text x="400" y="400" font-size="26" fill="rgba(255,255,255,0.5)" text-anchor="middle" font-family="system-ui,sans-serif">Immersive Audio</text>
+  <text x="1200" y="300" font-size="120" font-weight="bold" fill="rgba(255,255,255,0.03)" font-family="system-ui,sans-serif">4</text>
 </svg>

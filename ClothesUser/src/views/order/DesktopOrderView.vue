@@ -462,13 +462,13 @@ onMounted(() => {
 .btn-pay:hover::after { transform: translateX(100%); }
 
 .btn-cancel {
-  background: transparent; color: #999; border: 1px solid #e0ddd8;
+  background: transparent; color: var(--text-muted); border: 1px solid #e0ddd8;
 }
 .btn-cancel:hover { color: #dc3545; border-color: #dc3545; }
 .btn-review {
   background: transparent; color: #c45c4a; border: 1px solid #c45c4a;
 }
-.btn-review:hover { background: #c45c4a; color: #fff; }
+.btn-review:hover { background: #c45c4a; color: var(--text-primary); }
 
 /* 空状态 */
 .empty-state { text-align: center; padding: 80px 20px; }
@@ -489,7 +489,7 @@ onMounted(() => {
   display: flex; align-items: center; justify-content: center;
 }
 .review-modal {
-  background: #fff; border-radius: 16px;
+  background: var(--bg-card); border-radius: 16px;
   width: 440px; max-width: 90vw;
   box-shadow: 0 24px 64px rgba(0,0,0,0.2);
   overflow: hidden;
@@ -527,7 +527,7 @@ onMounted(() => {
 .rating input { display: none; }
 .rating label {
   cursor: pointer;
-  color: #ccc;
+  color: var(--text-muted);
   transition: color 0.3s;
   font-size: 32px;
   padding: 0 2px;

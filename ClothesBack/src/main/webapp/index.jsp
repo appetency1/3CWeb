@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ClothesBack</title>
+    <title>DigitBack</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
                max-width: 760px; margin: 60px auto; padding: 0 24px; color: #1f2329; }
@@ -13,7 +13,7 @@
     </style>
 </head>
 <body>
-    <h1>ClothesBack 已启动</h1>
+    <h1>DigitBack 已启动</h1>
     <p class="ok">Servlet 6.1 + 原生 JDBC + MySQL 8 + Fastjson2</p>
     <div class="card">
         <p>默认管理员: <code>admin / 123456</code></p>

@@ -1,4 +1,4 @@
-# 衣服商城 (ClothesDemo) - 项目文档索引
+# 数码商城 (ClothesDemo) - 项目文档索引
 
 > **本目录 `Doc/` 存放项目所有说明/设计文档**。后端基于 **Servlet 6.1 + 原生 JDBC + MySQL 8 + Fastjson2 + Maven** 的经典教学项目。
 > ⚠️ **不使用任何 Spring / Spring Boot 框架**。

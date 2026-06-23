@@ -16,7 +16,7 @@ public class AppListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        log.info("ClothesBack 启动中...");
+        log.info("DigitBack 启动中...");
         try {
             Class.forName(JdbcUtils.class.getName());
             log.info("数据库配置加载成功");
@@ -27,6 +27,6 @@ public class AppListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        log.info("ClothesBack 关闭");
+        log.info("DigitBack 关闭");
     }
 }

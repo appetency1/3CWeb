@@ -18,9 +18,9 @@ const activePill = ref('all')
 
 const pills = [
   { key: 'all', label: '全部' },
-  { key: 'women', label: '女装' },
-  { key: 'men', label: '男装' },
-  { key: 'accessories', label: '配饰' },
+  { key: 'women', label: '手机' },
+  { key: 'men', label: '笔记本' },
+  { key: 'accessories', label: '穿戴' },
 ]
 
 const favCount = computed(() => list.value.length)
@@ -166,7 +166,7 @@ onMounted(onLoad)
 <style scoped>
 .fav-page {
   min-height: 100vh;
-  background: #f7f5f2;
+  background: var(--bg-primary);
 }
 
 /* ── Page Header ── */
@@ -187,12 +187,12 @@ onMounted(onLoad)
   line-height: 1.1;
   letter-spacing: -0.5px;
   margin-bottom: 12px;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .page-count {
   font-size: 14px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .page-count span {
@@ -215,31 +215,31 @@ onMounted(onLoad)
 .pill {
   padding: 10px 20px;
   border-radius: 999px;
-  border: 1px solid #e8e5e0;
-  background: #fff;
-  color: #666;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
-.pill:hover { border-color: #1a1a1a; color: #1a1a1a; }
-.pill.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.pill:hover { border-color: var(--text-primary); color: var(--text-primary); }
+.pill.active { background: var(--bg-dark); color: var(--text-primary); border-color: var(--text-primary); }
 
 .sort-select {
   padding: 10px 18px;
   border-radius: 999px;
-  border: 1px solid #e8e5e0;
-  background: #fff;
-  color: #666;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   outline: none;
 }
 
-.sort-select:hover { border-color: #1a1a1a; }
+.sort-select:hover { border-color: var(--text-primary); }
 
 /* ── Favorites Grid ── */
 .fav-section {
@@ -255,12 +255,12 @@ onMounted(onLoad)
 }
 
 .fav-card {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(26, 26, 26, 0.04);
-  border: 1px solid #e8e5e0;
+  border: 1px solid var(--border);
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   opacity: 0;
   transform: translateY(24px);
@@ -323,7 +323,7 @@ onMounted(onLoad)
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.95);
-  color: #666;
+  color: var(--text-secondary);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -331,7 +331,7 @@ onMounted(onLoad)
   transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.action-btn:hover { background: #c45c4a; color: #fff; transform: scale(1.1); }
+.action-btn:hover { background: #c45c4a; color: var(--text-primary); transform: scale(1.1); }
 .action-btn.remove:hover { background: #c0392b; }
 
 .action-btn svg { width: 16px; height: 16px; }
@@ -344,7 +344,7 @@ onMounted(onLoad)
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #999;
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -352,7 +352,7 @@ onMounted(onLoad)
   font-family: 'Noto Serif SC', 'Cormorant Garamond', Georgia, serif;
   font-size: 15px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text-primary);
   line-height: 1.5;
   margin-bottom: 14px;
   display: -webkit-box;
@@ -377,7 +377,7 @@ onMounted(onLoad)
 
 .fav-original {
   font-size: 13px;
-  color: #999;
+  color: var(--text-muted);
   text-decoration: line-through;
   margin-left: 8px;
 }
@@ -426,11 +426,11 @@ onMounted(onLoad)
   font-size: 32px;
   font-weight: 600;
   margin-bottom: 10px;
-  color: #1a1a1a;
+  color: var(--text-primary);
 }
 
 .empty-state p {
-  color: #999;
+  color: var(--text-muted);
   font-size: 15px;
   margin-bottom: 28px;
   line-height: 1.8;
@@ -441,8 +441,8 @@ onMounted(onLoad)
   align-items: center;
   gap: 10px;
   padding: 14px 32px;
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--bg-dark);
+  color: var(--text-primary);
   border-radius: 999px;
   font-size: 14px;
   font-weight: 500;
@@ -461,7 +461,7 @@ onMounted(onLoad)
 .loading-more {
   text-align: center;
   padding: 40px;
-  color: #999;
+  color: var(--text-muted);
   font-size: 14px;
 }
 

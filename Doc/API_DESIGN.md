@@ -9,12 +9,12 @@
 ### 1.1 服务地址
 | 环境 | 地址 |
 |---|---|
-| 本地开发 | `http://localhost:8080/clothes` |
+| 本地开发 | `http://localhost:8080/ClothesBack_war` |
 | 用户端前缀 | `/api/user` |
 | 管理端前缀 | `/api/admin` |
 | 公共接口 | `/api/public` |
 
-> 部署到 Tomcat 时,应用上下文为 `/clothes`,所有接口需带此前缀
+> 部署到 Tomcat 时,应用上下文为 `/ClothesBack_war`,所有接口需带此前缀。前端(Vite)已配置代理自动处理。
 
 ### 1.2 数据格式
 - **请求/响应**: 全部 `application/json; charset=UTF-8`

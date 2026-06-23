@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
@@ -14,12 +14,10 @@ const cartStore = useCartStore()
 const searchValue = ref('')
 
 const userAvatar = computed(() => userStore.userInfo?.avatar || '')
-
 const userAvatarLetter = computed(() => {
   const str = userStore.userInfo?.nickname || userStore.userInfo?.username || '?'
   return str[0].toUpperCase()
 })
-
 const cartCount = computed(() => cartStore.totalCount)
 
 function goHome() { router.push('/') }
@@ -40,20 +38,120 @@ function goOrder() {
   router.push('/order')
 }
 function goLogin() { router.push('/login') }
-
 function onSearch() {
   if (searchValue.value.trim()) {
     router.push({ name: 'search', query: { keyword: searchValue.value } })
   }
 }
 
+// ── Canvas 粒子连线背景 ──
+let canvasCtx: CanvasRenderingContext2D | null = null
+let particles: any[] = []
+let W = 0, H = 0
+let animId = 0
+
+class Particle {
+  x: number; y: number; vx: number; vy: number; size: number
+  constructor() {
+    this.x = Math.random() * W
+    this.y = Math.random() * H
+    this.vx = (Math.random() - 0.5) * 0.3
+    this.vy = (Math.random() - 0.5) * 0.3
+    this.size = Math.random() * 1.5 + 0.5
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy
+    if (this.x < 0 || this.x > W) this.vx *= -1
+    if (this.y < 0 || this.y > H) this.vy *= -1
+  }
+  draw() {
+    if (!canvasCtx) return
+    canvasCtx.beginPath()
+    canvasCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+    canvasCtx.fillStyle = 'rgba(0,240,255,0.15)'
+    canvasCtx.fill()
+  }
+}
+
+function initCanvas() {
+  const canvas = document.getElementById('bg-canvas') as HTMLCanvasElement
+  if (!canvas) return
+  canvasCtx = canvas.getContext('2d')
+  if (!canvasCtx) return
+  resizeCanvas()
+  window.addEventListener('resize', resizeCanvas)
+  for (let i = 0; i < 40; i++) particles.push(new Particle())
+  animateParticles()
+}
+
+function resizeCanvas() {
+  const canvas = document.getElementById('bg-canvas') as HTMLCanvasElement
+  if (!canvas) return
+  W = canvas.width = window.innerWidth
+  H = canvas.height = window.innerHeight
+}
+
+function drawLines() {
+  if (!canvasCtx) return
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x
+      const dy = particles[i].y - particles[j].y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist < 150) {
+        canvasCtx.beginPath()
+        canvasCtx.moveTo(particles[i].x, particles[i].y)
+        canvasCtx.lineTo(particles[j].x, particles[j].y)
+        canvasCtx.strokeStyle = `rgba(0,240,255,${0.04 * (1 - dist / 150)})`
+        canvasCtx.lineWidth = 0.5
+        canvasCtx.stroke()
+      }
+    }
+  }
+}
+
+function animateParticles() {
+  if (!canvasCtx) return
+  canvasCtx.clearRect(0, 0, W, H)
+  particles.forEach(p => { p.update(); p.draw() })
+  drawLines()
+  animId = requestAnimationFrame(animateParticles)
+}
+
+// ── 滚动显现 IntersectionObserver ──
+let revealObserver: IntersectionObserver | null = null
+
+function initReveal() {
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+        revealObserver?.unobserve(entry.target)
+      }
+    })
+  }, { threshold: 0.08 })
+  // 观察所有 .reveal 元素
+  document.querySelectorAll('.reveal').forEach(el => revealObserver?.observe(el))
+  // 用 MutationObserver 监听动态添加的 .reveal
+  const mo = new MutationObserver(() => {
+    document.querySelectorAll('.reveal:not(._observed)').forEach(el => {
+      el.classList.add('_observed')
+      revealObserver?.observe(el)
+    })
+  })
+  mo.observe(document.body, { childList: true, subtree: true })
+}
+
 onMounted(async () => {
   if (userStore.isLoggedIn && !userStore.userInfo) {
-    try {
-      const info: any = await userApi.info()
-      userStore.setUserInfo(info)
-    } catch { /* 静默 */ }
+    try { const info: any = await userApi.info(); userStore.setUserInfo(info) } catch { /* 静默 */ }
   }
+  initCanvas()
+  initReveal()
+})
+
+onUnmounted(() => {
+  cancelAnimationFrame(animId)
 })
 
 function isActive(name: string) {
@@ -66,95 +164,81 @@ function isCategoryActive(id: number) {
 </script>
 
 <template>
-  <div class="cl-app">
-    <!-- 顶部全宽导航栏 -->
-    <header class="cl-header">
-      <div class="cl-header-inner">
-        <div class="logo-section">
-          <!-- Logo -->
-          <div class="cl-logo" @click="goHome">
-            <div class="cl-logo-icon">M</div>
-            <span class="cl-logo-text">MAISON</span>
+  <div class="nexus-app">
+    <!-- Canvas 粒子背景 -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- 顶部通知条 -->
+    <div class="topbar">
+      <span class="topbar-text">新用户首单立减 <strong>¥50</strong> · 全场满 <strong>¥299</strong> 包邮 · 7天无理由退换</span>
+    </div>
+
+    <!-- 导航栏 -->
+    <header class="navbar">
+      <div class="nav-inner">
+        <div class="nav-left">
+          <div class="logo" @click="goHome">
+            <div class="logo-mark">M<div class="logo-shine"></div></div>
+            <span class="logo-text">NEXUS</span>
           </div>
-
-          <!-- 主导航 -->
-          <nav class="cl-nav">
-            <a :class="['cl-nav-item', isActive('home') ? 'active' : '']" @click="goHome">首页</a>
-            <a :class="['cl-nav-item', isCategoryActive(2) ? 'active' : '']" @click="goCategory(2)">女装</a>
-            <a :class="['cl-nav-item', isCategoryActive(1) ? 'active' : '']" @click="goCategory(1)">男装</a>
-            <a :class="['cl-nav-item', isCategoryActive(3) ? 'active' : '']" @click="goCategory(3)">鞋靴</a>
-            <a :class="['cl-nav-item', isCategoryActive(4) ? 'active' : '']" @click="goCategory(4)">配饰</a>
-            <a :class="['cl-nav-item', isActive('service') ? 'active' : '']" @click="router.push('/service')">客服</a>
-          </nav>
+          <ul class="nav-menu">
+            <li><a :class="{ active: isActive('home') }" @click="goHome">首页</a></li>
+            <li><a :class="{ active: isCategoryActive(1) }" @click="goCategory(1)">手机通讯</a></li>
+            <li><a :class="{ active: isCategoryActive(2) }" @click="goCategory(2)">电脑办公</a></li>
+            <li><a :class="{ active: isCategoryActive(3) }" @click="goCategory(3)">数码影音</a></li>
+            <li><a :class="{ active: isCategoryActive(4) }" @click="goCategory(4)">智能穿戴</a></li>
+            <li><a :class="{ active: isActive('service') }" @click="router.push('/service')">AI客服</a></li>
+          </ul>
         </div>
-
-        <!-- 搜索框 -->
-        <div class="cl-search">
-          <input v-model="searchValue" placeholder="搜索商品、品牌..." @keyup.enter="onSearch" />
-          <button @click="onSearch">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          </button>
-        </div>
-
-        <!-- 右侧操作区 -->
-        <div class="cl-actions">
-          <button class="cl-icon-btn" @click="goCart" title="购物车">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <path d="M16 10a4 4 0 0 1-8 0"></path>
-            </svg>
-            <span v-if="cartCount > 0" class="cl-badge">{{ cartCount }}</span>
-          </button>
-          <button class="cl-icon-btn" @click="goOrder" title="我的订单">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-          </button>
-          <button class="cl-icon-btn" @click="goUser" title="个人中心">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </button>
-          <div v-if="userStore.isLoggedIn" class="cl-user-chip" @click="goUser">
-            <img v-if="userAvatar" :src="fullImgUrl(userAvatar)" class="cl-user-avatar-img" />
-            <div v-else class="cl-user-avatar">{{ userAvatarLetter }}</div>
-            <span>{{ userStore.userInfo?.nickname || userStore.userInfo?.username }}</span>
+        <div class="nav-right">
+          <div class="search-box">
+            <span class="search-glow-tl"></span>
+            <span class="search-glow-br"></span>
+            <div class="search-inner">
+              <span class="search-sweep"></span>
+              <span class="search-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+              </span>
+              <input v-model="searchValue" placeholder="搜索数码好物..." @keyup.enter="onSearch" />
+              <button class="search-btn" @click="onSearch">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <button v-else class="cl-login-btn" @click="goLogin">登录</button>
+          <div class="nav-icon" title="购物车" @click="goCart">
+            🛒<span v-if="cartCount > 0" class="badge">{{ cartCount }}</span>
+          </div>
+          <div class="nav-icon" title="我的订单" @click="goOrder">📋</div>
+          <div v-if="userStore.isLoggedIn" class="nav-user" @click="goUser">
+            <img v-if="userAvatar" :src="fullImgUrl(userAvatar)" class="nav-avatar-img" />
+            <div v-else class="nav-avatar">{{ userAvatarLetter }}</div>
+          </div>
+          <button v-else class="nav-login-btn" @click="goLogin">登录</button>
         </div>
       </div>
     </header>
 
-    <!-- 顶部促销条 -->
-    <div class="cl-promo">
-      🎉 新用户首单立减 <strong>¥50</strong> · 全场满 <strong>¥299</strong> 包邮 · 7天无理由退换
-    </div>
-
     <!-- 主内容 -->
-    <main class="cl-main">
+    <main class="nexus-main">
       <slot />
     </main>
 
     <!-- 页脚 -->
-    <footer class="cl-footer">
-      <div class="cl-footer-inner">
-        <div class="cl-footer-brand">
-          <div class="cl-footer-logo">
-            <div class="cl-logo-icon">M</div>
-            <span class="cl-logo-text">MAISON</span>
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="logo" style="margin-bottom:12px">
+            <div class="logo-mark">M</div>
+            <span class="logo-text">MAISON</span>
           </div>
-          <p>探索全球时尚，定义独特风格。精选优质设计师品牌，为你带来独一无二的穿搭体验。</p>
-          <div class="cl-social">
-            <a>微</a><a>博</a><a>知</a><a>red</a>
-          </div>
+          <p>探索前沿科技，定义数字生活。精选全球优质数码品牌，为你带来高效智能的科技体验。</p>
+          <div class="social"><a>微</a><a>博</a><a>知</a><a>B</a></div>
         </div>
         <div>
           <h4>购物指南</h4>
@@ -169,452 +253,249 @@ function isCategoryActive(id: number) {
           <ul><li>品牌故事</li><li>加入我们</li><li>商务合作</li><li>隐私政策</li></ul>
         </div>
       </div>
-      <div class="cl-footer-bottom">
-        <span>MAISON © 2026 精选时尚商城 · 沪ICP备XXXXXXXX号</span>
-        <div class="cl-payments">
-          <span>支付宝</span><span>微信支付</span><span>银联</span><span>Visa</span>
-        </div>
+      <div class="footer-bottom">
+        <span class="typewriter">NEXUS &copy; 2026 // ALL SYSTEMS OPERATIONAL</span>
+        <span>DESIGNED FOR THE FUTURE</span>
       </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
-.cl-app {
-  min-height: 100vh;
-  background: var(--bg-primary);
-  display: flex;
-  flex-direction: column;
+/* ── Canvas 粒子背景 ── */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
 }
 
-/* ── 顶部导航栏 ── */
-.cl-header {
-  background: var(--bg-card);
+.nexus-app { position: relative; z-index: 1; }
+
+/* ── 顶部通知条 ── */
+.topbar {
+  position: relative; z-index: 10;
+  background: linear-gradient(90deg, rgba(0,240,255,0.05), rgba(184,41,247,0.05), rgba(255,42,138,0.05));
   border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: var(--shadow-sm);
+  text-align: center; padding: 10px 20px;
+  font-size: 12px; color: var(--text-secondary); letter-spacing: 1px;
 }
+.topbar strong { color: var(--accent); font-weight: 600; }
 
-.cl-header-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 40px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ── 导航栏 ── */
+.navbar {
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(6,6,10,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
 }
-
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 48px;
+.nav-inner {
+  max-width: 1440px; margin: 0 auto; padding: 0 40px; height: 70px;
+  display: flex; align-items: center; justify-content: space-between;
 }
-
-.cl-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  flex-shrink: 0;
+.nav-left { display: flex; align-items: center; gap: 48px; }
+.logo {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
 }
-
-.cl-logo-icon {
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-  letter-spacing: -1px;
+.logo-mark {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-tertiary));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 22px; color: #000;
+  box-shadow: 0 0 28px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.3);
+  position: relative; overflow: hidden;
 }
-
-.cl-logo-text {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 2px;
+.logo-shine {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%);
+  animation: shine 3s infinite;
 }
-
-.cl-nav {
-  display: flex;
-  gap: 36px;
-  list-style: none;
+.logo-text {
+  font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 700;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-tertiary), var(--accent-secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+.nav-menu { display: flex; gap: 36px; list-style: none; }
+.nav-menu a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
+  position: relative; padding: 6px 0; transition: color .3s; cursor: pointer;
+}
+.nav-menu a:hover, .nav-menu a.active { color: var(--accent); }
+.nav-menu a::after {
+  content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px;
+  background: var(--accent); box-shadow: 0 0 6px var(--accent-glow);
+  transition: width .3s;
+}
+.nav-menu a:hover::after, .nav-menu a.active::after { width: 100%; }
 
-.cl-nav-item {
-  text-decoration: none;
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 500;
-  padding: 8px 0;
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.search-box {
   position: relative;
+  width: 320px;
+  height: 48px;
+}
+.search-glow-tl, .search-glow-br {
+  position: absolute;
+  width: 110px; height: 90px;
+  border-radius: 50%;
+  filter: blur(22px);
+  opacity: 0.45;
+  transition: all 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.search-glow-tl { top: -14px; left: -14px; background: var(--accent-secondary); }
+.search-glow-br { bottom: -14px; right: -14px; background: var(--accent-tertiary); }
+.search-box:hover .search-glow-tl {
+  top: 10px; left: 60px;
+  opacity: 0.6;
+  width: 100px; height: 70px;
+}
+.search-box:hover .search-glow-br {
+  bottom: 10px; right: 60px;
+  opacity: 0.6;
+  width: 100px; height: 70px;
+}
+.search-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(10,10,18,0.95), rgba(5,5,8,0.98));
+  border: 1px solid rgba(0,240,255,0.12);
+  overflow: hidden;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s;
+}
+.search-box:hover .search-inner {
+  border-color: rgba(0,240,255,0.35);
+  box-shadow: 0 0 40px rgba(0,240,255,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.search-sweep {
+  position: absolute;
+  top: 0; left: -140px;
+  width: 100px; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0,240,255,0.18), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+.search-box:hover .search-sweep { left: calc(100% + 40px); }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  font-size: 18px;
+  z-index: 3;
+  pointer-events: none;
   transition: color 0.3s;
 }
-
-.cl-nav-item:hover {
-  color: var(--accent);
-}
-
-.cl-nav-item.active {
+.search-box:hover .search-icon { color: var(--accent); }
+.search-inner input {
+  width: 100%; height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
   color: var(--text-primary);
-  font-weight: 600;
+  font-size: 14px;
+  padding: 0 50px 0 44px;
+  font-family: var(--font-body);
+  position: relative;
+  z-index: 3;
 }
-
-.cl-nav-item.active::after {
+.search-inner input::placeholder { color: var(--text-muted); }
+.search-btn {
+  position: absolute;
+  right: 6px; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-tertiary));
+  display: flex; align-items: center; justify-content: center;
+  color: #000;
+  cursor: pointer;
+  z-index: 4;
+  overflow: hidden;
+  box-shadow: 0 0 16px rgba(0,240,255,0.2);
+  transition: box-shadow 0.3s;
+}
+.search-box:hover .search-btn {
+  box-shadow: 0 0 28px rgba(0,240,255,0.4), 0 0 8px var(--accent-tertiary-glow, rgba(170,136,255,0.5));
+}
+.search-btn::before {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2.5px;
-  background: var(--accent);
-  border-radius: 2px;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s;
 }
-
-
-.cl-search {
-  flex: 1;
-  max-width: 480px;
-  margin: 0 40px;
-  position: relative;
+.search-box:hover .search-btn::before { transform: translateX(100%); }
+.nav-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg-card);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 18px; cursor: pointer;
+  transition: all .3s; position: relative;
 }
-
-.cl-search input {
-  width: 100%;
-  height: 42px;
-  border: 1px solid transparent;
-  border-radius: 24px;
-  padding: 0 48px 0 20px;
-  font-size: 14px;
-  outline: none;
-  background: var(--bg-secondary);
-  transition: all 0.3s;
-  box-sizing: border-box;
-  color: var(--text-primary);
+.nav-icon:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 12px rgba(0,240,255,0.1); }
+.nav-icon .badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent-secondary); color: #fff; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 8px var(--accent-secondary-glow);
 }
-
-.cl-search input:focus {
-  border-color: var(--accent);
-  background: var(--bg-card);
-  box-shadow: 0 0 0 3px rgba(196, 92, 74, 0.1);
+.nav-user { cursor: pointer; }
+.nav-avatar, .nav-avatar-img {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--border); transition: var(--transition);
 }
-
-.cl-search input::placeholder {
-  color: var(--text-muted);
+.nav-avatar {
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #000;
 }
-
-.cl-search button {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s;
+.nav-user:hover .nav-avatar, .nav-user:hover .nav-avatar-img { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+.nav-login-btn {
+  padding: 8px 20px; border-radius: 8px; border: 1px solid var(--accent);
+  background: transparent; color: var(--accent); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .3s;
 }
-
-.cl-search button:hover {
-  background: var(--accent-dark);
-}
-
-.cl-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.cl-icon-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: transparent;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 18px;
-  color: var(--text-secondary);
-  position: relative;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cl-icon-btn:hover {
-  background: var(--bg-secondary);
-  color: var(--accent);
-}
-
-.cl-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 16px;
-  height: 16px;
-  background: var(--accent);
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-}
-
-.cl-user-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 14px 4px 4px;
-  background: var(--bg-secondary);
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-}
-
-.cl-user-chip:hover {
-  background: var(--accent-bg);
-  color: var(--accent);
-}
-
-.cl-user-avatar {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.cl-user-avatar-img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.cl-login-btn {
-  padding: 8px 24px;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-left: 8px;
-}
-
-.cl-login-btn:hover {
-  background: var(--accent-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(196, 92, 74, 0.3);
-}
-
-/* ── 促销条 ── */
-.cl-promo {
-  background: var(--bg-dark);
-  color: white;
-  text-align: center;
-  padding: 10px 20px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.cl-promo strong {
-  color: var(--accent-light);
-  margin: 0 4px;
-}
+.nav-login-btn:hover { background: rgba(0,240,255,0.1); box-shadow: 0 0 12px rgba(0,240,255,0.2); }
 
 /* ── 主内容 ── */
-.cl-main {
-  flex: 1;
-}
+.nexus-main { min-height: calc(100vh - 140px); }
 
 /* ── 页脚 ── */
-.cl-footer {
+.footer {
+  border-top: 1px solid var(--border);
   background: var(--bg-dark);
-  color: white;
-  padding: 60px 40px 30px;
   margin-top: 60px;
 }
-
-.cl-footer-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
-  gap: 60px;
-  margin-bottom: 48px;
+.footer-inner {
+  max-width: 1440px; margin: 0 auto; padding: 48px 40px 32px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px;
 }
-
-.cl-footer-brand .cl-footer-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
+.footer-brand p { font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 300px; }
+.footer h4 { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; letter-spacing: 1px; }
+.footer ul { list-style: none; }
+.footer ul li { font-size: 13px; color: var(--text-muted); padding: 6px 0; cursor: pointer; transition: color .2s; }
+.footer ul li:hover { color: var(--accent); }
+.social { display: flex; gap: 10px; margin-top: 16px; }
+.social a {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--text-muted); cursor: pointer; transition: all .3s; text-decoration: none;
 }
-
-.cl-footer-brand .cl-logo-text {
-  color: white;
+.social a:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,240,255,0.05); }
+.footer-bottom {
+  max-width: 1440px; margin: 0 auto; padding: 16px 40px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted);
+  font-family: 'Orbitron', sans-serif; letter-spacing: 2px;
 }
-
-.cl-footer-brand p {
-  font-size: 13px;
-  color: rgba(255,255,255,0.6);
-  line-height: 1.7;
-  margin-bottom: 20px;
-  max-width: 360px;
-}
-
-.cl-social {
-  display: flex;
-  gap: 10px;
-}
-
-.cl-social a {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,0.1);
-  border-radius: 50%;
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.cl-social a:hover {
-  background: var(--accent);
-}
-
-.cl-footer h4 {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  color: white;
-}
-
-.cl-footer ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.cl-footer ul li {
-  margin-bottom: 10px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.cl-footer ul li:hover {
-  color: white;
-}
-
-.cl-footer-bottom {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  color: rgba(255,255,255,0.4);
-}
-
-.cl-payments {
-  display: flex;
-  gap: 10px;
-}
-
-.cl-payments span {
-  padding: 6px 12px;
-  background: rgba(255,255,255,0.1);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  color: rgba(255,255,255,0.6);
-}
-
-/* ── 响应式 ── */
-@media (max-width: 1024px) {
-  .cl-header-inner {
-    padding: 0 20px;
-    gap: 20px;
-  }
-  
-  .cl-nav {
-    display: none;
-  }
-  
-  .cl-search {
-    max-width: 240px;
-  }
-}
-
-@media (max-width: 768px) {
-  .cl-header-inner {
-    height: 60px;
-    padding: 0 16px;
-  }
-  
-  .cl-search {
-    max-width: 180px;
-  }
-  
-  .cl-actions {
-    gap: 4px;
-  }
-  
-  .cl-icon-btn {
-    width: 36px;
-    height: 36px;
-  }
-  
-  .cl-user-chip {
-    display: none;
-  }
-  
-  .cl-footer-inner {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  
-  .cl-footer-bottom {
-    flex-direction: column;
-    gap: 16px;
-    text-align: center;
-  }
-}
+.typewriter { letter-spacing: 3px; }
 </style>

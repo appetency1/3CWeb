@@ -2,7 +2,7 @@
 
 > 写给前端开发者的工程实现手册。技术栈已固定：**Vue 3 + Vite 8 + TypeScript + Vant 4 + Pinia + Axios**。
 >
-> 本项目是服装商城的用户端（ClothesUser），另有管理后台（ClothesAdmin）独立部署。
+> 本项目是数码/3C 商城的用户端（ClothesUser），另有管理后台（ClothesAdmin）独立部署。
 
 ---
 

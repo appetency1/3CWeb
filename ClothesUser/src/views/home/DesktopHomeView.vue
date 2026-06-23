@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { publicApi } from '@/api/public'
 import { favoriteApi } from '@/api/favorite'
@@ -13,21 +13,15 @@ const userStore = useUserStore()
 const banners = ref<any[]>([])
 const bannersLoaded = ref(false)
 const activeBanner = ref(0)
-const swipeRef = ref<any>(null)            // 手动切换轮播
-function prevSlide() { swipeRef.value?.swipeTo(activeBanner.value - 1) }
-function nextSlide() { swipeRef.value?.swipeTo(activeBanner.value + 1) }
-const categories = ref<any[]>([])         // 一级 + children
+let bannerTimer: any = null
+
+const categories = ref<any[]>([])
 const hotGoods = ref<any[]>([])
 const newGoods = ref<any[]>([])
-const allGoods = ref<any[]>([])          // 通用商品
-const flashGoods = ref<any[]>([])         // 限时秒杀（从 hot 算折扣）
-const brands = ref<string[]>([])          // 品牌矩阵
-const countdown = ref({ h: '02', m: '15', s: '43' })
-let countdownTimer: any = null
+const allGoods = ref<any[]>([])
 
-// 收藏状态
+// 收藏
 const wishlistSet = ref(new Set<number>())
-
 async function loadWishlist() {
   if (!userStore.isLoggedIn) return
   try {
@@ -38,1251 +32,574 @@ async function loadWishlist() {
 }
 async function toggleWishlist(g: any) {
   if (!userStore.isLoggedIn) { router.push({ name: 'login', query: { redirect: '/user/favorites' } }); return }
-  const id = Number(g.id)
-  const s = new Set(wishlistSet.value)
-  const isLiked = s.has(id)
+  const id = Number(g.id); const s = new Set(wishlistSet.value); const liked = s.has(id)
   try {
-    if (isLiked) { await favoriteApi.remove(id); s.delete(id) }
+    if (liked) { await favoriteApi.remove(id); s.delete(id) }
     else { await favoriteApi.add(id); s.add(id) }
     wishlistSet.value = s
-  } catch (e: any) {
-    showToast(isLiked ? '取消收藏失败' : '收藏失败')
-  }
+  } catch { showToast(liked ? '取消收藏失败' : '收藏失败') }
 }
 
-// 秒杀自动轮转
-const flashOffset = ref(0)
-let flashScrollTimer: any = null
-let flashItemStep = 0
+// 秒杀
+const flashGoods = ref<any[]>([])
+const countdown = ref({ h: '02', m: '15', s: '43' })
+let countdownTimer: any = null
 
-function calcFlashStep() {
-  setTimeout(() => {
-    const el = document.querySelector('.flash-item') as HTMLElement | null
-    if (el) flashItemStep = el.offsetWidth + 16
-  }, 100)
-}
-
-function startFlashScroll() {
-  if (!flashGoods.value.length || flashGoods.value.length <= 5) return
-  stopFlashScroll()
-  stopFlashScroll()
-  calcFlashStep()
-  flashScrollTimer = setInterval(() => {
-    const total = flashGoods.value.length
-    if (!flashItemStep) calcFlashStep()
-    if (!flashItemStep) return
-    flashOffset.value += flashItemStep
-    if (flashOffset.value >= total * flashItemStep) flashOffset.value = 0
-  }, 4000)
-}
-function stopFlashScroll() { if (flashScrollTimer) { clearInterval(flashScrollTimer); flashScrollTimer = null } }
-function pauseFlashScroll() { stopFlashScroll() }
-function resumeFlashScroll() { startFlashScroll() }
-
-function priceFmt(p: any) { return Number(p || 0).toFixed(2) }
-function pct(orig: any, cur: any) {
-  const o = Number(orig), c = Number(cur)
-  if (!o || o <= c) return 0
-  return Math.round((1 - c / o) * 100)
-}
-function stockRatio(g: any): number {
-  const stock = Number(g.stock || 0)
-  const sales = Number(g.sales || 0)
-  const total = stock + sales
-  if (!total) return 50
-  return Math.min(95, Math.round((stock / total) * 100))
-}
-function cover(g: any) { return fullImgUrl(g.cover) }
-
-function goGoods(id: number) { router.push({ name: 'goodsDetail', params: { id } }) }
-function goCategory(id?: number) {
-  if (id) router.push({ name: 'categoryGoods', params: { id } })
-  else router.push({ name: 'category' })
-}
-async function loadBanners() {
-  try {
-    const data: any = await publicApi.banners()
-    banners.value = data || []
-    // 等所有 SVG 图片加载完成后再显示轮播，避免闪一下空图
-    if (banners.value.length > 0) {
-      await Promise.all(
-        banners.value.map(
-          (b: any) => new Promise<void>((resolve) => {
-            const img = new Image()
-            img.onload = () => resolve()
-            img.onerror = () => resolve()
-            img.src = fullImgUrl(b.image)
-          })
-        )
-      )
-    }
-  } catch { /* silent */ }
-  if (banners.value.length > 0) bannersLoaded.value = true
-}
-async function loadCategories() {
-  try {
-    const data: any = await publicApi.categories()
-    // 树结构:取一级
-    const top = (data || []).filter((c: any) => Number(c.parentId) === 0)
-    categories.value = top.filter((c: any) => c.id !== 501 && c.id !== 502).slice(0, 8) // 8 个一级
-  } catch { /* silent */ }
-}
-async function loadHot() {
-  try { hotGoods.value = (await publicApi.hotGoods()) || [] } catch { /* silent */ }
-}
-async function loadNew() {
-  try { newGoods.value = (await publicApi.newGoods()) || [] } catch { /* silent */ }
-}
-async function loadAll() {
-  try {
-    const data: any = await publicApi.goodsList({ page: 1, size: 20, sort: 'sales_desc' })
-    allGoods.value = data?.list || data || []
-  } catch { /* silent */ }
-}
-
-function buildFlash() {
-  // 取前 6 个 hot + 有折扣的作为秒杀
-  flashGoods.value = hotGoods.value
-    .filter((g: any) => g.originalPrice && Number(g.originalPrice) > Number(g.price))
-    .slice(0, 6)
-  if (flashGoods.value.length < 3) {
-    flashGoods.value = hotGoods.value.slice(0, 6)
-  }
-}
-function buildBrands() {
-  const set = new Set<string>()
-  for (const g of allGoods.value) {
-    if (g.brand) set.add(String(g.brand))
-  }
-  brands.value = Array.from(set).slice(0, 12)
-}
-
-// 分类专区:每个一级分类挑 4 件
-const categoryBlocks = computed(() => {
-  return categories.value.map((top: any) => {
-    const items = allGoods.value
-      .filter((g: any) => Number(g.categoryId) === Number(top.id) ||
-        (top.children || []).some((c: any) => Number(c.id) === Number(g.categoryId)))
-      .slice(0, 4)
-    return { ...top, items }
-  }).filter((b: any) => b.items.length > 0).slice(0, 4)
-})
-
+// 倒计时
 function startCountdown() {
   let total = (2 * 60 + 15) * 60 + 43
   countdownTimer = setInterval(() => {
     if (total <= 0) total = (2 * 60 + 15) * 60 + 43
     total--
-    const h = Math.floor(total / 3600)
-    const m = Math.floor((total % 3600) / 60)
-    const s = total % 60
-    countdown.value = {
-      h: String(h).padStart(2, '0'),
-      m: String(m).padStart(2, '0'),
-      s: String(s).padStart(2, '0'),
-    }
+    const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60
+    countdown.value = { h: String(h).padStart(2,'0'), m: String(m).padStart(2,'0'), s: String(s).padStart(2,'0') }
   }, 1000)
 }
 
-// ── RAF 品牌滚动 ──
-let brandLoop: any = null
-let brandLogos: { name: string; file: string }[] = [
-  { name: 'MLB', file: 'mlb' },
-  { name: '回力', file: 'warrior' },
-  { name: 'Uniqlo', file: 'uniqlo' },
-  { name: '小CK', file: 'charleskeith' },
-  { name: '飞跃', file: 'feiyue' },
-  { name: 'Nike', file: 'nike' },
-  { name: 'H&M', file: 'hm' },
-  { name: 'UR', file: 'ur' },
-  { name: '红豆', file: 'hongdou' },
-  { name: '红蜻蜓', file: 'red-dragonfly' },
-  { name: 'Supreme', file: 'supreme' },
-  { name: 'Adidas', file: 'adidas' },
-  { name: 'ZARA', file: 'zara' },
-  { name: 'MUJI', file: 'muji' },
-  { name: 'GAP', file: 'gap' },
-  { name: 'GUCCI', file: 'gucci' },
-  { name: 'PRADA', file: 'prada' },
-  { name: 'DIOR', file: 'dior' },
-  { name: 'LV', file: 'lv' },
-  { name: 'CHANEL', file: 'chanel' },
-]
-
-function initBrandScroll() {
-  const wrapper = document.getElementById('brand-raf-wrapper')
-  const track = document.getElementById('brand-raf-track')
-  if (!wrapper || !track) return
-  brandLoop = initLogoLoop(wrapper, track, brandLogos, { speed: 0.6, hoverSpeed: 0, easingFactor: 0.1 })
+// 工具函数
+function priceFmt(p: any) { return Number(p || 0).toFixed(2) }
+function displayPrice(g: any) {
+  if (g.min_price && g.max_price && Number(g.min_price) !== Number(g.max_price)) {
+    return '¥' + priceFmt(g.min_price) + ' - ¥' + priceFmt(g.max_price)
+  }
+  return '¥' + priceFmt(g.price || g.min_price)
 }
-function pauseBrandScroll() { if (brandLoop) brandLoop.isHovered = true; brandLoop.targetSpeed = 0 }
-function resumeBrandScroll() { if (brandLoop) { brandLoop.isHovered = false; brandLoop.targetSpeed = brandLoop.options.speed } }
+function pct(orig: any, cur: any) {
+  const o = Number(orig), c = Number(cur)
+  if (!o || o <= c) return 0
+  return Math.round((1 - c / o) * 100)
+}
+function cover(g: any) { return fullImgUrl(g.cover) }
+function goGoods(id: number) { router.push({ name: 'goodsDetail', params: { id } }) }
+function goCategory(id?: number) {
+  if (id) router.push({ name: 'categoryGoods', params: { id } })
+  else router.push({ name: 'category' })
+}
+
+// 轮播自动切换
+function nextBanner() {
+  if (banners.value.length) activeBanner.value = (activeBanner.value + 1) % banners.value.length
+}
+function startBannerAuto() {
+  bannerTimer = setInterval(nextBanner, 4500)
+}
+function stopBannerAuto() { if (bannerTimer) clearInterval(bannerTimer) }
+
+// 数据加载
+async function loadBanners() {
+  try { banners.value = (await publicApi.banners()) || [] } catch { /* silent */ }
+  if (banners.value.length) bannersLoaded.value = true
+}
+async function loadCategories() {
+  try {
+    const data: any = await publicApi.categories()
+    categories.value = (data || []).filter((c: any) => Number(c.parentId) === 0).slice(0, 6)
+  } catch { /* silent */ }
+}
+async function loadHot() { try { hotGoods.value = (await publicApi.hotGoods()) || [] } catch { /* silent */ } }
+async function loadNew() { try { newGoods.value = (await publicApi.newGoods()) || [] } catch { /* silent */ } }
+async function loadAll() {
+  try {
+    const data: any = await publicApi.goodsList({ page: 1, size: 50, sort: 'sales_desc' })
+    allGoods.value = data?.list || data || []
+  } catch { /* silent */ }
+}
+
+function buildFlash() {
+  flashGoods.value = hotGoods.value.filter((g: any) => g.originalPrice && Number(g.originalPrice) > Number(g.min_price || g.price)).slice(0, 5)
+  if (flashGoods.value.length < 3) flashGoods.value = hotGoods.value.slice(0, 5)
+}
 
 onMounted(async () => {
   await Promise.all([loadBanners(), loadCategories(), loadHot(), loadNew(), loadAll()])
   buildFlash()
-  buildBrands()
   startCountdown()
   loadWishlist()
-  startFlashScroll()
-  initBrandScroll()
+  startBannerAuto()
 })
-onUnmounted(() => {
-  clearInterval(countdownTimer)
-  if (brandLoop && brandLoop.destroy) brandLoop.destroy()
-})
+onUnmounted(() => { clearInterval(countdownTimer); stopBannerAuto() })
 </script>
 
 <template>
   <DesktopLayout>
   <div class="home">
-    <!-- 1. Hero 轮播 + 右侧两个促销卡 -->
+
+    <!-- HERO -->
     <section class="hero">
-      <div class="hero-slider">
-        <div class="hero-main">
-          <template v-if="bannersLoaded">
-            <van-swipe
-              ref="swipeRef"
-              :autoplay="4500"
-              :initial-swipe="activeBanner"
-              class="hero-swipe"
-              :loop="true"
-              @change="activeBanner = $event"
-            >
-              <van-swipe-item v-for="b in banners" :key="b.id" class="hero-slide-item">
-                <div class="hero-slide-bg" :style="{ backgroundImage: `url(${fullImgUrl(b.image)})` }">
-                  <div class="hero-slide-overlay">
-                    <span class="slide-tag">{{ b.title || '新品推荐' }}</span>
-                    <h2 class="slide-title">{{ b.title || '精选好物' }}</h2>
-                    <p class="slide-desc">探索全球时尚，定义独特风格</p>
-                    <a class="slide-btn" @click="b.link && router.push(b.link)">
-                      立即查看
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </van-swipe-item>
-              <template #indicator>
-                <div class="hero-dots">
-                  <span v-for="(_, i) in banners" :key="i" class="dot" :class="{ on: i === activeBanner }" />
-                </div>
-              </template>
-            </van-swipe>
-            <button class="hero-arrow hero-arrow-prev" @click="prevSlide" aria-label="上一张">‹</button>
-            <button class="hero-arrow hero-arrow-next" @click="nextSlide" aria-label="下一张">›</button>
-          </template>
-          <div v-else class="hero-placeholder slide-1">
-            <div class="slide-content">
-              <span class="slide-tag">夏季新品</span>
-              <h2 class="slide-title">轻盈夏日<br />焕新衣橱</h2>
-              <p class="slide-desc">精选透气面料，打造舒适夏日穿搭体验</p>
-              <a class="slide-btn" @click="goCategory()">
-                立即选购
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </a>
-            </div>
-            <div class="slide-image"></div>
+      <div class="hero-slide">
+        <div class="hero-info">
+          <div class="hero-tag">NEW ARRIVAL</div>
+          <h1 class="hero-title">未来科技<br><span>触手可及</span></h1>
+          <p class="hero-desc">探索前沿数码，定义数字生活。精选全球优质品牌，为你带来高效智能的科技体验。</p>
+          <div class="hero-btns">
+            <button class="btn-primary" @click="goCategory()">立即选购</button>
+            <button class="btn-secondary" @click="goCategory(1)">新品推荐</button>
           </div>
         </div>
+        <div class="hero-img-wrap">
+          <div v-if="banners.length" class="banner-slide">
+            <img v-for="(b, i) in banners.slice(0, 3)" :key="b.id"
+              :src="cover(b)" :alt="b.title"
+              :class="['banner-img', { active: i === activeBanner }]"
+              @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+            <div class="banner-dots">
+              <span v-for="(_, i) in banners.slice(0, 3)" :key="i"
+                :class="['dot', { active: i === activeBanner }]"
+                @click="activeBanner = i" />
+            </div>
+          </div>
+          <div v-else class="hero-placeholder-img">📱</div>
+        </div>
+      </div>
+      <div class="hero-dots-bar">
+                <span v-for="i in banners.slice(0, 3).length" :key="i"
+          :class="['hdot', { active: i-1 === activeBanner }]"
+          @click="activeBanner = i-1" />
+      </div>
+    </section>
 
-        <div class="hero-side">
-          <div class="side-card sc-dark" @click="goCategory(1)">
-            <div class="sc-tag">MAN</div>
-            <div class="sc-title">潮流男装</div>
-            <div class="sc-sub">商务休闲两相宜</div>
-            <span class="sc-emoji">👔</span>
-          </div>
-          <div class="side-card sc-red" @click="goCategory(2)">
-            <div class="sc-tag">WOMAN</div>
-            <div class="sc-title">精品女装</div>
-            <div class="sc-sub">优雅浪漫不重样</div>
-            <span class="sc-emoji">👗</span>
-          </div>
+    <!-- 快捷分类 -->
+    <section class="cats" v-if="categories.length">
+      <div class="cats-grid">
+        <div v-for="c in categories" :key="c.id" class="cat-card reveal" @click="goCategory(c.id)">
+          <div class="cat-icon">{{ ['💻','📱','🎧','⌚','📷','🎮'][categories.indexOf(c) % 6] }}</div>
+          <div class="cat-name">{{ c.name }}</div>
         </div>
       </div>
     </section>
 
-    <!-- 3. 限时秒杀 -->
-    <section v-if="flashGoods.length" class="flash-sale">
+    <!-- 品牌滚动条 -->
+    <section class="brand-strip">
+      <div class="brand-track">
+        <span class="brand-item">APPLE</span><span class="brand-item">SAMSUNG</span><span class="brand-item">SONY</span>
+        <span class="brand-item">XIAOMI</span><span class="brand-item">HUAWEI</span><span class="brand-item">BOSE</span>
+        <span class="brand-item">META</span><span class="brand-item">GARMIN</span><span class="brand-item">DJI</span>
+        <span class="brand-item">LG</span><span class="brand-item">ASUS</span><span class="brand-item">DELL</span>
+        <!-- 重复一份实现无缝滚动 -->
+        <span class="brand-item">APPLE</span><span class="brand-item">SAMSUNG</span><span class="brand-item">SONY</span>
+        <span class="brand-item">XIAOMI</span><span class="brand-item">HUAWEI</span><span class="brand-item">BOSE</span>
+        <span class="brand-item">META</span><span class="brand-item">GARMIN</span><span class="brand-item">DJI</span>
+        <span class="brand-item">LG</span><span class="brand-item">ASUS</span><span class="brand-item">DELL</span>
+      </div>
+    </section>
+
+    <!-- 限时秒杀 -->
+    <section v-if="flashGoods.length" class="flash reveal">
       <div class="flash-header">
-        <div class="flash-title-group">
-          <span class="flash-icon">⚡</span>
-          <h3 class="flash-title">限时秒杀</h3>
-          <div class="countdown">
-            <span class="countdown-label">距结束</span>
-            <span class="countdown-box">{{ countdown.h }}</span>
-            <span class="countdown-sep">:</span>
-            <span class="countdown-box">{{ countdown.m }}</span>
-            <span class="countdown-sep">:</span>
-            <span class="countdown-box">{{ countdown.s }}</span>
+        <div class="flash-title-wrap">
+          <div class="flash-title">⚡ FLASH SALE</div>
+          <div class="flash-countdown">
+            <span class="cd-box">{{ countdown.h }}</span><span class="cd-sep">:</span>
+            <span class="cd-box">{{ countdown.m }}</span><span class="cd-sep">:</span>
+            <span class="cd-box">{{ countdown.s }}</span>
           </div>
         </div>
-        <a class="flash-more" @click="goCategory()">更多秒杀 →</a>
+        <div class="flash-more" @click="goCategory()">查看全部 →</div>
       </div>
-      <div class="flash-carousel" @mouseenter="pauseFlashScroll" @mouseleave="resumeFlashScroll">
-        <div class="flash-track" :style="{ transform: `translateX(-${flashOffset}px)` }">
-          <div v-for="g in flashGoods" :key="g.id" class="flash-item" @click="goGoods(g.id)">
-            <div class="new-card">
-              <div class="new-img-wrapper">
-                <img :src="cover(g)" class="flash-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-                <div class="new-img-overlay"></div>
-                <div class="new-tag-combo">
-                  <span v-if="g.isHot" class="new-tag-hot">热卖</span>
-                  <span v-if="pct(g.originalPrice, g.price) > 0" class="new-tag-discount">
-                    -{{ pct(g.originalPrice, g.price) }}%
-                  </span>
-                </div>
-                <button class="new-fav-btn" :class="{ liked: wishlistSet.has(Number(g.id)) }" @click.stop="toggleWishlist(g)">{{ wishlistSet.has(Number(g.id)) ? '♥' : '♡' }}</button>
-              </div>
-              <div class="new-info">
-                <div v-if="g.brand" class="new-brand-row">
-                  <span class="new-brand">{{ g.brand }}</span>
-                </div>
-                <div class="new-name">{{ g.name }}</div>
-                <div class="new-price-block">
-                  <span class="new-price">{{ priceFmt(g.price) }}</span>
-                  <span v-if="g.originalPrice" class="new-original">¥{{ priceFmt(g.originalPrice) }}</span>
-                </div>
-                <div v-if="g.sales" class="new-sold">
-                  <span class="new-sold-fire">🔥</span>
-                  已售 <span class="new-sold-num">{{ g.sales > 999 ? (g.sales/1000).toFixed(1) + 'k' : g.sales }}</span>
-                </div>
-                <div class="new-stock-bar">
-                  <div class="new-stock-fill" :style="{ width: stockRatio(g) + '%' }"></div>
-                </div>
-                <div v-if="g.stock && stockRatio(g) < 20" class="new-stock-text">库存紧张</div>
-              </div>
+      <div class="flash-grid">
+        <div v-for="g in flashGoods" :key="g.id" class="gcard" @click="goGoods(g.id)">
+          <div class="gcard-img">
+            <img :src="cover(g)" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
+            <div class="gcard-badges">
+              <span class="gbadge gbadge-discount">-{{ pct(g.originalPrice, g.min_price || g.price) }}%</span>
             </div>
           </div>
-          <!-- 克隆首批 5 个用于无缝循环 -->
-          <div v-for="g in flashGoods.slice(0, 5)" :key="'c' + g.id" class="flash-item" @click="goGoods(g.id)">
-            <div class="new-card">
-              <div class="new-img-wrapper">
-                <img :src="cover(g)" class="flash-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-                <div class="new-img-overlay"></div>
-                <div class="new-tag-combo">
-                  <span v-if="g.isHot" class="new-tag-hot">热卖</span>
-                  <span v-if="pct(g.originalPrice, g.price) > 0" class="new-tag-discount">
-                    -{{ pct(g.originalPrice, g.price) }}%
-                  </span>
-                </div>
-                <button class="new-fav-btn" :class="{ liked: wishlistSet.has(Number(g.id)) }" @click.stop="toggleWishlist(g)">{{ wishlistSet.has(Number(g.id)) ? '♥' : '♡' }}</button>
-              </div>
-              <div class="new-info">
-                <div v-if="g.brand" class="new-brand-row">
-                  <span class="new-brand">{{ g.brand }}</span>
-                </div>
-                <div class="new-name">{{ g.name }}</div>
-                <div class="new-price-block">
-                  <span class="new-price">{{ priceFmt(g.price) }}</span>
-                  <span v-if="g.originalPrice" class="new-original">¥{{ priceFmt(g.originalPrice) }}</span>
-                </div>
-                <div v-if="g.sales" class="new-sold">
-                  <span class="new-sold-fire">🔥</span>
-                  已售 <span class="new-sold-num">{{ g.sales > 999 ? (g.sales/1000).toFixed(1) + 'k' : g.sales }}</span>
-                </div>
-                <div class="new-stock-bar">
-                  <div class="new-stock-fill" :style="{ width: stockRatio(g) + '%' }"></div>
-                </div>
-                <div v-if="g.stock && stockRatio(g) < 20" class="new-stock-text">库存紧张</div>
-              </div>
+          <div class="gcard-body">
+            <div class="gcard-brand">{{ g.brand || '' }}</div>
+            <div class="gcard-name">{{ g.name }}</div>
+            <div class="gcard-price-row">
+              <span class="gcard-price">{{ displayPrice(g) }}</span>
+              <span class="gcard-orig">¥{{ priceFmt(g.originalPrice) }}</span>
+            </div>
+            <button class="gcard-btn" @click.stop="toggleWishlist(g)">{{ wishlistSet.has(Number(g.id)) ? '♥ 已收藏' : '♡ 收藏' }}</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENTO GRID 精选产品 -->
+    <section class="bento-section reveal">
+      <div class="sec-header">
+        <div class="sec-title"><div class="bar"></div>BENTO <span>SELECTION</span></div>
+        <div class="sec-more" @click="goCategory()">查看全部 &#8594;</div>
+      </div>
+      <div class="bento-grid">
+        <div class="bento-item large" @click="goGoods(allGoods[0]?.id)">
+          <div class="bento-img"><img v-if="allGoods[0]" :src="cover(allGoods[0])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">FLAGSHIP</div>
+            <div class="bento-brand">{{ allGoods[0]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[0]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[0] ? displayPrice(allGoods[0]) : '' }}</div>
+          </div>
+        </div>
+        <div class="bento-item tall" @click="goGoods(allGoods[1]?.id)">
+          <div class="bento-img"><img v-if="allGoods[1]" :src="cover(allGoods[1])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">BEST</div>
+            <div class="bento-brand">{{ allGoods[1]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[1]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[1] ? displayPrice(allGoods[1]) : '' }}</div>
+          </div>
+        </div>
+        <div class="bento-item" @click="goGoods(allGoods[2]?.id)">
+          <div class="bento-img"><img v-if="allGoods[2]" :src="cover(allGoods[2])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">NEW</div>
+            <div class="bento-brand">{{ allGoods[2]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[2]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[2] ? displayPrice(allGoods[2]) : '' }}</div>
+          </div>
+        </div>
+        <div class="bento-item" @click="goGoods(allGoods[3]?.id)">
+          <div class="bento-img"><img v-if="allGoods[3]" :src="cover(allGoods[3])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">HOT</div>
+            <div class="bento-brand">{{ allGoods[3]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[3]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[3] ? displayPrice(allGoods[3]) : '' }}</div>
+          </div>
+        </div>
+        <div class="bento-item wide" @click="goGoods(allGoods[4]?.id)">
+          <div class="bento-img"><img v-if="allGoods[4]" :src="cover(allGoods[4])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">PRO</div>
+            <div class="bento-brand">{{ allGoods[4]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[4]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[4] ? displayPrice(allGoods[4]) : '' }}</div>
+          </div>
+        </div>
+        <div class="bento-item" @click="goGoods(allGoods[5]?.id)">
+          <div class="bento-img"><img v-if="allGoods[5]" :src="cover(allGoods[5])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">TABLET</div>
+            <div class="bento-brand">{{ allGoods[5]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[5]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[5] ? displayPrice(allGoods[5]) : '' }}</div>
+          </div>
+        </div>
+        <div class="bento-item" @click="goGoods(allGoods[6]?.id)">
+          <div class="bento-img"><img v-if="allGoods[6]" :src="cover(allGoods[6])" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+          <div class="bento-overlay"></div>
+          <div class="bento-content">
+            <div class="bento-badge">VR</div>
+            <div class="bento-brand">{{ allGoods[6]?.brand || '' }}</div>
+            <div class="bento-name">{{ allGoods[6]?.name || '' }}</div>
+            <div class="bento-price">{{ allGoods[6] ? displayPrice(allGoods[6]) : '' }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 横向滚动推荐 -->
+    <section class="scroll-section" v-if="newGoods.length">
+      <div class="scroll-header">
+        <div class="scroll-title">NEW ARRIVALS</div>
+        <div class="sec-more" @click="goCategory()">查看全部 &#8594;</div>
+      </div>
+      <div class="scroll-track-wrap">
+        <div class="scroll-track">
+          <div v-for="g in newGoods" :key="g.id" class="sitem" @click="goGoods(g.id)">
+            <div class="sitem-img"><img :src="cover(g)" alt="" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" /></div>
+            <div class="sitem-body">
+              <div class="sitem-name">{{ g.name }}</div>
+              <div class="sitem-price">{{ displayPrice(g) }}</div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 4. 热门品牌（RAF 无限滚动) -->
-    <section class="brand-raf-section">
-      <div class="brand-raf-header">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
-        </svg>
-        <span>热门品牌</span>
-      </div>
-      <div class="brand-raf-wrapper" id="brand-raf-wrapper" @mouseenter="pauseBrandScroll" @mouseleave="resumeBrandScroll">
-        <div class="brand-raf-track" id="brand-raf-track"></div>
-      </div>
-    </section>
-
-    <!-- 5. 热门推荐 -->
-    <section v-if="hotGoods.length" class="section">
-      <div class="section-head">
-        <div class="section-title">
-          <span class="emoji">🔥</span>
-          <h2>热门推荐</h2>
+    <!-- 促销横幅 -->
+    <section class="promo">
+      <div class="promo-card p1" @click="goCategory(1)">
+        <div>
+          <h3>数码配件狂欢</h3>
+          <p>充电保护 · 一应俱全</p>
+          <span class="promo-tag">限时 8 折</span>
         </div>
-        <a class="section-more" @click="goCategory()">查看全部 →</a>
       </div>
-      <div class="grid-5">
-        <div v-for="g in hotGoods.slice(0, 10)" :key="g.id" class="card" @click="goGoods(g.id)">
-          <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-            <div class="card-badges">
-              <span v-if="g.isHot" class="badge badge-hot">热卖</span>
-              <span v-if="pct(g.originalPrice, g.price) > 0" class="badge badge-discount">
-                -{{ pct(g.originalPrice, g.price) }}%
-              </span>
-            </div>
-          </div>
-          <div class="card-info">
-            <div v-if="g.brand" class="card-brand">{{ g.brand }}</div>
-            <div class="card-name">{{ g.name }}</div>
-            <div class="card-price-row">
-              <span class="card-price">¥{{ priceFmt(g.price) }}</span>
-              <span v-if="g.originalPrice" class="card-orig">¥{{ priceFmt(g.originalPrice) }}</span>
-            </div>
-            <div class="card-meta">
-              <span v-if="g.sales">已售 {{ g.sales }}</span>
-            </div>
-          </div>
+      <div class="promo-card p2" @click="goCategory(4)">
+        <div>
+          <h3>智能穿戴新品</h3>
+          <p>科技随行 · 健康生活</p>
+          <span class="promo-tag">满 199 减 30</span>
         </div>
       </div>
     </section>
 
-    <!-- 6. 新品上市 -->
-    <section v-if="newGoods.length" class="section">
-      <div class="section-head">
-        <div class="section-title">
-          <span class="emoji">✨</span>
-          <h2>新品上市</h2>
-        </div>
-        <a class="section-more" @click="goCategory()">查看全部 →</a>
-      </div>
-      <div class="grid-5">
-        <div v-for="g in newGoods.slice(0, 10)" :key="g.id" class="card" @click="goGoods(g.id)">
-          <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-            <div class="card-badges">
-              <span v-if="g.isNew" class="badge badge-new">新品</span>
-            </div>
-          </div>
-          <div class="card-info">
-            <div v-if="g.brand" class="card-brand">{{ g.brand }}</div>
-            <div class="card-name">{{ g.name }}</div>
-            <div class="card-price-row">
-              <span class="card-price">¥{{ priceFmt(g.price) }}</span>
-              <span v-if="g.originalPrice" class="card-orig">¥{{ priceFmt(g.originalPrice) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. 分类专区 -->
-    <section v-for="b in categoryBlocks" :key="b.id" class="section">
-      <div class="section-head">
-        <div class="section-title">
-          <span class="emoji">🛍️</span>
-          <h2>{{ b.name }}专区</h2>
-        </div>
-        <a class="section-more" @click="goCategory(b.id)">查看全部 →</a>
-      </div>
-      <div class="grid-4">
-        <div v-for="g in b.items" :key="g.id" class="card" @click="goGoods(g.id)">
-          <div class="card-img-wrap">
-            <img :src="cover(g)" class="card-img" loading="lazy" @error="($event.target as HTMLImageElement).src = IMG_PLACEHOLDER" />
-          </div>
-          <div class="card-info">
-            <div class="card-name">{{ g.name }}</div>
-            <div class="card-price-row">
-              <span class="card-price">¥{{ priceFmt(g.price) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 8. 促销横幅 -->
-    <section class="promo-banners">
-      <div class="promo-banner p-dark" @click="goCategory(1)">
-        <div class="pb-content">
-          <h3>男装专区</h3>
-          <p>商务休闲 · 简约不简单</p>
-          <span class="pb-tag">限时 8 折</span>
-        </div>
-        <span class="pb-emoji">👔</span>
-      </div>
-      <div class="promo-banner p-light" @click="goCategory(4)">
-        <div class="pb-content">
-          <h3>配饰专场</h3>
-          <p>点睛之笔 · 精致生活</p>
-          <span class="pb-tag pb-tag-dark">满 199 减 30</span>
-        </div>
-        <span class="pb-emoji">⌚</span>
-      </div>
-    </section>
-
-<!-- 品牌矩阵已合入 RAF 滚动区 -->
-
-    <!-- 10. 服务保障 -->
+    <!-- 服务保障 -->
     <section class="service">
-      <div class="service-grid">
-        <div class="svc">
-          <div class="svc-icon">🚚</div>
-          <div class="svc-text">
-            <h4>全场包邮</h4>
-            <p>满 ¥299 免运费</p>
-          </div>
-        </div>
-        <div class="svc">
-          <div class="svc-icon">🔄</div>
-          <div class="svc-text">
-            <h4>7 天无理由</h4>
-            <p>不满意随时退换</p>
-          </div>
-        </div>
-        <div class="svc">
-          <div class="svc-icon">🛡️</div>
-          <div class="svc-text">
-            <h4>正品保障</h4>
-            <p>品牌授权 · 假一赔十</p>
-          </div>
-        </div>
-        <div class="svc">
-          <div class="svc-icon">💬</div>
-          <div class="svc-text">
-            <h4>专属客服</h4>
-            <p>24 小时在线服务</p>
-          </div>
-        </div>
+      <div class="svc-grid">
+        <div class="svc"><div class="svc-icon">🚚</div><div><h4>全场包邮</h4><p>满 ¥299 免运费</p></div></div>
+        <div class="svc"><div class="svc-icon">🔄</div><div><h4>7 天无理由</h4><p>不满意随时退换</p></div></div>
+        <div class="svc"><div class="svc-icon">🛡️</div><div><h4>正品保障</h4><p>品牌授权 · 假一赔十</p></div></div>
+        <div class="svc"><div class="svc-icon">💬</div><div><h4>专属客服</h4><p>24 小时在线服务</p></div></div>
       </div>
     </section>
+
   </div>
   </DesktopLayout>
 </template>
 
-<script lang="ts">
-/**
- * LogoLoop — RAF 物理缓动无限滚动
- */
-function initLogoLoop(
-  wrapper: HTMLElement,
-  track: HTMLElement,
-  brands: { name: string; file: string }[],
-  options: {
-    speed?: number
-    hoverSpeed?: number
-    easingFactor?: number
-    hoverEasing?: number
-    pauseOnHover?: boolean
-  }
-) {
-  const opt = {
-    speed: 0.6,
-    hoverSpeed: 0,
-    easingFactor: 0.1,
-    hoverEasing: 0.08,
-    pauseOnHover: true,
-    ...options,
-  }
-
-  // 生成内容
-  brands.forEach(brand => {
-    const el = document.createElement('div')
-    el.className = 'brand-raf-card'
-    const img = document.createElement('img')
-    img.alt = brand.name
-    img.loading = 'lazy'
-    img.src = `/assets/logos/brands/${brand.file}.png`
-    el.appendChild(img)
-    track.appendChild(el)
-  })
-
-  const originalCount = brands.length
-  let singleGroupWidth = 0
-  let position = 0
-  let velocity = 0
-  let targetSpeed = opt.speed
-  let isHovered = false
-  let rafId: number | null = null
-  let resizeObserver: ResizeObserver | null = null
-  let prefersReducedMotion: MediaQueryList | null = null
-
-  function calculateGroupWidth() {
-    const children = Array.from(track.children) as HTMLElement[]
-    if (!children.length || !originalCount) {
-      singleGroupWidth = 0
-      return
-    }
-    singleGroupWidth = children.slice(0, originalCount).reduce((sum, el) => {
-      const style = getComputedStyle(el)
-      return sum + el.offsetWidth + parseInt(style.marginLeft) + parseInt(style.marginRight)
-    }, 0)
-  }
-
-  function adjustDuplication() {
-    if (!singleGroupWidth) return
-    const wrapperWidth = wrapper.offsetWidth
-    while (track.scrollWidth < wrapperWidth * 2) {
-      Array.from(track.children)
-        .slice(0, originalCount)
-        .forEach(child => track.appendChild(child.cloneNode(true)))
-    }
-  }
-
-  // 等待图片加载
-  function waitForImages(): Promise<void> {
-    const images = track.querySelectorAll('img')
-    if (images.length === 0) return Promise.resolve()
-    return Promise.all(
-      Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve()
-        return new Promise<void>(resolve => {
-          img.onload = () => resolve()
-          img.onerror = () => resolve()
-        })
-      })
-    ).then(() => undefined)
-  }
-
-  function animate() {
-    const factor = isHovered ? (opt.hoverEasing || 0.08) : opt.easingFactor
-    velocity += (targetSpeed - velocity) * factor
-    position -= velocity
-
-    if (singleGroupWidth && position <= -singleGroupWidth) {
-      position += singleGroupWidth
-    }
-
-    track.style.transform = `translate3d(${position}px, 0, 0)`
-    rafId = requestAnimationFrame(animate)
-  }
-
-  function start() {
-    rafId = requestAnimationFrame(animate)
-  }
-
-  // 初始化
-  waitForImages().then(() => {
-    calculateGroupWidth()
-    adjustDuplication()
-    start()
-  })
-
-  // ResizeObserver
-  resizeObserver = new ResizeObserver(() => {
-    calculateGroupWidth()
-    adjustDuplication()
-  })
-  resizeObserver.observe(wrapper)
-
-  // prefers-reduced-motion
-  prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-  prefersReducedMotion.addEventListener?.('change', (e: MediaQueryListEvent) => {
-    targetSpeed = e.matches ? 0 : opt.speed
-  })
-
-  return {
-    get isHovered() { return isHovered },
-    set isHovered(v: boolean) { isHovered = v },
-    get targetSpeed() { return targetSpeed },
-    set targetSpeed(v: number) { targetSpeed = v },
-    get options() { return opt },
-    destroy() {
-      if (rafId) cancelAnimationFrame(rafId)
-      if (resizeObserver) resizeObserver.disconnect()
-    }
-  }
-}
-</script>
-
 <style scoped>
-.home { background: #faf9f7; padding-bottom: 0; }
-
-/* ===== 2. Hero ===== */
-.hero { max-width: 1400px; margin: 0 auto; padding: 24px 40px 0; }
-.hero-slider { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; height: 420px; }
-.hero-main {
-  position: relative; border-radius: 12px; overflow: hidden;
-  background: linear-gradient(135deg, #fff5f0 0%, #ffe4d6 50%, #ffd4c4 100%);
+/* ── HERO ── */
+.hero { max-width: 1440px; margin: 24px auto 0; padding: 0 40px; }
+.hero-slide {
+  position: relative; height: 460px; border-radius: 20px; overflow: hidden;
+  display: grid; grid-template-columns: 1fr 1.3fr;
+  border: 1px solid var(--border);
 }
-.hero-swipe { height: 100%; }
-.hero-img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
-.hero-dots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 2; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); transition: all 0.3s; }
-.dot.on { width: 24px; border-radius: 4px; background: #fff; }
-
-/* 轮播左右箭头 */
-.hero-arrow {
-  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
-  width: 40px; height: 40px; border: none; border-radius: 50%;
-  background: rgba(0,0,0,0.25); color: #fff; font-size: 28px; line-height: 1;
-  cursor: pointer; opacity: 0; transition: all 0.25s; display: flex;
-  align-items: center; justify-content: center; padding-bottom: 4px;
+.hero-info {
+  padding: 60px 50px;
+  background: linear-gradient(135deg, rgba(0,240,255,0.06), rgba(170,102,255,0.04));
+  display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2;
 }
-.hero-main:hover .hero-arrow { opacity: 0.7; }
-.hero-arrow:hover { opacity: 1 !important; background: rgba(0,0,0,0.5); }
-.hero-arrow-prev { left: 12px; }
-.hero-arrow-next { right: 12px; }
-
-/* 轮播文字覆盖层 */
-.hero-slide-item { position: relative; }
-.hero-slide-bg {
-  width: 100%; height: 100%;
-  background-size: cover; background-position: center;
-  position: relative;
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+  padding: 6px 14px; border-radius: 6px;
+  background: rgba(0,240,255,0.1); border: 1px solid rgba(0,240,255,0.25);
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  letter-spacing: 1px; margin-bottom: 20px;
 }
-.hero-slide-overlay {
+.hero-title { font-size: 44px; font-weight: 700; line-height: 1.15; margin-bottom: 16px; }
+.hero-title span {
+  background: linear-gradient(135deg, var(--accent), var(--accent-tertiary), var(--accent-secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 32px; max-width: 380px; }
+.hero-btns { display: flex; gap: 14px; }
+.btn-primary {
+  padding: 14px 32px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-tertiary));
+  color: #000; font-size: 14px; font-weight: 700; border: none;
+  cursor: pointer; transition: all .3s;
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
+.btn-secondary {
+  padding: 14px 32px; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-primary); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all .3s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.hero-img-wrap {
+  position: relative; background: linear-gradient(145deg, #0a0a14, #121220);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.banner-slide { width: 100%; height: 100%; position: relative; }
+.banner-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; transition: opacity 0.6s; filter: drop-shadow(0 20px 60px rgba(0,240,255,0.15));
+  padding: 20px;
+}
+.banner-img.active { opacity: 1; }
+.banner-dots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 2; }
+.banner-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: all .3s; }
+.banner-dots .dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); width: 24px; border-radius: 4px; }
+.hero-placeholder-img { font-size: 120px; opacity: 0.15; }
+.hero-dots-bar { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.hdot { width: 32px; height: 4px; border-radius: 2px; background: var(--text-muted); cursor: pointer; transition: all .3s; }
+.hdot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+
+/* ── 快捷分类 ── */
+.cats { max-width: 1440px; margin: 32px auto 0; padding: 0 40px; }
+.cats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.cat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  cursor: pointer; transition: all .35s;
+}
+.cat-card:hover {
+  transform: translateY(-4px); border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0,240,255,0.1);
+}
+.cat-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(170,102,255,0.08));
+  border: 1px solid rgba(0,240,255,0.15);
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.cat-card:hover .cat-icon { background: linear-gradient(135deg, var(--accent), var(--accent-tertiary)); box-shadow: 0 0 16px var(--accent-glow); }
+.cat-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+
+/* ── 品牌滚动条 ── */
+.brand-strip {
+  max-width: 1440px; margin: 40px auto 0; padding: 0 40px;
+  overflow: hidden; position: relative;
+}
+.brand-strip::before, .brand-strip::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2; pointer-events: none;
+}
+.brand-strip::before { left: 0; background: linear-gradient(90deg, var(--bg-primary), transparent); }
+.brand-strip::after { right: 0; background: linear-gradient(-90deg, var(--bg-primary), transparent); }
+.brand-track {
+  display: flex; gap: 60px; align-items: center;
+  animation: brand-scroll 35s linear infinite;
+  width: max-content; padding: 20px 0;
+}
+.brand-track:hover { animation-play-state: paused; }
+.brand-item {
+  font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 3px; white-space: nowrap;
+  opacity: 0.5; transition: all .3s; cursor: default;
+}
+.brand-item:hover { opacity: 1; color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); }
+
+/* ── 限时秒杀 ── */
+.flash { max-width: 1440px; margin: 40px auto 0; padding: 0 40px; }
+.flash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.flash-title-wrap { display: flex; align-items: center; gap: 16px; }
+.flash-title { font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: 2px; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.flash-countdown { display: flex; align-items: center; gap: 6px; }
+.cd-box { background: var(--bg-card); border: 1px solid var(--border); color: var(--accent); padding: 6px 10px; border-radius: 6px; font-size: 18px; font-weight: 700; min-width: 36px; text-align: center; box-shadow: 0 0 8px rgba(0,240,255,0.08); }
+.cd-sep { color: var(--text-muted); font-size: 16px; }
+.flash-more { font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: color .2s; }
+.flash-more:hover { color: var(--accent); }
+.flash-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+
+/* ── 商品卡片 ── */
+.gcard { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all .4s; position: relative; }
+.gcard::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(135deg, rgba(0,240,255,0.05) 0%, transparent 50%, rgba(170,102,255,0.03) 100%); opacity: 0; transition: opacity .3s; }
+.gcard:hover::before { opacity: 1; }
+.gcard:hover { transform: translateY(-6px); border-color: var(--border-hover); box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 20px rgba(0,240,255,0.08); }
+.gcard-img { position: relative; width: 100%; aspect-ratio: 1; background: linear-gradient(145deg, #0a0a16, #131326); overflow: hidden; }
+.gcard-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.gcard:hover .gcard-img img { transform: scale(1.06); }
+.gcard-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+.gbadge { padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; }
+.gbadge-hot { background: linear-gradient(135deg, #ff6b35, var(--accent-secondary)); color: #fff; box-shadow: 0 2px 8px rgba(255,42,138,0.3); }
+.gbadge-discount { background: linear-gradient(135deg, var(--accent), var(--accent-tertiary)); color: #000; }
+.gcard-fav { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(0,0,0,0.4); color: #fff; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .3s; z-index: 2; }
+.gcard-fav:hover, .gcard-fav.liked { background: var(--accent-secondary); color: #fff; box-shadow: 0 0 12px var(--accent-secondary-glow); }
+.gcard-body { padding: 16px; position: relative; z-index: 2; }
+.gcard-brand { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: 1px; margin-bottom: 6px; }
+.gcard-name { font-size: 14px; color: var(--text-primary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 12px; min-height: 42px; }
+.gcard-price-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.gcard-price { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); text-shadow: 0 0 10px rgba(0,240,255,0.2); }
+.gcard-price::before { content: '¥'; font-size: 13px; margin-right: 2px; }
+.gcard-orig { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+.gcard-sold { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.gcard-btn { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .3s; }
+.gcard:hover .gcard-btn { background: linear-gradient(135deg, var(--accent), var(--accent-tertiary)); border-color: transparent; color: #000; box-shadow: 0 4px 16px rgba(0,240,255,0.2); }
+
+/* ── 通用区块 ── */
+.section { max-width: 1440px; margin: 48px auto 0; padding: 0 40px; }
+.sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.sec-title { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; display: flex; align-items: center; gap: 12px; }
+.sec-title .bar { width: 4px; height: 24px; border-radius: 2px; background: linear-gradient(180deg, var(--accent), var(--accent-tertiary)); box-shadow: 0 0 8px var(--accent-glow); }
+.sec-title span { background: linear-gradient(135deg, var(--text-primary), var(--text-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.sec-more { font-size: 13px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: color .2s; }
+.sec-more:hover { color: var(--accent); }
+.pgrid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+
+/* ── 促销横幅 ── */
+.promo { max-width: 1440px; margin: 48px auto 0; padding: 0 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.promo-card { position: relative; height: 200px; border-radius: 20px; overflow: hidden; cursor: pointer; display: flex; align-items: center; padding: 36px; border: 1px solid var(--border); transition: all .3s; }
+.promo-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-glow); }
+.promo-card h3 { font-size: 24px; font-weight: 700; margin-bottom: 8px; position: relative; z-index: 2; }
+.promo-card p { font-size: 14px; opacity: 0.7; position: relative; z-index: 2; }
+.promo-tag { display: inline-block; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-top: 16px; position: relative; z-index: 2; }
+.p1 { background: linear-gradient(135deg, #0f0c29, #302b63); }
+.p1 h3, .p1 .promo-tag { color: var(--accent); }
+.p1 .promo-tag { background: rgba(0,240,255,0.12); border: 1px solid rgba(0,240,255,0.25); }
+.p2 { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+.p2 h3, .p2 .promo-tag { color: var(--accent-secondary); }
+.p2 .promo-tag { background: rgba(255,42,138,0.12); border: 1px solid rgba(255,42,138,0.25); }
+
+/* ── 服务保障 ── */
+.service { max-width: 1440px; margin: 48px auto 0; padding: 0 40px 60px; }
+.svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.svc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 16px; }
+.svc-icon { font-size: 32px; }
+.svc h4 { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.svc p { font-size: 12px; color: var(--text-muted); }
+
+/* ── Bento Grid ── */
+.bento-section { max-width: 1440px; margin: 48px auto 0; padding: 0 40px; }
+.bento-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 240px; gap: 16px;
+}
+.bento-item {
+  position: relative; border-radius: 20px; overflow: hidden;
+  cursor: pointer; border: 1px solid var(--border);
+  transition: all .4s; background: var(--bg-card);
+}
+.bento-item:hover { border-color: var(--border-hover); box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 30px rgba(0,240,255,0.05); transform: translateY(-2px); }
+.bento-item.large { grid-column: span 2; grid-row: span 2; }
+.bento-item.tall { grid-row: span 2; }
+.bento-item.wide { grid-column: span 2; }
+.bento-img { position: absolute; inset: 0; }
+.bento-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+.bento-item:hover .bento-img img { transform: scale(1.08); }
+.bento-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.88) 0%, rgba(255,245,240,0.5) 50%, transparent 70%);
-  padding: 48px;
-  display: flex; flex-direction: column; justify-content: center;
-  max-width: 55%;
+  background: linear-gradient(180deg, transparent 40%, rgba(5,5,8,0.85) 100%);
+  z-index: 1;
 }
+.bento-content {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; z-index: 2;
+}
+.bento-badge {
+  display: inline-block; padding: 4px 10px; border-radius: 6px;
+  font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; margin-bottom: 8px;
+  background: rgba(0,240,255,0.15); color: var(--accent);
+  border: 1px solid rgba(0,240,255,0.25);
+}
+.bento-brand { font-family: 'Orbitron', sans-serif; font-size: 11px; color: var(--text2); letter-spacing: 1px; margin-bottom: 4px; }
+.bento-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; line-height: 1.4; }
+.bento-price { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); text-shadow: 0 0 10px rgba(0,240,255,0.2); }
+.bento-price::before { content: '¥'; font-size: 14px; margin-right: 2px; }
 
-/* ===== Hero 占位（demo3 风格） ===== */
-.slide-1 {
-  background: linear-gradient(135deg, #fff5f0 0%, #ffe4d6 50%, #ffd4c4 100%);
-  position: relative;
+/* ── 横向滚动推荐 ── */
+.scroll-section { max-width: 1440px; margin: 48px auto 0; padding: 0 40px; }
+.scroll-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.scroll-title { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; }
+.scroll-track-wrap { overflow-x: auto; padding-bottom: 12px; -webkit-overflow-scrolling: touch; }
+.scroll-track-wrap::-webkit-scrollbar { height: 4px; }
+.scroll-track-wrap::-webkit-scrollbar-thumb { background: var(--text3); border-radius: 2px; }
+.scroll-track { display: flex; gap: 16px; width: max-content; }
+.sitem {
+  width: 220px; border-radius: 16px; overflow: hidden;
+  border: 1px solid var(--border); background: var(--bg-card);
+  cursor: pointer; transition: all .3s; flex-shrink: 0;
 }
-.slide-1::before {
-  content: '';
-  position: absolute;
-  right: -100px;
-  top: -100px;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(184,84,80,0.08) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.slide-1::after {
-  content: '';
-  position: absolute;
-  left: -50px;
-  bottom: -50px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(184,84,80,0.06) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.hero-placeholder {
-  position: absolute; inset: 0; padding: 48px 60px;
-  display: flex; align-items: center;
-}
-.slide-content {
-  position: relative; z-index: 2; max-width: 50%;
-}
-.slide-tag {
-  display: inline-block; background: var(--accent, #c45c4a); color: #fff;
-  padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  margin-bottom: 16px; letter-spacing: 1px;
-}
-.slide-title {
-  font-size: 42px; font-weight: 700; color: #1a1a1a;
-  line-height: 1.2; margin-bottom: 12px;
-}
-.slide-desc {
-  font-size: 16px; color: #666; margin-bottom: 28px; line-height: 1.6;
-}
-.slide-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 14px 32px; background: #1a1a1a; color: #fff;
-  text-decoration: none; border-radius: 30px; font-size: 15px; font-weight: 600;
-  cursor: pointer; transition: all 0.3s;
-}
-.slide-btn:hover {
-  background: var(--accent, #c45c4a); transform: translateX(4px);
-}
-.slide-image {
-  position: absolute; right: 60px; top: 50%;
-  transform: translateY(-50%);
-  width: 320px; height: 320px;
-  background: linear-gradient(145deg, #e8ddd6, #d4c4b8);
-  border-radius: 20px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-}
-.slide-image::after {
-  content: '👗';
-  font-size: 80px;
-  opacity: 0.3;
-}
+.sitem:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.sitem-img { width: 100%; height: 220px; background: linear-gradient(145deg, #0a0a16, #131326); }
+.sitem-img img { width: 100%; height: 100%; object-fit: cover; }
+.sitem-body { padding: 14px; }
+.sitem-name { font-size: 13px; color: var(--text-primary); line-height: 1.4; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sitem-price { font-family: 'Orbitron', sans-serif; font-size: 17px; font-weight: 700; color: var(--accent); text-shadow: 0 0 8px rgba(0,240,255,0.15); }
+.sitem-price::before { content: '¥'; font-size: 12px; margin-right: 2px; }
 
-.hero-side { display: grid; grid-template-rows: 1fr 1fr; gap: 16px; }
-.side-card {
-  position: relative; border-radius: 12px; padding: 24px; cursor: pointer; overflow: hidden;
-  transition: transform 0.25s;
-}
-.side-card:hover { transform: translateY(-2px); }
-.sc-dark { background: linear-gradient(135deg, #2d2a2a 0%, #1a1a1a 100%); color: #fff; }
-.sc-red { background: linear-gradient(135deg, #c45c4a 0%, #8b3a2a 100%); color: #fff; }
-.sc-tag {
-  display: inline-block; padding: 4px 10px; background: rgba(255,255,255,0.2);
-  font-size: 10px; font-weight: 700; letter-spacing: 1px; border-radius: 3px; margin-bottom: 12px;
-}
-.sc-title { font-size: 24px; font-weight: 600; margin-bottom: 6px; letter-spacing: 1px; }
-.sc-sub { font-size: 12px; opacity: 0.7; letter-spacing: 0.5px; }
-.sc-emoji { position: absolute; right: 20px; bottom: 16px; font-size: 64px; opacity: 0.5; }
-
-/* ===== 3. Flash Sale（demo3 风格 + 自动轮转） ===== */
-.flash-sale {
-  background: #fff;
-  border-radius: 16px;
-  max-width: 1400px;
-  margin: 32px auto 0;
-  padding: 28px 32px;
-}
-.flash-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.flash-title-group {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.flash-icon { font-size: 24px; }
-.flash-title { font-size: 22px; font-weight: 700; color: #1a1a1a; }
-.countdown {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.countdown-label {
-  font-size: 13px;
-  color: #999;
-  margin-right: 4px;
-}
-.countdown-box {
-  background: #1a1a1a;
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 18px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  min-width: 36px;
-  text-align: center;
-}
-.countdown-sep {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-.flash-more {
-  color: var(--accent, #c45c4a);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: gap 0.3s;
-}
-.flash-more:hover { gap: 8px; }
-
-/* 商品网格 + 自动轮转 */
-.flash-carousel {
-  overflow: hidden;
-}
-.flash-track {
-  display: flex;
-  gap: 16px;
-  transition: transform 0.6s ease;
-}
-.flash-item { flex-shrink: 0; width: calc((100% - 64px) / 5); min-width: 200px; cursor: pointer; }
-.flash-img { width: 100%; height: 100%; object-fit: cover; }
-
-/* ===== 新版卡片（demo3 优化版） ===== */
-.new-card {
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid #f0f0f0;
-  cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-.new-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
-  border-color: transparent;
-}
-.new-img-wrapper {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  background: linear-gradient(145deg, #f0e8e0, #e5dbd2);
-  overflow: hidden;
-}
-.new-img-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: linear-gradient(to top, rgba(0,0,0,0.06), transparent);
-  pointer-events: none;
-}
-.new-tag-combo {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  align-items: center;
-  background: var(--accent, #c45c4a);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(196,92,74,0.3);
-}
-.new-tag-hot {
-  background: #e6a23c;
-  color: #fff;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-.new-tag-discount {
-  color: #fff;
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.new-fav-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(8px);
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.3s ease, background 0.3s ease, color 0.3s ease;
-  color: #999;
-  font-size: 16px;
-}
-.new-card:hover .new-fav-btn {
-  opacity: 1;
-  transform: scale(1);
-}
-.new-fav-btn:hover {
-  background: #fff;
-  color: var(--accent, #c45c4a);
-}
-.new-fav-btn.liked {
-  opacity: 1;
-  transform: scale(1);
-  color: var(--accent, #c45c4a);
-  background: rgba(255,255,255,0.95);
-  animation: favPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes favPop {
-  0% { transform: scale(0.8); }
-  40% { transform: scale(1.25); }
-  70% { transform: scale(0.95); }
-  100% { transform: scale(1); }
-}
-
-.new-fav-btn:not(.liked) {
-  transition: opacity 0.25s ease, background 0.25s ease, color 0.25s ease;
-}
-
-@media (hover: none) {
-  .new-fav-btn {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-.new-info { padding: 14px; }
-.new-brand-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-.new-brand {
-  font-size: 12px;
-  color: var(--accent, #c45c4a);
-  font-weight: 600;
-}
-.new-name {
-  font-size: 14px;
-  color: #1a1a1a;
-  font-weight: 500;
-  line-height: 1.5;
-  margin-bottom: 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 42px;
-}
-.new-price-block {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.new-price {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--accent, #c45c4a);
-  letter-spacing: -0.5px;
-}
-.new-price::before {
-  content: '¥';
-  font-size: 14px;
-  margin-right: 1px;
-}
-.new-original {
-  font-size: 12px;
-  color: #bbb;
-  text-decoration: line-through;
-}
-.new-sold {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #999;
-  font-weight: 500;
-}
-.new-sold-fire { font-size: 11px; }
-.new-sold-num {
-  color: #e6a23c;
-  font-weight: 700;
-}
-.new-stock-bar {
-  margin-top: 10px;
-  height: 4px;
-  background: #f0f0f0;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.new-stock-fill {
-  height: 100%;
-  transition: width 0.3s ease;
-  background: linear-gradient(90deg, var(--accent, #c45c4a), #e6a23c);
-  border-radius: 2px;
-}
-.new-stock-text {
-  font-size: 11px;
-  color: var(--accent, #c45c4a);
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-.price-current {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--accent, #c45c4a);
-}
-.price-original {
-  font-size: 12px;
-  color: #999;
-  text-decoration: line-through;
-}
-
-/* ===== 4. 热门品牌（RAF 无限滚动） ===== */
-.brand-raf-section {
-  max-width: 1400px;
-  margin: 32px auto 0;
-  padding: 20px 40px;
-  background: #fcfcfb;
-  border: 1px solid #e8e6e2;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-}
-
-.brand-raf-section::before,
-.brand-raf-section::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  width: 72px;
-  height: 100%;
-  z-index: 2;
-  pointer-events: none;
-}
-.brand-raf-section::before {
-  left: 0;
-  background: linear-gradient(to right, #fcfcfb, transparent);
-}
-.brand-raf-section::after {
-  right: 0;
-  background: linear-gradient(to left, #fcfcfb, transparent);
-}
-
-.brand-raf-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 4px;
-  margin-bottom: 20px;
-}
-
-.brand-raf-header svg {
-  width: 18px;
-  height: 18px;
-  color: var(--accent, #c45c4a);
-}
-
-.brand-raf-header span {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: #1a1a1a;
-}
-
-.brand-raf-wrapper {
-  width: 100%;
-  overflow: hidden;
-}
-
-.brand-raf-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
-
-.brand-raf-card {
-  flex-shrink: 0;
-  width: 128px;
-  height: 68px;
-  margin: 0 8px;
-  background: #f2f0ec;
-  border: 1px solid #e8e6e2;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  transition:
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.brand-raf-card:hover {
-  transform: translateY(-3px) scale(1.04);
-  border-color: var(--accent, #c45c4a);
-  background: #fcfcfb;
-  box-shadow: 0 12px 28px rgba(44, 42, 39, 0.08);
-}
-
-.brand-raf-card img {
-  max-width: 92px;
-  max-height: 40px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  pointer-events: none;
-  opacity: 0.85;
-  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.brand-raf-card:hover img {
-  opacity: 1;
-}
-
-/* ===== Section 通用 ===== */
-.section { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
-.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.section-title { display: flex; align-items: center; gap: 12px; }
-.section-title h2 { font-size: 22px; font-weight: 600; }
-.section-title .emoji { font-size: 24px; }
-.section-more { font-size: 13px; color: #999; cursor: pointer; transition: color 0.2s; }
-.section-more:hover { color: #c45c4a; }
-
-/* ===== 5 列网格 ===== */
-.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-
-.card {
-  background: #fff; border: 1px solid #e8e5e0; border-radius: 10px; overflow: hidden;
-  cursor: pointer; transition: all 0.25s;
-}
-.card:hover { border-color: #c45c4a; box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
-.card-img-wrap { position: relative; aspect-ratio: 1; background: #f5f3f0; overflow: hidden; }
-.card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-.card:hover .card-img { transform: scale(1.05); }
-.card-badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; }
-.badge { padding: 3px 8px; font-size: 10px; font-weight: 700; border-radius: 3px; color: #fff; }
-.badge-discount { background: #c45c4a; }
-.badge-hot { background: #d4920a; }
-.badge-new { background: #2d8a5e; }
-.card-info { padding: 12px 14px 14px; }
-.card-brand { font-size: 11px; font-weight: 600; color: #c45c4a; letter-spacing: 0.5px; margin-bottom: 4px; }
-.card-name {
-  font-size: 13px; color: #1a1a1a; line-height: 1.4; margin-bottom: 8px; min-height: 36px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.card-price-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-.card-price { font-size: 18px; font-weight: 700; color: #c45c4a; }
-.card-orig { font-size: 12px; color: #999; text-decoration: line-through; }
-.card-meta { font-size: 11px; color: #999; }
-
-/* ===== 7. 促销横幅 ===== */
-.promo-banners {
-  max-width: 1400px; margin: 40px auto 0; padding: 0 40px;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-}
-.promo-banner {
-  position: relative; height: 200px; border-radius: 12px; overflow: hidden; cursor: pointer;
-  display: flex; align-items: center; padding: 32px; transition: transform 0.25s;
-}
-.promo-banner:hover { transform: translateY(-2px); }
-.p-dark { background: linear-gradient(135deg, #2d2a2a 0%, #1a1a1a 100%); color: #fff; }
-.p-light { background: linear-gradient(135deg, #f5e6d8 0%, #e8d4c4 100%); color: #1a1a1a; }
-.pb-content h3 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
-.pb-content p { font-size: 14px; opacity: 0.8; margin-bottom: 16px; }
-.pb-tag { display: inline-block; padding: 6px 14px; background: #c45c4a; color: #fff; font-size: 12px; font-weight: 600; border-radius: 6px; }
-.pb-tag-dark { background: #1a1a1a; }
-.pb-emoji { position: absolute; right: 32px; bottom: 20px; font-size: 100px; opacity: 0.3; }
-
-/* ===== 9. 品牌墙 ===== */
-.brands { background: #f5f3f0; padding: 40px 0; margin: 40px 0 0; }
-/* 品牌矩阵已合入 RAF 滚动区 */
-
-/* ===== 10. 服务保障 ===== */
-.service { max-width: 1400px; margin: 40px auto 0; padding: 0 40px; }
-.service-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.svc {
-  display: flex; align-items: center; gap: 14px; padding: 20px; background: #fff;
-  border: 1px solid #e8e5e0; border-radius: 12px; transition: all 0.2s;
-}
-.svc:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-.svc-icon { font-size: 28px; }
-.svc-text h4 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.svc-text p { font-size: 12px; color: #666; }
-
-/* ===== 响应式 ===== */
 @media (max-width: 1200px) {
-  .hero-slider { grid-template-columns: 1fr; height: auto; }
-  .hero-main { height: 320px; }
-  .hero-side { flex-direction: row; }
-  .side-card { flex: 1; }
-  .grid-5 { grid-template-columns: repeat(4, 1fr); }
-  .flash-item { width: calc((100% - 48px) / 4); min-width: 160px; }
+  .pgrid-5 { grid-template-columns: repeat(4, 1fr); }
+  .flash-grid { grid-template-columns: repeat(4, 1fr); }
+  .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 200px; }
+  .bento-item.large, .bento-item.wide { grid-column: span 2; }
+  .bento-item.tall { grid-row: span 2; }
 }
-@media (max-width: 768px) {
-  .hero, .section, .flash-sale, .brand-raf-section, .promo-banners, .service { padding-left: 16px; padding-right: 16px; }
-  .flash-item { width: calc((100% - 32px) / 3); min-width: 130px; }
-  .grid-5, .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .service-grid { grid-template-columns: repeat(2, 1fr); }
-  .promo-banners { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .hero-slide { grid-template-columns: 1fr; height: auto; }
+  .hero-info { padding: 36px; }
+  .hero-img-wrap { min-height: 300px; }
+  .cats-grid { grid-template-columns: repeat(3, 1fr); }
+  .flash-grid { grid-template-columns: repeat(2, 1fr); }
+  .pgrid-5 { grid-template-columns: repeat(2, 1fr); }
+  .promo { grid-template-columns: 1fr; }
+  .svc-grid { grid-template-columns: repeat(2, 1fr); }
+  .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
+  .bento-item.large, .bento-item.tall { grid-column: span 2; grid-row: span 1; }
 }
 </style>

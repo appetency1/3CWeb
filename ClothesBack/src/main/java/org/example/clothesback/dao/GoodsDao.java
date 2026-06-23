@@ -155,10 +155,10 @@ public class GoodsDao {
      * 关键词搜索：FULLTEXT（ngram 中文分词）+ LIKE 单字兜底。
      *
      * 先走 MATCH AGAINST（快、有相关性排序）：
-     *   "连衣裙" → 命中 ngram 分词 "连衣" "衣裙"
-     *   "T恤"   → 命中英文全文索引
+     *   "手机" → 命中 ngram 分词 "手机"
+     *   "笔记本"   → 命中全文索引
      * 再 OR 上单字 LIKE 拆分做兜底：
-     *   "裙子"  → LIKE '%裙%' OR LIKE '%子%' → 找到"连衣裙""百褶裙"等
+     *   "电脑"  → LIKE '%电%' OR LIKE '%脑%' → 找到"笔记本电脑""台式电脑"等
      */
     private String buildKeywordClause(String keyword, List<Object> params) {
         // 1) FULLTEXT MATCH（ngram 分词，按相关性排序）

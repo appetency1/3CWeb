@@ -84,68 +84,41 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.page-content {
-  animation: fadeIn 0.4s ease;
-}
+.page-content { animation: fadeIn 0.4s ease; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.page-header {
-  margin-bottom: 40px;
-}
+.page-header { margin-bottom: 40px; }
 .page-title {
-  font-family: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
-  font-size: 38px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
   margin-bottom: 8px;
-  letter-spacing: -0.5px;
+  letter-spacing: 2px;
   line-height: 1.1;
-  color: #1a1a1a;
+  color: var(--text);
 }
-.page-subtitle {
-  font-size: 14px;
-  color: #666;
-  font-weight: 300;
-}
+.page-subtitle { font-size: 14px; color: var(--text2); font-weight: 300; }
 .panel {
-  background: #ffffff;
-  border: 1px solid #e8e5e0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 .panel-body { padding: 28px; }
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .data-table th {
-  text-align: left;
-  padding: 16px 24px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #666;
-  font-weight: 500;
-  border-bottom: 1px solid #e8e5e0;
+  text-align: left; padding: 16px 24px;
+  font-family: var(--font-display);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text3); font-weight: 500;
+  border-bottom: 1px solid var(--border);
 }
-.data-table td {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e8e5e0;
-  color: #1a1a1a;
-}
+.data-table td { padding: 20px 24px; border-bottom: 1px solid var(--border); color: var(--text); }
 .data-table tr { transition: background 0.2s; }
-.data-table tr:hover td { background: #faf9f7; }
+.data-table tr:hover td { background: var(--bg-hover); }
 .data-table tr:last-child td { border-bottom: none; }
-
-.tag {
-  display: inline-block;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-.tag-success { background: rgba(90,143,123,0.1); color: #2d8a5e; }
-.tag-muted { background: #f0eeeb; color: #666; }
+.tag { display: inline-block; padding: 4px 12px; font-size: 11px; font-weight: 500; letter-spacing: 0.5px; border-radius:4px; }
+.tag-success { background: rgba(0,255,163,0.1); color: var(--neon-green); }
+.tag-muted { background: rgba(90,90,120,0.15); color: var(--text3); }
 </style>
