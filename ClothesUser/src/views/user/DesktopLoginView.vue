@@ -341,21 +341,30 @@ onMounted(() => {
   initThreeOrb()
   const card = cardRef.value
   if (!card) return
-  const wrap = card.parentElement
-  if (!wrap) return
   const onMove = (e: MouseEvent) => {
     if (window.innerWidth < 960) return
-    const rect = wrap.getBoundingClientRect()
-    const dx = (e.clientX - rect.left) / rect.width - 0.5
-    const dy = (e.clientY - rect.top) / rect.height - 0.5
-    card.style.transform = `rotateX(${dy * -6}deg) rotateY(${dx * 6}deg)`
+    const rect = card.getBoundingClientRect()
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
+    // 3D rotation: follow mouse, max ±10deg
+    card.style.transform = `perspective(800px) rotateX(${(y - 0.5) * -20}deg) rotateY(${(x - 0.5) * 20}deg)`
+    // 全息光晕：径向渐变跟随鼠标位置
+    const glow = card.querySelector('.card-glow') as HTMLElement
+    if (glow) {
+      glow.style.background = `radial-gradient(circle at ${x * 100}% ${y * 100}%, rgba(0,240,255,0.12), rgba(184,41,247,0.06) 30%, transparent 55%)`
+      glow.style.opacity = '1'
+    }
   }
-  const onLeave = () => { card.style.transform = '' }
-  document.addEventListener('mousemove', onMove)
-  document.addEventListener('mouseleave', onLeave)
+  const onLeave = () => {
+    card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg)'
+    const glow = card.querySelector('.card-glow') as HTMLElement
+    if (glow) { glow.style.background = ''; glow.style.opacity = '0' }
+  }
+  card.addEventListener('mousemove', onMove)
+  card.addEventListener('mouseleave', onLeave)
   tiltCleanup = () => {
-    document.removeEventListener('mousemove', onMove)
-    document.removeEventListener('mouseleave', onLeave)
+    card?.removeEventListener('mousemove', onMove)
+    card?.removeEventListener('mouseleave', onLeave)
   }
 })
 
@@ -387,6 +396,7 @@ onUnmounted(() => {
     <!-- 右侧表单区 -->
     <div class="form-side">
       <div class="login-card" ref="cardRef">
+        <div class="card-glow"></div>
         <div class="card-brand">
           <div class="mark">N</div>
           <div class="name">NEXUS</div>
@@ -581,13 +591,28 @@ onUnmounted(() => {
   padding: 40px 40px 36px;
   backdrop-filter: blur(32px) saturate(1.2);
   box-shadow: 0 32px 96px rgba(0,0,0,0.5), 0 0 60px rgba(0,240,255,0.04), inset 0 1px 0 rgba(255,255,255,0.04);
-  transition: all 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 .login-card::before {
   content: ''; position: absolute; top: 0; left: 40px; right: 40px; height: 1px;
   background: linear-gradient(90deg, transparent, var(--neon-blue, #00f0ff), var(--neon-violet, #b829f7), transparent);
   opacity: 0.6;
+}
+
+/* 全息光晕层 */
+.card-glow {
+  position: absolute; inset: 0;
+  border-radius: 28px;
+  pointer-events: none; z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+/* 所有卡片内容在光晕层之上 */
+.login-card > :not(.card-glow) {
+  position: relative; z-index: 1;
 }
 
 .card-brand { text-align: center; margin-bottom: 28px; }

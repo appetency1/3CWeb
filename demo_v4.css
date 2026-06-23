@@ -1,0 +1,41 @@
+/* ===== 核心变量 · 2026 科幻电光 ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #050508;
+  --bg-elevated: #0a0a12;
+  --bg-card: rgba(255,255,255,0.02);
+  --bg-glass: rgba(10,10,18,0.65);
+  --neon-blue: #00f0ff;
+  --neon-blue-glow: rgba(0,240,255,0.4);
+  --neon-violet: #b829f7;
+  --neon-violet-glow: rgba(184,41,247,0.35);
+  --neon-pink: #ff2a8a;
+  --neon-pink-glow: rgba(255,42,138,0.35);
+  --holo-silver: #c0c0d0;
+  --text: #e8e8f0;
+  --text2: #8a8aa8;
+  --text3: #5a5a78;
+  --border: rgba(0,240,255,0.08);
+  --border-hover: rgba(0,240,255,0.25);
+  --font-display: 'Orbitron', 'Rajdhani', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ===== 数字噪点纹理 ===== */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9998; pointer-events: none; opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===== Canvas 粒子背景 ===== */
+#
