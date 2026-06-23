@@ -98,4 +98,35 @@ function prevSlide() {
 }
 
 function startAutoplay() {
-  slideInterval = setInterval(next
+  slideInterval = setInterval(nextSlide, 5000);
+}
+
+function stopAutoplay() {
+  clearInterval(slideInterval);
+}
+
+heroNext.addEventListener('click', () => { stopAutoplay(); nextSlide(); startAutoplay(); });
+heroPrev.addEventListener('click', () => { stopAutoplay(); prevSlide(); startAutoplay(); });
+
+heroDots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    stopAutoplay();
+    showSlide(Number(dot.dataset.index));
+    startAutoplay();
+  });
+});
+
+startAutoplay();
+
+/* ===== 3D 球体鼠标交互 ===== */
+document.querySelectorAll('[data-orb]').forEach(orb => {
+  orb.addEventListener('mousemove', e => {
+    const rect = orb.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    orb.style.transform = `rotateY(${x * 50}deg) rotateX(${-y * 50}deg) scale(1.06)`;
+  });
+  orb.addEventListener('mouseleave', () => {
+    orb.style.transform = '';
+  });
+});

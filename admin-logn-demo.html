@@ -313,244 +313,27 @@ body::before {
 
 <script type="module">
 /* ===== Three.js 3D 几何光环背景 ===== */
-import * as THREE from "https://esm.sh/three";
-import { OrbitControls } from "https://esm.sh/three/addons/controls/OrbitControls.js";
-import { EffectComposer } from "https://esm.sh/three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "https://esm.sh/three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "https://esm.sh/three/addons/postprocessing/UnrealBloomPass.js";
-
-const canvas = document.getElementById('bg-canvas');
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x050508, 0.008);
-
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(3, 2, 5);
-camera.lookAt(0, 0, 0);
-
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 1.2;
-renderer.setClearColor(0x000000, 0);
-
-const renderScene = new RenderPass(scene, camera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.3, 0.85);
-bloomPass.threshold = 0.1;
-bloomPass.strength = 0.8;
-bloomPass.radius = 0.5;
-
-const effectComposer = new EffectComposer(renderer);
-effectComposer.addPass(renderScene);
-effectComposer.addPass(bloomPass);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 1.2;
-controls.enableZoom = false;
-controls.enablePan = false;
-controls.enableRotate = false;
-controls.target.set(0, 0, 0);
-
-const ambientLight = new THREE.AmbientLight(0x222222);
-scene.add(ambientLight);
-
-const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
-mainLight.position.set(2, 3, 4);
-scene.add(mainLight);
-
-const backLight = new THREE.PointLight(0x4466cc, 0.6);
-backLight.position.set(-2, 1, -3);
-scene.add(backLight);
-
-const fillLight = new THREE.PointLight(0xffaa66, 0.5);
-fillLight.position.set(1.5, 1, 2);
-scene.add(fillLight);
-
-const colorLight = new THREE.PointLight(0xffaa44, 0.8);
-colorLight.position.set(1, 1, 2);
-scene.add(colorLight);
-
-// 星星
-const starGeometry = new THREE.BufferGeometry();
-const starCount = 800;
-const starPositions = new Float32Array(starCount * 3);
-for (let i = 0; i < starCount; i++) {
-  starPositions[i * 3] = 200 * (Math.random() - 0.5);
-  starPositions[i * 3 + 1] = 100 * (Math.random() - 0.5);
-  starPositions[i * 3 + 2] = 80 * (Math.random() - 0.5) - 40;
+ tvas.height = window.innerHeight;
+}txavare;tCntet'2d'
+l,plscl res{=[]
+    this.x = Math.random() * W;
+fun ti  hissiz ()a{
+hn*= .wd=th.random() - 0.5
+.ad0   .hvtihgh =
 }
-starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-const starMaterial = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.08, transparent: true, opacity: 0.6 });
-const stars = new THREE.Points(starGeometry, starMaterial);
-scene.add(stars);
-
-// 核心 Icosahedron
-const geometryIco = new THREE.IcosahedronGeometry(1.1, 0);
-const materialMain = new THREE.MeshStandardMaterial({
-  color: 0x4a7c4c,
-  emissive: 0x112233,
-  roughness: 0.28,
-  metalness: 0.75,
-  flatShading: false,
-  transparent: true,
-  opacity: 0.92
-});
-const coreMesh = new THREE.Mesh(geometryIco, materialMain);
-scene.add(coreMesh);
-
-// 线框
-const wireframeMat = new THREE.MeshBasicMaterial({ color: 0x66ccff, wireframe: true, transparent: true, opacity: 0.25 });
-const wireframeIco = new THREE.Mesh(geometryIco, wireframeMat);
-wireframeIco.scale.setScalar(1.08);
-scene.add(wireframeIco);
-
-// 环形粒子
-const ringParticleCount = 1200;
-const ringGeometry = new THREE.BufferGeometry();
-const ringPositions = new Float32Array(ringParticleCount * 3);
-const ringColors = new Float32Array(ringParticleCount * 3);
-for (let i = 0; i < ringParticleCount; i++) {
-  const t = (i / ringParticleCount) * Math.PI * 2;
-  const r = 1.55;
-  const x = Math.cos(t) * r;
-  const z = Math.sin(t) * r;
-  const y = 0.35 * Math.sin(3 * t);
-  ringPositions[i * 3] = x;
-  ringPositions[i * 3 + 1] = y;
-  ringPositions[i * 3 + 2] = z;
-  ringColors[i * 3] = 0.4 + 0.6 * Math.sin(t);
-  ringColors[i * 3 + 1] = 0.3 + 0.7 * Math.cos(1.7 * t);
-  ringColors[i * 3 + 2] = 0.8 + 0.2 * Math.sin(2.3 * t);
-}
-ringGeometry.setAttribute('position', new THREE.BufferAttribute(ringPositions, 3));
-ringGeometry.setAttribute('color', new THREE.BufferAttribute(ringColors, 3));
-const ringMaterial = new THREE.PointsMaterial({
-  size: 0.05,
-  vertexColors: true,
-  transparent: true,
-  blending: THREE.AdditiveBlending
-});
-const ringParticles = new THREE.Points(ringGeometry, ringMaterial);
-scene.add(ringParticles);
-
-// Torus 环
-const torusMat = new THREE.MeshStandardMaterial({
-  color: 0x88aadd,
-  emissive: 0x225522,
-  roughness: 0.3,
-  metalness: 0.9
-});
-const torusRing = new THREE.Mesh(new THREE.TorusGeometry(1.45, 0.045, 64, 500), torusMat);
-scene.add(torusRing);
-
-const torusRing2 = new THREE.Mesh(new THREE.TorusGeometry(1.68, 0.03, 64, 500), torusMat.clone());
-torusRing2.material.color.setHex(0xffcc66);
-torusRing2.material.emissive.setHex(0x442200);
-torusRing2.material.roughness = 0.5;
-torusRing2.material.metalness = 0.7;
-scene.add(torusRing2);
-
-// 星云粒子
-const cloudParticleCount = 800;
-const cloudGeo = new THREE.BufferGeometry();
-const cloudPositions = new Float32Array(cloudParticleCount * 3);
-for (let i = 0; i < cloudParticleCount; i++) {
-  cloudPositions[i * 3] = 5 * (Math.random() - 0.5);
-  cloudPositions[i * 3 + 1] = 3 * (Math.random() - 0.5);
-  cloudPositions[i * 3 + 2] = 4 * (Math.random() - 0.5) - 1;
-}
-cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPositions, 3));
-const cloudMat = new THREE.PointsMaterial({
-  color: 0x77aaff,
-  size: 0.025,
-  transparent: true,
-  opacity: 0.4,
-  blending: THREE.AdditiveBlending
-});
-const cloudPoints = new THREE.Points(cloudGeo, cloudMat);
-scene.add(cloudPoints);
-
-// 网格地面
-const gridHelper = new THREE.GridHelper(12, 24, 0x88aadd, 0x334466);
-gridHelper.position.y = -1.8;
-gridHelper.material.transparent = true;
-gridHelper.material.opacity = 0.2;
-scene.add(gridHelper);
-
-let time = 0;
-function animate() {
-  requestAnimationFrame(animate);
-  time += 0.012;
-
-  coreMesh.rotation.y = 0.25 * time;
-  coreMesh.rotation.x = 0.2 * Math.sin(0.37 * time);
-  coreMesh.rotation.z = 0.15 * Math.cos(0.23 * time);
-  wireframeIco.rotation.copy(coreMesh.rotation);
-
-  ringParticles.rotation.y = 0.35 * time;
-  ringParticles.rotation.x = 0.2 * Math.sin(0.28 * time);
-
-  torusRing.rotation.x = Math.PI / 2;
-  torusRing.rotation.z = 0.5 * time;
-  torusRing2.rotation.x = Math.PI / 2 + 0.3;
-  torusRing2.rotation.z = 0.65 * time;
-
-  const e = (0.2 * time) % (2 * Math.PI);
-  colorLight.color.setHSL(0.55 + 0.1 * Math.sin(e), 1, 0.6);
-
-  stars.rotation.y += 0.0005;
-  stars.rotation.x += 0.0003;
-
-  cloudPoints.rotation.y = 0.05 * time;
-  cloudPoints.rotation.x = 0.1 * Math.sin(0.1 * time);
-
-  controls.update();
-  effectComposer.render();
-}
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  effectComposer.setSize(window.innerWidth, window.innerHeight);
-}
-
-animate();
-window.addEventListener('resize', onWindowResize, false);
-
-/* ===== 密码可见切换 ===== */
-function togglePwd() {
-  const input = document.getElementById('password');
-  const icon = document.getElementById('eyeIcon');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  } else {
-    input.type = 'password';
-    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-  }
-}
-window.togglePwd = togglePwd;
-
-/* ===== 3D 卡片倾斜 ===== */
-const card = document.getElementById('loginCard');
-const wrap = card.parentElement;
-document.addEventListener('mousemove', (e) => {
-  if (window.innerWidth < 900) return;
-  const rect = wrap.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  const dx = (e.clientX - cx) / (rect.width / 2);
-  const dy = (e.clientY - cy) / (rect.height / 2);
-  card.style.transform = `rotateX(${dy * -4}deg) rotateY(${dx * 4}deg)`;
-});
-document.addEventListener('mouseleave', () => {
-  card.style.transform = '';
-});
-</script>
-
-</body>
-</html>
+bPz);
+wiwEveLi('tiz;',i+ z)
+.length; i++) {
+ j  o =c ri c=q{      if (dist < 150) {
+h    rau0,4r0s{
+xe(Malanm)gls;W
+fptt'h) .y';*H
+     hiH.vxL d94 17.94A10.07 10.07  * 0.40 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    h.vy*0.   input.type = 'password';
+41<h.h rr*  e5 + ret;top + rect.height/2;
+  }tX - cx) / (rect.width/2);
+ eladrmoes{ipt>
+tx+hvxh.+h.vhs.x<||h.x>Wisvx-if.<||s.y>Hh.vy-1}daw(){cxbegPah(cxarhx,shz0hI*2);cxflSy'b(0,240,255,02'ctxfl);}}for( 0;i<;i++palepuPai
+fc dwLn {f ( i <p.gh++){
+ j =+1jples.ghjtdxpriexae[j].x      ypte[]y-cs[j]yMhq(dx*dx+*yf ds<50) {beginPcx.ovT(pal[].x,p[]);
+  ctx.leTo(p[j],prcls[j].ycx.tkeSyl=`b(0,4,55,${0(1-di/15}`  cxlWidh  x.tk()}  }}amatctx.leR(0,0,,)partils.foEch(p => { p(); p.dw); }aLs(rquAmaFam(anmae
