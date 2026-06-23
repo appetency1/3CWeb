@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showFailToast, showConfirmDialog, showToast } from 'vant'
 import { getGoodsList, deleteGoods, updateGoodsStatus } from '@/api/goods'
@@ -10,9 +10,11 @@ const goodsList = ref<any[]>([])
 const loading = ref(false)
 const page = ref(1)
 const size = 20
-const finished = ref(false)
+const total = ref(0)
 const keyword = ref('')
 const filterStatus = ref<number | undefined>(undefined)
+
+const totalPages = computed(() => Math.ceil(total.value / size) || 0)
 
 const statusPills = [
   { label: '全部', value: undefined },
@@ -27,12 +29,18 @@ async function fetchList() {
     const res = await getGoodsList({ page: page.value, size, keyword: keyword.value || undefined, status: filterStatus.value })
     const list = res?.list || res?.data?.list || res || []
     if (Array.isArray(list)) goodsList.value = list
-    finished.value = (list?.length || 0) < size
+    total.value = res?.total ?? 0
   } catch (e: any) {
     showFailToast(e?.message || '加载失败')
   } finally {
     loading.value = false
   }
+}
+
+function goPage(p: number) {
+  if (p < 1 || p > totalPages.value || p === page.value) return
+  page.value = p
+  fetchList()
 }
 
 async function onDelete(id: number) {
@@ -60,16 +68,16 @@ function onEdit(id: number) { router.push({ name: 'goodsEdit', params: { id } })
 
 function onSearch() {
   page.value = 1
+  total.value = 0
   goodsList.value = []
-  finished.value = false
   fetchList()
 }
 
 function onFilterChange(val: number | undefined) {
   filterStatus.value = val
   page.value = 1
+  total.value = 0
   goodsList.value = []
-  finished.value = false
   fetchList()
 }
 
@@ -154,6 +162,22 @@ onMounted(() => fetchList())
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div v-if="total > size" class="pagination-bar">
+      <span class="pagination-info">共 {{ total }} 件商品，{{ totalPages }} 页</span>
+      <div class="pagination-controls">
+        <button class="page-btn" :disabled="page <= 1" @click="goPage(page - 1)">上一页</button>
+        <template v-for="p in totalPages" :key="p">
+          <button
+            v-if="p === 1 || p === totalPages || Math.abs(p - page) <= 2"
+            :class="['page-btn', { active: p === page }]"
+            @click="goPage(p)"
+          >{{ p }}</button>
+          <span v-else-if="p === page - 3 || p === page + 3" class="page-dots">…</span>
+        </template>
+        <button class="page-btn" :disabled="page >= totalPages" @click="goPage(page + 1)">下一页</button>
       </div>
     </div>
   </div>
@@ -243,4 +267,20 @@ onMounted(() => fetchList())
 .action-danger:hover { border-color:#b05c4f; color:#b05c4f; }
 .action-warn:hover { border-color:#c9a227; color:#c9a227; }
 .action-ok:hover { border-color:#4a7c59; color:#4a7c59; }
+
+.pagination-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 8px; flex-wrap: wrap; gap: 12px;
+}
+.pagination-info { font-size: 13px; color: #706a64; }
+.pagination-controls { display: flex; align-items: center; gap: 6px; }
+.page-btn {
+  padding: 6px 14px; border: 1px solid #e6e1dc; background: #fff;
+  font-size: 12px; color: #1a1a1a; cursor: pointer; border-radius: 6px;
+  transition: all 0.2s; font-family: inherit;
+}
+.page-btn:hover:not(:disabled) { border-color: #b05c4f; color: #b05c4f; }
+.page-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+.page-dots { color: #999; font-size: 13px; letter-spacing: 2px; user-select: none; }
 </style>

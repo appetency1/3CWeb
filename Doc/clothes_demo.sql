@@ -11,7 +11,7 @@
  Target Server Version : 90200 (9.2.0)
  File Encoding         : 65001
 
- Date: 21/06/2026 18:02:12
+ Date: 21/06/2026 20:55:38
 */
 
 SET NAMES utf8mb4;
@@ -31,18 +31,21 @@ CREATE TABLE `address`  (
   `district` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '区/县',
   `detail` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '详细地址',
   `is_default` tinyint NOT NULL DEFAULT 0 COMMENT '是否默认: 0否 1是',
-  `tag` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '地址标签: 家/公司/学校等',
+  `tag` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '地址标签: 家/公司/学校等',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '收货地址表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '收货地址表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of address
 -- ----------------------------
-INSERT INTO `address` VALUES (1, 1, 'demo', '17616599913', '北京市', '北京市', '东城区', 'dd', 1, '2026-06-20 20:10:41', '2026-06-20 20:10:41');
-INSERT INTO `address` VALUES (2, 1, 'test1', '1', '北京市', '北京市', '东城区', '1', 0, '2026-06-21 15:34:09', '2026-06-21 15:34:09');
+INSERT INTO `address` VALUES (1, 1, 'demo', '17616599913', '北京市', '北京市', '东城区', 'dd', 1, NULL, '2026-06-20 20:10:41', '2026-06-20 20:10:41');
+INSERT INTO `address` VALUES (2, 1, 'test1', '1', '北京市', '北京市', '东城区', '1', 0, NULL, '2026-06-21 15:34:09', '2026-06-21 15:34:09');
+INSERT INTO `address` VALUES (4, 3, 'ra', '17616599913', '北京市', '北京市', '东城区', 'd', 1, '家', '2026-06-21 20:17:15', '2026-06-21 20:17:15');
+INSERT INTO `address` VALUES (7, 3, 'rafa', '17616599913', '北京市', '北京市', '东城区', 'd', 0, '家', '2026-06-21 20:17:29', '2026-06-21 20:17:29');
+INSERT INTO `address` VALUES (8, 3, 'rafa', '17616599913', '上海市', '上海市', '黄浦区', 'd', 0, '家', '2026-06-21 20:17:29', '2026-06-21 20:25:32');
 
 -- ----------------------------
 -- Table structure for admin
@@ -66,7 +69,7 @@ CREATE TABLE `admin`  (
 -- ----------------------------
 -- Records of admin
 -- ----------------------------
-INSERT INTO `admin` VALUES (1, 'admin', '$2a$10$JZRWUgI5cwvHcKcAuLl6euoAblzi7b7URoAkiLG8sJOo/XAeohzuK', 'Admin', NULL, NULL, 1, '2026-06-21 17:45:45', '2026-06-20 19:42:53', '2026-06-21 17:45:45');
+INSERT INTO `admin` VALUES (1, 'admin', '$2a$10$JZRWUgI5cwvHcKcAuLl6euoAblzi7b7URoAkiLG8sJOo/XAeohzuK', 'Admin', NULL, NULL, 1, '2026-06-21 19:55:35', '2026-06-20 19:42:53', '2026-06-21 19:55:34');
 
 -- ----------------------------
 -- Table structure for banner
@@ -82,7 +85,7 @@ CREATE TABLE `banner`  (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '轮播图表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '轮播图表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of banner
@@ -92,6 +95,7 @@ INSERT INTO `banner` VALUES (2, '精品女装 时尚专区', '/assets/banners/ba
 INSERT INTO `banner` VALUES (3, '优雅连衣裙 海滨风情', '/assets/banners/banner-3.svg', '/category', 3, 1, '2026-06-20 19:42:53', '2026-06-20 19:42:53');
 INSERT INTO `banner` VALUES (4, '时尚穿搭 都市优雅', '/assets/banners/banner-4.svg', '/category', 4, 1, '2026-06-20 19:42:53', '2026-06-20 19:42:53');
 INSERT INTO `banner` VALUES (5, '潮流男装 街头风格', '/assets/banners/banner-5.svg', '/user', 5, 1, '2026-06-20 19:42:53', '2026-06-20 19:42:53');
+INSERT INTO `banner` VALUES (6, 'test', '/uploads/2026/06/21/c7946777ba794564a472f6ab597688af.jpg', '', 1, 1, '2026-06-21 19:50:05', '2026-06-21 19:50:05');
 
 -- ----------------------------
 -- Table structure for cart
@@ -109,11 +113,12 @@ CREATE TABLE `cart`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_user_sku`(`user_id` ASC, `sku_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '购物车表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '购物车表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of cart
 -- ----------------------------
+INSERT INTO `cart` VALUES (5, 3, 41, 41, 1, 1, '2026-06-21 19:23:34', '2026-06-21 19:23:34');
 
 -- ----------------------------
 -- Table structure for category
@@ -167,7 +172,7 @@ CREATE TABLE `comment`  (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_goods_id`(`goods_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品评价表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '商品评价表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of comment
@@ -264,7 +269,7 @@ INSERT INTO `goods` VALUES (37, 203, '白色直筒长裤', 'VERO MODA', '/assets
 INSERT INTO `goods` VALUES (38, 203, '黑色小脚裤', 'Only', '/assets/products/goods-38-hei-se-xiao-jiao-ku.jpg', '[]', '显瘦小脚设计', NULL, 169.00, 289.00, 420, 890, 0, 1, 1, 0, '2026-06-20 19:42:53', '2026-06-20 19:57:51');
 INSERT INTO `goods` VALUES (39, 203, '蓝色高腰百褶裙', '伊芙丽', '/assets/products/goods-39-lan-se-gao-yao-bai-zhe-qun.jpg', '[]', '经典百褶款式', NULL, 199.00, 349.00, 300, 540, 0, 1, 0, 1, '2026-06-20 19:42:53', '2026-06-20 19:57:51');
 INSERT INTO `goods` VALUES (40, 203, '转色直摆裙', '地素', '/assets/products/goods-40-zhuan-se-zhi-bai-qun.jpg', '[]', '渐变转色设计', NULL, 229.00, 399.00, 250, 360, 0, 1, 0, 0, '2026-06-20 19:42:53', '2026-06-20 19:57:51');
-INSERT INTO `goods` VALUES (41, 203, '卡其迷你裙', '红袖', '/assets/products/goods-41-ka-qi-mi-ni-qun.jpg', '[]', '休闲百搭卡其裙', NULL, 149.00, 259.00, 380, 670, 0, 1, 1, 0, '2026-06-20 19:42:53', '2026-06-20 19:57:51');
+INSERT INTO `goods` VALUES (41, 203, '卡其迷你裙', '红袖', '/assets/products/goods-41-ka-qi-mi-ni-qun.jpg', '[]', '休闲百搭卡其裙', NULL, 149.00, 259.00, 380, 670, 1, 1, 1, 0, '2026-06-20 19:42:53', '2026-06-21 19:23:32');
 INSERT INTO `goods` VALUES (42, 301, '复古运动跑步鞋', 'Nike', '/assets/products/goods-42-fu-gu-yun-dong-xie.jpg', '[]', '轻量化设计', NULL, 459.00, 699.00, 299, 1, 2, 1, 1, 0, '2026-06-20 19:42:53', '2026-06-21 17:14:47');
 INSERT INTO `goods` VALUES (43, 301, '黑白拼接篮球鞋', 'Nike', '/assets/products/goods-43-hei-bai-jiao-se-xie.jpg', '[]', '经典黑白撞色', NULL, 699.00, 999.00, 200, 820, 0, 1, 1, 1, '2026-06-20 19:42:53', '2026-06-20 19:57:51');
 INSERT INTO `goods` VALUES (44, 301, '硬岩登山徒步鞋', 'Columbia', '/assets/products/goods-44-ying-yan-bu-deng-xie.jpg', '[]', '防滑耐磨鞋底', NULL, 499.00, 799.00, 150, 430, 0, 1, 0, 0, '2026-06-20 19:42:53', '2026-06-20 19:57:51');
@@ -275,7 +280,7 @@ INSERT INTO `goods` VALUES (48, 302, '尖头细跟通勤高跟鞋', '热风', '/
 INSERT INTO `goods` VALUES (49, 302, '坡跟平底休闲淑女鞋', '卓诗尼', '/assets/products/goods-49-po-gen-ping-di-shu-nv-xie.jpg', '[]', '舒适坡跟设计', NULL, 199.00, 329.00, 300, 730, 0, 1, 0, 0, '2026-06-20 19:42:53', '2026-06-20 19:58:02');
 INSERT INTO `goods` VALUES (50, 302, '纯皮系带英伦皮鞋', '天美意', '/assets/products/goods-50-chun-pi-xi-dai-ying-lun-pi-xie.jpg', '[]', '头层牛皮材质', NULL, 349.00, 549.00, 180, 480, 0, 1, 1, 1, '2026-06-20 19:42:53', '2026-06-20 19:58:02');
 INSERT INTO `goods` VALUES (51, 302, '夏花流苏凉鞋', 'Kiss Kitty', '/assets/products/goods-51-xia-hua-liu-su-liang-xie.jpg', '[]', '流苏装饰夏日凉鞋', NULL, 229.00, 379.00, 220, 560, 0, 1, 0, 1, '2026-06-20 19:42:53', '2026-06-20 19:58:02');
-INSERT INTO `goods` VALUES (52, 302, '水晶粗头鞋', '百丽', '/assets/products/goods-52-shui-jing-cu-gen-xie.jpg', '[]', '水晶装饰粗头设计', NULL, 279.00, 449.00, 200, 340, 0, 1, 0, 0, '2026-06-20 19:42:53', '2026-06-20 19:58:02');
+INSERT INTO `goods` VALUES (52, 302, '水晶粗头鞋', '百丽', '/assets/products/goods-52-shui-jing-cu-gen-xie.jpg', '[]', '水晶装饰粗头设计', NULL, 279.00, 449.00, 200, 340, 1, 1, 0, 0, '2026-06-20 19:42:53', '2026-06-21 20:52:37');
 INSERT INTO `goods` VALUES (53, 401, '韩版百搭棒球帽', 'MLB', '/assets/products/goods-53-han-ban-bai-da-baseball-mao.jpg', '[]', '纯棉面料', NULL, 89.00, 149.00, 800, 2300, 0, 1, 0, 0, '2026-06-20 19:42:53', '2026-06-20 19:58:02');
 INSERT INTO `goods` VALUES (54, 401, '织物小球毛线帽', '正是', '/assets/products/goods-54-zhi-wu-xiao-qiu-mao-xian-mao.jpg', '[]', '保暖毛线帽', NULL, 59.00, 99.00, 600, 1200, 0, 1, 0, 1, '2026-06-20 19:42:53', '2026-06-20 19:58:02');
 INSERT INTO `goods` VALUES (55, 402, '通勤手提单肩两用包', '小CK', '/assets/products/goods-55-tong-yong-shou-ti-dan-jian-liang-yong-bao.jpg', '[]', 'PU材质大容量', NULL, 229.00, 399.00, 399, 1, 1, 1, 1, 1, '2026-06-20 19:42:53', '2026-06-20 20:44:05');
@@ -343,8 +348,7 @@ CREATE TABLE `orders`  (
   UNIQUE INDEX `uk_order_no`(`order_no` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
-  INDEX `idx_create_time`(`create_time` ASC) USING BTREE,
-  FULLTEXT INDEX `ft_search`(`name`, `brand`, `description`) WITH PARSER `ngram`
+  INDEX `idx_create_time`(`create_time` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -462,11 +466,12 @@ CREATE TABLE `user`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_username`(`username` ASC) USING BTREE,
   INDEX `idx_phone`(`phone` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user
 -- ----------------------------
-INSERT INTO `user` VALUES (1, 'rafa', '$2a$10$GwDMOnPwuyRdnd.ChsZILOkCy4JuKoYJJpVh3tetB65jHTD6nbNd2', NULL, '/uploads/2026/06/20/0ed8492218c94b76ad5f39262817b5ed.jpg', '17616599913', '2671135604@qq.com', 0, NULL, 1, '2026-06-20 19:43:22', '2026-06-21 14:27:57');
+INSERT INTO `user` VALUES (2, 'test', '$2a$10$k5zFc0ToXiDpVyXl0dh7XOHQTxe4sWfPBhL0rzOD5K6bgMXpZeH3m', NULL, NULL, NULL, NULL, 0, NULL, 1, '2026-06-21 19:17:44', '2026-06-21 19:17:44');
+INSERT INTO `user` VALUES (3, 'rafa', '$2a$10$gIMxTDdoJFRGsgJeY2zO9eqrdNW7mWvQW66As1aKshVtS1asp5qOK', NULL, '/uploads/2026/06/21/e7f71f32965c415ea1c32b18b960b999.jpg', NULL, NULL, 0, NULL, 1, '2026-06-21 19:20:14', '2026-06-21 19:21:53');
 
 SET FOREIGN_KEY_CHECKS = 1;
