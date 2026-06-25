@@ -313,8 +313,8 @@ onMounted(() => {
   border: 1px solid var(--border, #ece9e4);
   cursor: pointer;
 }
-.stat-card:hover { box-shadow: 0 2px 24px rgba(0,0,0,0.04); border-color: #d0cbc4; transform: translateY(-2px); }
-.stat-card.active { border-color: var(--accent, #c45c4a); box-shadow: 0 0 0 3px rgba(196,92,74,0.08); }
+.stat-card:hover { box-shadow: 0 2px 24px rgba(0,0,0,0.04); border-color: var(--accent, #00f0ff); transform: translateY(-2px); }
+.stat-card.active { border-color: var(--accent, #00f0ff); box-shadow: 0 0 0 3px rgba(0,240,255,0.08); }
 .stat-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
 .stat-label { font-size: 13px; color: var(--text-secondary, #6b6b6b); font-weight: 500; }
 
@@ -336,9 +336,10 @@ onMounted(() => {
   color: var(--text-secondary, #6b6b6b);
   cursor: pointer;
   font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.tab-btn:hover { background: var(--bg-secondary, #f5f3f0); color: var(--text-primary, #1a1a1a); }
-.tab-btn.active { background: var(--bg-dark, #1a1a1a); color: white; }
+.tab-btn:hover { background: rgba(0,240,255,0.08); color: var(--accent, #00f0ff); }
+.tab-btn.active { background: var(--accent, #00f0ff); color: #0a0a0f; }
 
 /* 订单卡片 */
 .orders-list { display: flex; flex-direction: column; gap: 20px; }
@@ -348,7 +349,7 @@ onMounted(() => {
   border: 1px solid var(--border, #ece9e4);
   overflow: hidden;
 }
-.order-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.06); border-color: #d0cbc4; }
+.order-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.06); border-color: var(--accent, #00f0ff); }
 
 .order-header {
   padding: 20px 24px;
@@ -367,18 +368,18 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 600;
 }
-.status-paid { background: #eef4ef; color: var(--success, #5a8c6f); }
-.status-shipped { background: #f0ebe4; color: var(--warning, #c4953b); }
-.status-completed { background: #e8e8e8; color: var(--text-secondary, #6b6b6b); }
-.status-pending { background: #fdf0ed; color: var(--accent, #c45c4a); }
-.status-cancelled { background: #f5f5f5; color: #bbb; }
+.status-paid { background: rgba(0,240,255,0.1); color: var(--accent, #00f0ff); }
+.status-shipped { background: rgba(255,200,0,0.1); color: #f0c040; }
+.status-completed { background: rgba(255,255,255,0.05); color: var(--text-muted, rgba(255,255,255,0.45)); }
+.status-pending { background: rgba(255,60,60,0.08); color: #ff6b6b; }
+.status-cancelled { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.25); }
 
 .order-body {
   padding: 20px 28px;
   cursor: pointer;
   transition: background 0.2s;
 }
-.order-body:hover { background: #fcfaf8; }
+.order-body:hover { background: var(--bg-secondary, rgba(255,255,255,0.03)); }
 
 .order-items { display: flex; flex-direction: column; gap: 16px; }
 .order-item { display: flex; align-items: center; gap: 16px; }
@@ -428,16 +429,16 @@ onMounted(() => {
 }
 .btn-outline:hover { border-color: var(--text-primary, #1a1a1a); color: var(--text-primary, #1a1a1a); }
 .btn-primary-order {
-  background: var(--bg-dark, #1a1a1a); color: white;
+  background: var(--accent, #00f0ff); color: #0a0a0f;
 }
-.btn-primary-order:hover { background: #333; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.btn-primary-order:hover { background: var(--accent-hover, #00d8e6); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,240,255,0.25); }
 .btn-accent {
-  background: var(--accent, #c45c4a); color: white;
+  background: var(--accent, #c45c4a); color: #0a0a0f;
 }
 .btn-accent:hover { background: var(--accent-dark, #8b3a2a); transform: translateY(-1px); }
 .btn-pay {
   background: linear-gradient(135deg, var(--accent, #c45c4a), var(--accent-dark, #8b3a2a));
-  color: white;
+  color: #0a0a0f;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -466,9 +467,9 @@ onMounted(() => {
 }
 .btn-cancel:hover { color: #dc3545; border-color: #dc3545; }
 .btn-review {
-  background: transparent; color: #c45c4a; border: 1px solid #c45c4a;
+  background: transparent; color: var(--accent, #00f0ff); border: 1px solid var(--accent, #00f0ff);
 }
-.btn-review:hover { background: #c45c4a; color: var(--text-primary); }
+.btn-review:hover { background: var(--accent, #00f0ff); color: #0a0a0f; }
 
 /* 空状态 */
 .empty-state { text-align: center; padding: 80px 20px; }
@@ -477,7 +478,7 @@ onMounted(() => {
 .empty-desc { color: var(--text-muted, #9a9a9a); font-size: 14px; margin-bottom: 24px; }
 .btn-primary-dark {
   padding: 14px 36px; border-radius: 16px; border: none;
-  background: var(--bg-dark, #1a1a1a); color: white;
+  background: var(--bg-dark, #1a1a1a); color: #0a0a0f;
   font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .btn-primary-dark:hover { background: #333; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }

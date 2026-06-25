@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { showToast, showFailToast } from 'vant'
 import { userApi } from '@/api/user'
 import { useUserStore } from '@/stores/user'
@@ -15,6 +16,10 @@ const emailForm = ref('')
 const pwdLoading = ref(false)
 const phoneLoading = ref(false)
 const emailLoading = ref(false)
+const showDeactivateModal = ref(false)
+const deactivatePwd = ref('')
+const deactivateLoading = ref(false)
+const router = useRouter()
 
 const securityScore = ref(0)
 const gaugeOffset = ref(502)
@@ -133,6 +138,24 @@ async function onChangeEmail() {
 function openPwdModal() { showPwdModal.value = true }
 function openPhoneModal() { phoneForm.value = user.value?.phone || ''; showPhoneModal.value = true }
 function openEmailModal() { emailForm.value = user.value?.email || ''; showEmailModal.value = true }
+
+function openDeactivateModal() { deactivatePwd.value = ''; showDeactivateModal.value = true }
+
+async function deactivateAccount() {
+  if (!deactivatePwd.value) { showToast('请输入密码'); return }
+  deactivateLoading.value = true
+  try {
+    await userApi.deactivateAccount({ password: deactivatePwd.value })
+    showToast('账号已注销')
+    showDeactivateModal.value = false
+    userStore.logout()
+    router.push({ name: 'login' })
+  } catch (e: any) {
+    showFailToast(e?.message || '注销失败')
+  } finally {
+    deactivateLoading.value = false
+  }
+}
 
 function onSecurityAction(id: string) {
   if (id === 'pwd') openPwdModal()
@@ -255,7 +278,7 @@ function onSecurityAction(id: string) {
             <div class="danger-desc">一旦注销，所有数据将被永久删除且无法恢复</div>
           </div>
         </div>
-        <button class="btn btn-danger" disabled style="opacity:0.4;cursor:not-allowed" title="功能开发中">注销账号（即将上线）</button>
+        <button class="btn btn-danger" @click="openDeactivateModal">申请注销账号</button>
       </div>
     </div>
 
@@ -304,7 +327,7 @@ function onSecurityAction(id: string) {
             <div class="form-grid">
               <div class="form-item full">
                 <label class="form-label">手机号</label>
-                <input class="form-input" v-model="phoneForm" placeholder="输入手机号" />
+                <input class="form-input" v-model="phoneForm" placeholder="输入手机号" type="tel" />
               </div>
             </div>
           </div>
@@ -336,6 +359,32 @@ function onSecurityAction(id: string) {
             <button class="btn btn-outline" @click="showEmailModal = false">取消</button>
             <button class="btn btn-primary" :disabled="emailLoading" @click="onChangeEmail">
               {{ emailLoading ? '提交中...' : '确认' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 注销账号确认 -->
+      <div :class="['modal-overlay', { active: showDeactivateModal }]" @click.self="showDeactivateModal = false">
+        <div class="modal">
+          <div class="modal-header">
+            <h2 class="modal-title">确认注销账号</h2>
+            <div class="modal-close" @click="showDeactivateModal = false">&times;</div>
+          </div>
+          <div class="modal-body">
+            <p style="color:#ff6b6b;margin-bottom:16px;font-size:14px;line-height:1.6">
+              ⚠️ 注销后您的所有数据将被永久删除，且无法恢复。
+              请确认您已备份重要信息。
+            </p>
+            <div class="form-group">
+              <label class="form-label">请输入密码确认</label>
+              <input class="form-input" v-model="deactivatePwd" type="password" placeholder="输入登录密码" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline" @click="showDeactivateModal = false">取消</button>
+            <button class="btn btn-danger" :disabled="deactivateLoading" @click="deactivateAccount">
+              {{ deactivateLoading ? '处理中...' : '确认注销' }}
             </button>
           </div>
         </div>

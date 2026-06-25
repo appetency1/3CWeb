@@ -144,7 +144,16 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   <div class="admin-app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-logo" @click="goHome">Digit<span>.</span></div>
+      <div class="sidebar-logo" @click="goHome">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px">
+          <polygon points="12 2 22 7 22 17 12 22 2 17 2 7 12 2"/>
+          <line x1="12" y1="2" x2="12" y2="22"/>
+          <line x1="2" y1="7" x2="22" y2="17"/>
+          <line x1="2" y1="17" x2="22" y2="7"/>
+          <circle cx="12" cy="12" r="2" fill="var(--neon-blue)" stroke="none"/>
+        </svg>
+        NEXUS<span>.</span>
+      </div>
       <ul class="nav-list">
         <li
           v-for="item in menus"

@@ -22,7 +22,7 @@ const loading = ref(false)
 const finished = ref(false)
 
 const sortType = ref<'default' | 'sales' | 'price_asc' | 'price_desc' | 'new'>('default')
-const priceRange = ref<'all' | '0-100' | '100-300' | '300-500' | '500+'>('all')
+const priceRange = ref<'all' | '0-500' | '500-2000' | '2000-5000' | '5000-10000' | '10000+'>('all')
 const showOnlyStock = ref(false)
 
 const sorts = [
@@ -35,22 +35,23 @@ const sorts = [
 
 const priceRanges = [
   { key: 'all', label: '全部价格' },
-  { key: '0-100', label: '¥0-100' },
-  { key: '100-300', label: '¥100-300' },
-  { key: '300-500', label: '¥300-500' },
-  { key: '500+', label: '¥500+' },
+  { key: '0-500', label: '¥500以下' },
+  { key: '500-2000', label: '¥500-2000' },
+  { key: '2000-5000', label: '¥2000-5000' },
+  { key: '5000-10000', label: '¥5000-10000' },
+  { key: '10000+', label: '¥10000以上' },
 ] as const
 
 function priceFmt(p: any) { return Number(p || 0).toFixed(2) }
 function displayPrice(g: any) {
-  if (g.min_price && g.max_price && Number(g.min_price) !== Number(g.max_price)) {
-    return '¥' + priceFmt(g.min_price) + ' - ¥' + priceFmt(g.max_price)
+  if (g.minPrice && g.maxPrice && Number(g.minPrice) !== Number(g.maxPrice)) {
+    return '¥' + priceFmt(g.minPrice) + ' - ¥' + priceFmt(g.maxPrice)
   }
-  return '¥' + priceFmt(g.price || g.min_price)
+  return '¥' + priceFmt(g.price || g.minPrice)
 }
 function discountPct(g: any) {
-  const o = Number(g.originalPrice || g.max_price)
-  const c = Number(g.price || g.min_price)
+  const o = Number(g.originalPrice || g.maxPrice)
+  const c = Number(g.price || g.minPrice)
   if (!o || o <= c) return 0
   return Math.round((1 - c / o) * 100)
 }
@@ -159,11 +160,12 @@ async function fetchGoods() {
 
 function filterByPrice(g: any) {
   if (priceRange.value === 'all') return true
-  const p = Number(g.price || 0)
-  if (priceRange.value === '0-100') return p < 100
-  if (priceRange.value === '100-300') return p >= 100 && p < 300
-  if (priceRange.value === '300-500') return p >= 300 && p < 500
-  if (priceRange.value === '500+') return p >= 500
+  const p = Number(g.price || g.minPrice || 0)
+  if (priceRange.value === '0-500') return p < 500
+  if (priceRange.value === '500-2000') return p >= 500 && p < 2000
+  if (priceRange.value === '2000-5000') return p >= 2000 && p < 5000
+  if (priceRange.value === '5000-10000') return p >= 5000 && p < 10000
+  if (priceRange.value === '10000+') return p >= 10000
   return true
 }
 function filterByStock(g: any) {
@@ -366,14 +368,14 @@ onMounted(async () => {
   border-radius: 16px; cursor: pointer; transition: all 0.2s;
 }
 .sub-chip:hover { color: var(--accent); border-color: var(--border-hover); }
-.sub-chip.active { background: #1a1a1a; color: var(--text-primary); border-color: #1a1a1a; }
+.sub-chip.active { background: #1a1a1a; color: var(--text-primary); border-color: var(--text-primary, #e8e8f0); }
 
 /* ===== Body ===== */
 .cat-body { max-width: 1400px; margin: 0 auto; padding: 24px 40px; display: grid; grid-template-columns: 200px 1fr; gap: 32px; }
 
 .cat-side { display: flex; flex-direction: column; gap: 16px; }
 .side-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-.side-h { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0ede8; }
+.side-h { font-size: 13px; font-weight: 600; color: var(--text-primary, #e8e8f0); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); }
 .side-item {
   display: block; padding: 8px 12px; font-size: 13px; color: var(--text-secondary); cursor: pointer;
   border-radius: 4px; transition: all 0.2s; margin-bottom: 2px;
@@ -414,7 +416,7 @@ onMounted(async () => {
 .oos { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; letter-spacing: 4px; }
 .card-info { padding: 10px 12px 12px; }
 .card-brand { font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px; margin-bottom: 4px; }
-.card-name { font-size: 13px; color: #1a1a1a; line-height: 1.4; margin-bottom: 6px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-name { font-size: 13px; color: var(--text-primary, #e8e8f0); line-height: 1.4; margin-bottom: 6px; min-height: 36px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card-price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
 .card-price { font-size: 17px; font-weight: 700; color: var(--accent); }
 .card-orig { font-size: 11px; color: var(--text-muted); text-decoration: line-through; }

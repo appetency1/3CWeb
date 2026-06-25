@@ -31,6 +31,7 @@ public class UserServlet extends BaseServlet {
             case "/logout":   doLogout(req, resp); break;
             case "/info":     doInfo(req, resp); break;
             case "/password": doUpdatePassword(req, resp); break;
+            case "/deactivate": doDeactivate(req, resp); break;
             default: writeJson(resp, 404, "接口不存在");
         }
     }
@@ -110,5 +111,15 @@ public class UserServlet extends BaseServlet {
     private LocalDate parseLocalDate(String s) {
         if (s == null || s.isBlank()) return null;
         try { return LocalDate.parse(s.trim()); } catch (Exception e) { return null; }
+    }
+
+    /** 注销账号（软删除：置 status=0 并清除 token） */
+    private void doDeactivate(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        if (!AuthInterceptor.preHandle(req, resp)) return;
+        JSONObject body = readJson(req);
+        String password = body.getString("password");
+        userService.deactivateAccount(currentUser(req).getId(), password);
+        TokenManager.remove(currentToken(req));
+        writeOk(resp, "账号已注销", null);
     }
 }

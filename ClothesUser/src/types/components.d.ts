@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     DesktopLayout: typeof import('./../components/desktop/DesktopLayout.vue')['default']
+    NexusIcon: typeof import('./../components/NexusIcon.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VanTabbar: typeof import('vant/es')['Tabbar']

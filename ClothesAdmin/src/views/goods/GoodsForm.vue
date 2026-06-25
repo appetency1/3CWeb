@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showFailToast } from 'vant'
 import { saveGoods, getGoodsDetail } from '@/api/goods'
+import { getCategoryList } from '@/api/category'
 import { uploadFile, imgUrl } from '@/utils/request'
 
 const router = useRouter()
@@ -27,7 +28,10 @@ const form = ref({
   isNew: false,
 })
 
-const dropActive = ref(false)
+const categories = ref<any[]>([])
+const skuList = ref([{ spec: '', price: 0, stock: 0, image: '' }])
+function addSku() { skuList.value.push({ spec: '', price: 0, stock: 0, image: '' }) }
+function removeSku(idx: number) { if (skuList.value.length > 1) skuList.value.splice(idx, 1) }
 
 function onCoverDrop(e: DragEvent) {
   dropActive.value = false
@@ -63,9 +67,10 @@ function removeCover() {
 async function onSave() {
   if (!form.value.name?.trim()) { showFailToast('请输入商品名称'); return }
   if (!form.value.price) { showFailToast('请输入价格'); return }
+  if (!form.value.categoryId) { showFailToast('请选择分类'); return }
   saving.value = true
   try {
-    await saveGoods(form.value)
+    await saveGoods({ ...form.value, skus: skuList.value.filter(s => s.spec || s.price) })
     showToast(form.value.id ? '修改成功' : '新增成功')
     router.push({ name: 'goods' })
   } catch (e: any) {
@@ -76,6 +81,7 @@ async function onSave() {
 }
 
 onMounted(async () => {
+  try { categories.value = await getCategoryList() } catch { /* silent */ }
   const id = route.params.id as string
   if (id) {
     isEdit.value = true
@@ -111,7 +117,7 @@ onMounted(async () => {
         <h3 class="form-section-title">基本信息</h3>
         <div class="form-grid">
           <div class="form-field">
-            <label>商品名称 <span style="color:#c45c4a">*</span></label>
+            <label>商品名称 <span style="color:var(--neon-pink)">*</span></label>
             <input v-model="form.name" class="form-input" placeholder="请输入商品名称" />
           </div>
           <div class="form-field">
@@ -119,7 +125,7 @@ onMounted(async () => {
             <input v-model="form.brand" class="form-input" placeholder="如 Apple、HUAWEI" />
           </div>
           <div class="form-field">
-            <label>价格 <span style="color:#c45c4a">*</span></label>
+            <label>价格 <span style="color:var(--neon-pink)">*</span></label>
             <input v-model.number="form.price" class="form-input" type="number" step="0.01" placeholder="0.00" />
           </div>
           <div class="form-field">
@@ -131,8 +137,11 @@ onMounted(async () => {
             <input v-model.number="form.stock" class="form-input" type="number" placeholder="0" />
           </div>
           <div class="form-field">
-            <label>分类 ID</label>
-            <input v-model.number="form.categoryId" class="form-input" type="number" placeholder="0" />
+            <label>分类</label>
+            <select v-model.number="form.categoryId" class="form-input">
+              <option :value="0" disabled>请选择分类</option>
+              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+            </select>
           </div>
         </div>
       </div>
@@ -204,6 +213,19 @@ onMounted(async () => {
         <textarea v-model="form.description" class="form-textarea" rows="4" placeholder="商品描述..."></textarea>
       </div>
     </div>
+
+    <div class="form-section">
+      <h3 class="form-section-title">规格库存（SKU）</h3>
+      <div class="sku-list">
+        <div v-for="(sku, idx) in skuList" :key="idx" class="sku-row">
+          <input v-model="sku.spec" class="form-input sku-spec" placeholder="规格名称（如：256G 蓝色）" />
+          <input v-model.number="sku.price" class="form-input sku-price" type="number" step="0.01" placeholder="价格" />
+          <input v-model.number="sku.stock" class="form-input sku-stock" type="number" placeholder="库存" />
+          <button v-if="skuList.length > 1" class="sku-remove" @click="removeSku(idx)">✕</button>
+        </div>
+      </div>
+      <button class="admin-btn admin-btn-outline sku-add-btn" @click="addSku">+ 添加规格</button>
+    </div>
   </div>
 </template>
 
@@ -262,7 +284,13 @@ onMounted(async () => {
 }
 .form-textarea:focus { border-color: var(--neon-blue); box-shadow: 0 0 0 3px rgba(0,240,255,0.08); }
 .checkbox-label { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text); }
-select.form-input { appearance: auto; }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300f0ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
 
 /* ── 封面图片上传 ── */
 .cover-preview-wrap { margin-bottom: 8px; }
@@ -309,4 +337,19 @@ select.form-input { appearance: auto; }
 .upload-icon { color: var(--text3); margin-bottom: 12px; }
 .upload-text { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
 .upload-hint { font-size: 12px; color: var(--text3); }
+
+/* SKU */
+.sku-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.sku-row { display: flex; gap: 10px; align-items: center; }
+.sku-spec { flex: 3; }
+.sku-price { flex: 1; min-width: 100px; }
+.sku-stock { flex: 1; min-width: 80px; }
+.sku-remove {
+  width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px;
+  background: transparent; color: var(--neon-pink); cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.sku-remove:hover { background: rgba(255,42,138,0.1); border-color: var(--neon-pink); }
+.sku-add-btn { margin-top: 4px; }
+@media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
 </style>

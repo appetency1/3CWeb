@@ -373,8 +373,8 @@ onMounted(loadAddresses)
   font-size: 13px; font-weight: 600;
   cursor: pointer; white-space: nowrap;
 }
-.promo-btn:hover { background: var(--accent, #c45c4a); color: white; }
-.promo-btn.applied { background: var(--success, #2d8a5e); border-color: var(--success, #2d8a5e); color: white; }
+.promo-btn:hover { background: var(--accent, #c45c4a); color: #0a0a0f; }
+.promo-btn.applied { background: var(--success, #2d8a5e); border-color: var(--success, #2d8a5e); color: #0a0a0f; }
 
 /* 金额明细 */
 .price-row {
@@ -394,7 +394,7 @@ onMounted(loadAddresses)
 .checkout-btn {
   width: 100%; height: 52px;
   background: var(--accent, #c45c4a);
-  color: white; border: none;
+  color: #0a0a0f; border: none;
   border-radius: var(--radius-md, 8px);
   font-size: 15px; font-weight: 600;
   cursor: pointer; margin-top: 8px;

@@ -3,6 +3,7 @@ import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior() { return { top: 0 } },
   routes: [
     {
       path: '/',
@@ -99,10 +100,6 @@ const router = createRouter({
     {
       path: '/security',
       redirect: { name: 'userSecurity' },
-    },
-    {
-      path: '/service',
-      redirect: { name: 'userService' },
     },
     {
       path: '/order/:id',

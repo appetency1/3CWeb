@@ -87,6 +87,7 @@ public class AddressService {
     private void validate(AddressDTO dto) {
         if (dto.receiver() == null || dto.receiver().isBlank()) throw new BizException(400, "收货人不能为空");
         if (dto.phone() == null || dto.phone().isBlank()) throw new BizException(400, "手机号不能为空");
+        if (!dto.phone().matches("^1[3-9]\\d{9}$")) throw new BizException(400, "手机号格式不正确");
         if (dto.province() == null || dto.province().isBlank()) throw new BizException(400, "省份不能为空");
         if (dto.city() == null || dto.city().isBlank()) throw new BizException(400, "城市不能为空");
         if (dto.district() == null || dto.district().isBlank()) throw new BizException(400, "区县不能为空");

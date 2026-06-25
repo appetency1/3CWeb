@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — 手机通讯</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070c;
+    --bg-surface: #0c0c14;
+    --bg-card: #10101a;
+    --bg-hover: #151524;
+    --text: #f0f0f8;
+    --text-secondary: #8a8aa8;
+    --text-dim: #4a4a68;
+    --accent: #00e8ff;
+    --accent-soft: rgba(0,232,255,0.12);
+    --accent-glow: rgba(0,232,255,0.35);
+    --accent-purple: #a855f7;
+    --accent-pink: #ec4899;
+    --success: #22d3a8;
+    --warning: #f59e42;
+    --danger: #ef4444;
+    --border: rgba(255,255,255,0.06);
+    --border-active: rgba(0,232,255,0.35);
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    --transition-slow: all 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ===== Navigation ===== */
+  .nav {
+    position:sticky; top:0; z-index:100;
+    background: rgba(7,7,12,0.88);
+    backdrop-filter: blur(20px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner {
+    max-width:1400px; margin:0 auto;
+    padding:0 32px; height:60px;
+    display:flex; align-items:center; gap:36px;
+  }
+  .logo {
+    font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800;
+    letter-spacing:3px; color:var(--text); text-decoration:none;
+    display:flex; align-items:center; gap:10px;
+  }
+  .logo-mark {
+    width:30px; height:30px; border-radius:8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; color:#000;
+  }
+  .nav-links { display:flex; gap:28px; flex:1; }
+  .nav-links a {
+    font-size:14px; color:var(--text-secondary); text-decoration:none;
+    font-weight:500; position:relative; transition:var(--transition);
+  }
+  .nav-links a:hover, .nav-links a.active { color:var(--accent); }
+  .nav-links a.active::after {
+    content:''; position:absolute; bottom:-18px; left:0; right:0;
+    height:2px; background:var(--accent); box-shadow:0 0 10px var(--accent-glow);
+  }
+  .nav-search {
+    width:280px; height:36px; background:var(--bg-card);
+    border:1px solid var(--border); border-radius:var(--radius-sm);
+    display:flex; align-items:center; padding:0 12px; gap:8px;
+    transition:var(--transition);
+  }
+  .nav-search:focus-within { border-color:var(--border-active); }
+  .nav-search input {
+    flex:1; background:transparent; border:none; outline:none;
+    color:var(--text); font-size:13px;
+  }
+  .nav-search input::placeholder { color:var(--text-dim); }
+
+  /* ===== Hero: Data-Driven ===== */
+  .hero {
+    position:relative; overflow:hidden;
+    padding:48px 0 36px;
+  }
+  .hero-glow {
+    position:absolute; width:500px; height:500px; border-radius:50%;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+    top:-180px; left:5%; filter:blur(50px); pointer-events:none;
+  }
+  .hero-inner { max-width:1400px; margin:0 auto; padding:0 32px; position:relative; }
+  .hero h1 {
+    font-family:'Orbitron','Noto Sans SC',sans-serif;
+    font-size:44px; font-weight:700; letter-spacing:1px;
+    margin-bottom:20px;
+  }
+  .hero-stats {
+    display:flex; gap:32px; align-items:center;
+  }
+  .hero-stat {
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .hero-stat-num {
+    font-family:'Orbitron',sans-serif; font-size:24px; font-weight:700;
+    color:var(--accent);
+  }
+  .hero-stat-label {
+    font-size:12px; color:var(--text-dim); letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .hero-stat-divider {
+    width:1px; height:32px; background:var(--border);
+  }
+
+  /* ===== Brand Filter Strip ===== */
+  .brand-strip {
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    background: var(--bg-surface);
+    position:sticky; top:60px; z-index:90;
+  }
+  .brand-strip-inner {
+    max-width:1400px; margin:0 auto; padding:14px 32px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .brand-strip-label {
+    font-size:11px; color:var(--text-dim); font-weight:600;
+    letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap;
+  }
+  .brand-scroll {
+    display:flex; gap:10px; overflow-x:auto;
+    scrollbar-width:none; flex:1;
+  }
+  .brand-scroll::-webkit-scrollbar { display:none; }
+  .brand-pill {
+    flex-shrink:0; padding:8px 18px;
+    font-size:13px; font-weight:600; color:var(--text-secondary);
+    background:transparent; border:1px solid var(--border);
+    border-radius:100px; cursor:pointer; transition:var(--transition);
+    display:flex; align-items:center; gap:8px;
+  }
+  .brand-pill:hover {
+    border-color:var(--border-active); color:var(--text);
+    background: var(--bg-hover);
+  }
+  .brand-pill.active {
+    background: var(--accent); border-color:var(--accent);
+    color:#000; box-shadow:0 0 20px var(--accent-glow);
+  }
+  .brand-pill .count {
+    font-size:10px; font-weight:700; color:var(--text-dim);
+    background: var(--bg); padding:1px 6px; border-radius:100px;
+  }
+  .brand-pill.active .count { color:var(--text-dim); background:rgba(0,0,0,0.15); }
+
+  /* ===== Filter Bar: Specs + Price + Sort ===== */
+  .filter-bar {
+    max-width:1400px; margin:0 auto; padding:20px 32px 0;
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+  }
+  .filter-group {
+    display:flex; align-items:center; gap:6px;
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:4px;
+  }
+  .filter-chip {
+    padding:7px 14px; font-size:12px; font-weight:500;
+    color:var(--text-secondary); background:transparent;
+    border:none; border-radius:6px; cursor:pointer;
+    transition:var(--transition); font-family:inherit;
+    white-space:nowrap;
+  }
+  .filter-chip:hover { color:var(--text); }
+  .filter-chip.active {
+    background: var(--bg-hover); color:var(--accent); font-weight:600;
+  }
+  .filter-divider {
+    width:1px; height:16px; background:var(--border); margin:0 4px;
+  }
+  .filter-check {
+    display:flex; align-items:center; gap:8px;
+    padding:7px 14px; font-size:12px; color:var(--text-secondary);
+    cursor:pointer; user-select:none; white-space:nowrap;
+  }
+  .filter-check input {
+    appearance:none; width:15px; height:15px;
+    border:1.5px solid var(--border); border-radius:4px;
+    background:var(--bg-card); cursor:pointer; position:relative;
+    transition:var(--transition);
+  }
+  .filter-check input:checked {
+    background:var(--accent); border-color:var(--accent);
+  }
+  .filter-check input:checked::after {
+    content:''; position:absolute; left:4px; top:1px;
+    width:3.5px; height:7px; border:solid #000;
+    border-width:0 2px 2px 0; transform:rotate(45deg);
+  }
+
+  /* ===== Section Divider ===== */
+  .section-hd {
+    max-width:1400px; margin:0 auto; padding:32px 32px 16px;
+    display:flex; align-items:baseline; gap:12px;
+  }
+  .section-hd h2 {
+    font-family:'Orbitron',sans-serif; font-size:13px;
+    font-weight:600; letter-spacing:2px; text-transform:uppercase;
+    color:var(--text-secondary);
+  }
+  .section-hd span {
+    font-size:12px; color:var(--text-dim);
+  }
+
+  /* ===== Featured Grid: 2 large hero cards ===== */
+  .featured-grid {
+    max-width:1400px; margin:0 auto; padding:0 32px;
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+  }
+  .feat-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius-lg); overflow:hidden;
+    cursor:pointer; transition:var(--transition-slow);
+    position:relative; display:flex; flex-direction:column;
+  }
+  .feat-card::before {
+    content:''; position:absolute; inset:0; border-radius:var(--radius-lg);
+    background: linear-gradient(135deg, rgba(0,232,255,0.04) 0%, transparent 60%, rgba(168,85,247,0.03) 100%);
+    opacity:0; transition:opacity 0.4s; pointer-events:none; z-index:1;
+  }
+  .feat-card:hover {
+    transform:translateY(-3px);
+    border-color:rgba(0,232,255,0.2);
+  }
+  .feat-card:hover::before { opacity:1; }
+
+  .feat-img-wrap {
+    position:relative; aspect-ratio:16/9; overflow:hidden;
+    background: linear-gradient(160deg, #0a0a14, #141422);
+  }
+  .feat-img-wrap img {
+    width:100%; height:100%; object-fit:cover;
+    transition:transform 0.7s cubic-bezier(0.22,1,0.36,1);
+  }
+  .feat-card:hover .feat-img-wrap img { transform:scale(1.04); }
+  .feat-badges {
+    position:absolute; top:16px; left:16px; display:flex; gap:8px; z-index:2;
+  }
+  .feat-badge {
+    padding:5px 10px; font-size:11px; font-weight:700;
+    border-radius:var(--radius-sm); backdrop-filter:blur(8px);
+  }
+  .feat-badge.new { background:rgba(34,211,168,0.15); color:var(--success); border:1px solid rgba(34,211,168,0.3); }
+  .feat-badge.hot { background:rgba(245,158,66,0.15); color:var(--warning); border:1px solid rgba(245,158,66,0.3); }
+
+  .feat-info { padding:24px; position:relative; z-index:1; flex:1; display:flex; flex-direction:column; }
+  .feat-brand {
+    font-family:'Orbitron',sans-serif; font-size:11px; font-weight:600;
+    letter-spacing:1.5px; color:var(--accent); text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .feat-name {
+    font-size:20px; font-weight:700; color:var(--text);
+    line-height:1.35; margin-bottom:14px;
+  }
+  .feat-specs {
+    display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;
+  }
+  .feat-spec {
+    padding:5px 12px; font-size:12px; color:var(--text-secondary);
+    background:var(--bg-hover); border:1px solid var(--border);
+    border-radius:6px; font-weight:500;
+  }
+  .feat-price-row {
+    margin-top:auto; display:flex; align-items:baseline; gap:14px;
+  }
+  .feat-price {
+    font-family:'Orbitron',sans-serif; font-size:28px; font-weight:800;
+    color:var(--accent); letter-spacing:0.5px;
+  }
+  .feat-price .unit { font-size:16px; }
+  .feat-orig {
+    font-size:14px; color:var(--text-dim); text-decoration:line-through;
+  }
+  .feat-rating {
+    margin-left:auto; font-size:13px; color:var(--warning);
+    display:flex; align-items:center; gap:4px;
+  }
+
+  /* ===== Standard Product Grid ===== */
+  .std-grid {
+    max-width:1400px; margin:0 auto; padding:0 32px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:18px;
+  }
+  .product-card {
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius); overflow:hidden; cursor:pointer;
+    transition:var(--transition-slow); position:relative;
+  }
+  .product-card::before {
+    content:''; position:absolute; inset:0; border-radius:var(--radius);
+    background: linear-gradient(180deg, transparent 50%, rgba(0,232,255,0.03) 100%);
+    opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:1;
+  }
+  .product-card:hover {
+    transform:translateY(-3px);
+    border-color:rgba(0,232,255,0.18);
+  }
+  .product-card:hover::before { opacity:1; }
+
+  .card-img-wrap {
+    position:relative; aspect-ratio:4/3; overflow:hidden;
+    background: linear-gradient(145deg, #0a0a14, #131320);
+  }
+  .card-img-wrap img {
+    width:100%; height:100%; object-fit:cover;
+    transition:transform 0.6s cubic-bezier(0.22,1,0.36,1);
+  }
+  .product-card:hover .card-img-wrap img { transform:scale(1.06); }
+  .card-spec-bar {
+    position:absolute; bottom:0; left:0; right:0;
+    padding:8px 12px; display:flex; gap:8px;
+    background: linear-gradient(to top, rgba(7,7,12,0.9), transparent);
+    z-index:2;
+  }
+  .card-spec-tag {
+    padding:3px 8px; font-size:10px; font-weight:600;
+    color:var(--text-secondary); background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.08); border-radius:4px;
+    backdrop-filter:blur(4px);
+  }
+  .card-oos {
+    position:absolute; inset:0; background:rgba(7,7,12,0.6);
+    backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:700; letter-spacing:3px;
+    color:var(--text-dim); z-index:3;
+  }
+
+  .card-info { padding:14px; position:relative; z-index:1; }
+  .card-brand {
+    font-family:'Orbitron',sans-serif; font-size:10px; font-weight:600;
+    letter-spacing:1px; color:var(--accent); text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .card-name {
+    font-size:13px; font-weight:500; color:var(--text);
+    line-height:1.45; margin-bottom:12px;
+    display:-webkit-box; -webkit-line-clamp:2;
+    -webkit-box-orient:vertical; overflow:hidden; min-height:38px;
+  }
+  .card-price {
+    font-family:'Orbitron',sans-serif; font-size:18px; font-weight:800;
+    color:var(--accent); margin-bottom:8px; display:block;
+  }
+  .card-price .unit { font-size:12px; }
+  .card-orig {
+    font-size:11px; color:var(--text-dim); text-decoration:line-through;
+    margin-left:6px;
+  }
+  .card-meta {
+    display:flex; align-items:center; gap:12px;
+    font-size:11px; color:var(--text-dim);
+  }
+  .card-meta .rating { color:var(--warning); display:flex; align-items:center; gap:2px; }
+
+  /* ===== Load More ===== */
+  .load-more {
+    text-align:center; padding:40px 0 60px;
+  }
+  .load-more-btn {
+    padding:12px 40px; background:var(--bg-card);
+    border:1px solid var(--border); border-radius:100px;
+    color:var(--text-secondary); font-size:13px; font-weight:600;
+    cursor:pointer; transition:var(--transition); font-family:inherit;
+  }
+  .load-more-btn:hover {
+    border-color:var(--accent); color:var(--accent);
+  }
+
+  /* ===== Empty State ===== */
+  .empty {
+    grid-column:1/-1; text-align:center; padding:80px 0;
+    color:var(--text-dim);
+  }
+  .empty-icon {
+    width:80px; height:80px; margin:0 auto 20px;
+    border-radius:50%; background:var(--bg-card);
+    border:1px solid var(--border); display:flex;
+    align-items:center; justify-content:center;
+    font-size:32px; position:relative;
+  }
+  .empty-icon::before {
+    content:''; position:absolute; inset:-2px; border-radius:50%;
+    border:2px solid transparent;
+    border-top-color:var(--accent); opacity:0.3;
+    animation:spin 3s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ===== Responsive ===== */
+  @media (max-width:1200px) {
+    .std-grid { grid-template-columns:repeat(3,1fr); }
+  }
+  @media (max-width:768px) {
+    .nav-links, .nav-search { display:none; }
+    .hero h1 { font-size:28px; }
+    .hero-stats { gap:20px; }
+    .featured-grid { grid-template-columns:1fr; }
+    .std-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
+    .nav-inner, .hero-inner, .brand-strip-inner,
+    .filter-bar, .section-hd, .featured-grid, .std-grid
+    { padding-left:16px; padding-right:16px; }
+    .filter-bar { gap:8px; }
+    .feat-name { font-size:17px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Navigation ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark">N</span>
+      NEXUS
+    </a>
+    <div class="nav-links">
+      <a href="#">首页</a>
+      <a href="#" class="active">手机通讯</a>
+      <a href="#">电脑办公</a>
+      <a href="#">数码影音</a>
+      <a href="#">智能穿戴</a>
+    </div>
+    <div class="nav-search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-dim);flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" placeholder="搜索数码好物...">
+    </div>
+  </div>
+</nav>
+
+<!-- ===== Hero: Data-Driven ===== -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <h1>手机通讯</h1>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num">24</span>
+        <span class="hero-stat-label">在售商品</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">6</span>
+        <span class="hero-stat-label">本季新品</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">4.7</span>
+        <span class="hero-stat-label">平均评分</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">¥349</span>
+        <span class="hero-stat-label">起售价</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Brand Filter Strip ===== -->
+<div class="brand-strip">
+  <div class="brand-strip-inner">
+    <span class="brand-strip-label">品牌</span>
+    <div class="brand-scroll">
+      <div class="brand-pill active">全部 <span class="count">24</span></div>
+      <div class="brand-pill">Apple <span class="count">3</span></div>
+      <div class="brand-pill">华为 <span class="count">4</span></div>
+      <div class="brand-pill">三星 <span class="count">2</span></div>
+      <div class="brand-pill">小米 <span class="count">5</span></div>
+      <div class="brand-pill">OPPO <span class="count">2</span></div>
+      <div class="brand-pill">vivo <span class="count">3</span></div>
+      <div class="brand-pill">Nokia <span class="count">1</span></div>
+      <div class="brand-pill">天语 <span class="count">1</span></div>
+      <div class="brand-pill">飞利浦 <span class="count">1</span></div>
+      <div class="brand-pill">宝锋 <span class="count">2</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Filter Bar: Specs + Price + Sort ===== -->
+<div class="filter-bar">
+  <div class="filter-group">
+    <button class="filter-chip active">人气推荐</button>
+    <button class="filter-chip">最新发布</button>
+    <button class="filter-chip">价格从低到高</button>
+    <button class="filter-chip">价格从高到低</button>
+    <button class="filter-chip">评分最高</button>
+  </div>
+  <div class="filter-group">
+    <button class="filter-chip active">全部价格</button>
+    <button class="filter-chip">¥0-1000</button>
+    <button class="filter-chip">¥1000-3000</button>
+    <button class="filter-chip">¥3000-6000</button>
+    <button class="filter-chip">¥6000-10000</button>
+    <button class="filter-chip">¥10000+</button>
+  </div>
+  <label class="filter-check">
+    <input type="checkbox">
+    <span>仅看有货</span>
+  </label>
+</div>
+
+<!-- ===== Featured Section ===== -->
+<div class="section-hd">
+  <h2>当季主打</h2>
+  <span>— 编辑精选</span>
+</div>
+<div class="featured-grid">
+  <!-- Featured 1 -->
+  <div class="feat-card">
+    <div class="feat-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-apple-iphone15-pro-max.svg" alt="iPhone 15 Pro Max" onerror="this.style.display='none'">
+      <div class="feat-badges">
+        <span class="feat-badge hot">热卖</span>
+      </div>
+    </div>
+    <div class="feat-info">
+      <div class="feat-brand">Apple</div>
+      <div class="feat-name">iPhone 15 Pro Max 钛金属</div>
+      <div class="feat-specs">
+        <span class="feat-spec">1TB</span>
+        <span class="feat-spec">A17 Pro</span>
+        <span class="feat-spec">6.7" OLED</span>
+      </div>
+      <div class="feat-price-row">
+        <span class="feat-price"><span class="unit">¥</span>12,999</span>
+        <span class="feat-rating">★ 4.9 · 4,321 评价</span>
+      </div>
+    </div>
+  </div>
+  <!-- Featured 2 -->
+  <div class="feat-card">
+    <div class="feat-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-samsung-s24-ultra.svg" alt="三星 S24 Ultra" onerror="this.style.display='none'">
+      <div class="feat-badges">
+        <span class="feat-badge new">新品</span>
+      </div>
+    </div>
+    <div class="feat-info">
+      <div class="feat-brand">Samsung</div>
+      <div class="feat-name">Galaxy S24 Ultra AI 旗舰</div>
+      <div class="feat-specs">
+        <span class="feat-spec">256GB</span>
+        <span class="feat-spec">骁龙8 Gen3</span>
+        <span class="feat-spec">6.8" QHD+</span>
+      </div>
+      <div class="feat-price-row">
+        <span class="feat-price"><span class="unit">¥</span>9,699</span>
+        <span class="feat-orig">¥10,699</span>
+        <span class="feat-rating">★ 4.7 · 5,231 评价</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== All Products ===== -->
+<div class="section-hd">
+  <h2>全部商品</h2>
+  <span>— 共 24 件</span>
+</div>
+<div class="std-grid">
+
+  <!-- Card 1 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-huawei-mate60-pro.svg" alt="Mate 60 Pro" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">512GB</span>
+        <span class="card-spec-tag">麒麟9000S</span>
+        <span class="card-spec-tag">6.82"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">HUAWEI</div>
+      <div class="card-name">华为 Mate 60 Pro 卫星通信旗舰</div>
+      <span class="card-price"><span class="unit">¥</span>6,999<span class="card-orig">¥7,999</span></span>
+      <div class="card-meta">
+        <span>已售 1.2w</span>
+        <span class="rating">★ 4.9</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-apple-iphone15-pro.svg" alt="iPhone 15 Pro" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">256GB</span>
+        <span class="card-spec-tag">A17 Pro</span>
+        <span class="card-spec-tag">6.1"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Apple</div>
+      <div class="card-name">Apple iPhone 15 Pro 钛金属边框</div>
+      <span class="card-price"><span class="unit">¥</span>7,999</span>
+      <div class="card-meta">
+        <span>已售 8,432</span>
+        <span class="rating">★ 4.8</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-xiaomi-14-ultra.svg" alt="小米 14 Ultra" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">512GB</span>
+        <span class="card-spec-tag">骁龙8 Gen3</span>
+        <span class="card-spec-tag">6.73"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Xiaomi</div>
+      <div class="card-name">小米 14 Ultra 徕卡光学旗舰</div>
+      <span class="card-price"><span class="unit">¥</span>5,999<span class="card-orig">¥6,499</span></span>
+      <div class="card-meta">
+        <span>已售 3,876</span>
+        <span class="rating">★ 4.8</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-oppo-find-x7-ultra.svg" alt="OPPO Find X7" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">256GB</span>
+        <span class="card-spec-tag">骁龙8 Gen3</span>
+        <span class="card-spec-tag">6.82"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">OPPO</div>
+      <div class="card-name">OPPO Find X7 Ultra 双潜望长焦</div>
+      <span class="card-price"><span class="unit">¥</span>5,499<span class="card-orig">¥5,799</span></span>
+      <div class="card-meta">
+        <span>已售 2,104</span>
+        <span class="rating">★ 4.6</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-vivo-x100-pro.svg" alt="vivo X100 Pro" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">256GB</span>
+        <span class="card-spec-tag">天玑9300</span>
+        <span class="card-spec-tag">6.78"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">vivo</div>
+      <div class="card-name">vivo X100 Pro 蔡司APO超级长焦</div>
+      <span class="card-price"><span class="unit">¥</span>4,999</span>
+      <div class="card-meta">
+        <span>已售 6,543</span>
+        <span class="rating">★ 4.7</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 6 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-ktouch-g88.svg" alt="天语 G88" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">4G</span>
+        <span class="card-spec-tag">5000mAh</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">天语</div>
+      <div class="card-name">天语 G88 超长待机老人机</div>
+      <span class="card-price"><span class="unit">¥</span>129</span>
+      <div class="card-meta">
+        <span>已售 8,234</span>
+        <span class="rating">★ 4.3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 7 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-nokia-3210.svg" alt="Nokia 3210" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">4G</span>
+        <span class="card-spec-tag">复刻</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Nokia</div>
+      <div class="card-name">Nokia 3210 4G 复刻经典功能机</div>
+      <span class="card-price"><span class="unit">¥</span>349</span>
+      <div class="card-meta">
+        <span>已售 12,876</span>
+        <span class="rating">★ 4.5</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 8 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-philips-e2620.svg" alt="飞利浦 E2620" onerror="this.style.display='none'">
+      <div class="card-oos">暂时缺货</div>
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">翻盖</span>
+        <span class="card-spec-tag">商务</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Philips</div>
+      <div class="card-name">飞利浦 E2620 翻盖商务功能机</div>
+      <span class="card-price"><span class="unit">¥</span>259</span>
+      <div class="card-meta">
+        <span>已售 1,432</span>
+        <span class="rating">★ 4.2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 9 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-baofeng-uv5r.svg" alt="宝锋 UV-5R" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">双频段</span>
+        <span class="card-spec-tag">5W</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">宝锋</div>
+      <div class="card-name">宝锋 UV-5R 专业对讲机双频段</div>
+      <span class="card-price"><span class="unit">¥</span>169<span class="card-orig">¥199</span></span>
+      <div class="card-meta">
+        <span>已售 6,789</span>
+        <span class="rating">★ 4.6</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 10 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-xiaomi-talkie-3.svg" alt="小米对讲机3" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">4G全国</span>
+        <span class="card-spec-tag">5000km</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Xiaomi</div>
+      <div class="card-name">小米对讲机3 4G全国版</div>
+      <span class="card-price"><span class="unit">¥</span>399</span>
+      <div class="card-meta">
+        <span>已售 3,456</span>
+        <span class="rating">★ 4.7</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 11 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-xiaomi-14.svg" alt="小米14" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">256GB</span>
+        <span class="card-spec-tag">骁龙8 Gen3</span>
+        <span class="card-spec-tag">6.36"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Xiaomi</div>
+      <div class="card-name">小米14 徕卡光学镜头 骁龙8 Gen3</div>
+      <span class="card-price"><span class="unit">¥</span>3,999<span class="card-orig">¥4,299</span></span>
+      <div class="card-meta">
+        <span>已售 25,431</span>
+        <span class="rating">★ 4.8</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 12 -->
+  <div class="product-card">
+    <div class="card-img-wrap">
+      <img src="/ClothesUser/public/assets/products/goods-xiaomi-redmi-k70.svg" alt="Redmi K70" onerror="this.style.display='none'">
+      <div class="card-spec-bar">
+        <span class="card-spec-tag">256GB</span>
+        <span class="card-spec-tag">骁龙8 Gen2</span>
+        <span class="card-spec-tag">6.67"</span>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-brand">Redmi</div>
+      <div class="card-name">Redmi K70 第二代骁龙8 2K屏</div>
+      <span class="card-price"><span class="unit">¥</span>2,499</span>
+      <div class="card-meta">
+        <span>已售 18,765</span>
+        <span class="rating">★ 4.7</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="load-more">
+  <button class="load-more-btn">加载更多</button>
+</div>
+
+<script>
+  // Interactivity
+  document.querySelectorAll('.brand-pill').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.brand-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.filter-group').forEach(group => {
+    group.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        group.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

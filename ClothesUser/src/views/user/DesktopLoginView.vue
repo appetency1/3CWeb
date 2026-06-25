@@ -25,28 +25,63 @@ const login = reactive({ username: '', password: '' })
 // Register form
 const reg = reactive({ username: '', password: '', confirmPwd: '', phone: '', nickname: '' })
 
-// ── Canvas 粒子连线 ──
+// ── Canvas 粒子连线（升级版） ──
 let canvasCtx: CanvasRenderingContext2D | null = null
 let particles: any[] = []
 let W = 0, H = 0, animId = 0
+let mouseX = -9999, mouseY = -9999
+const COLORS = [
+  { r: 0, g: 240, b: 255 },   // 青色
+  { r: 184, g: 41, b: 247 },  // 紫色
+  { r: 255, g: 42, b: 138 },  // 粉色
+  { r: 0, g: 200, b: 255 },   // 亮蓝
+]
 
 class CanvasParticle {
-  x: number; y: number; vx: number; vy: number; size: number
+  x: number; y: number; vx: number; vy: number; size: number; colorIdx: number
+  baseVx: number; baseVy: number
   constructor() {
     this.x = Math.random() * W; this.y = Math.random() * H
-    this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.4
-    this.size = Math.random() * 1.5 + 0.5
+    const angle = Math.random() * Math.PI * 2
+    const speed = 0.15 + Math.random() * 0.35
+    this.baseVx = Math.cos(angle) * speed
+    this.baseVy = Math.sin(angle) * speed
+    this.vx = this.baseVx; this.vy = this.baseVy
+    this.size = Math.random() * 2.5 + 0.8
+    this.colorIdx = Math.floor(Math.random() * COLORS.length)
   }
   update() {
+    // 鼠标交互：靠近时产生排斥
+    const dx = this.x - mouseX
+    const dy = this.y - mouseY
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist < 250 && dist > 0) {
+      const force = (250 - dist) / 250 * 1.2
+      this.vx += (dx / dist) * force * 0.05
+      this.vy += (dy / dist) * force * 0.05
+      // 阻尼回归
+      this.vx += (this.baseVx - this.vx) * 0.02
+      this.vy += (this.baseVy - this.vy) * 0.02
+    } else {
+      this.vx = this.baseVx; this.vy = this.baseVy
+    }
     this.x += this.vx; this.y += this.vy
-    if (this.x < 0 || this.x > W) this.vx *= -1
-    if (this.y < 0 || this.y > H) this.vy *= -1
+    if (this.x < -20) this.x = W + 20
+    if (this.x > W + 20) this.x = -20
+    if (this.y < -20) this.y = H + 20
+    if (this.y > H + 20) this.y = -20
   }
   draw() {
     if (!canvasCtx) return
+    const c = COLORS[this.colorIdx]
     canvasCtx.beginPath()
     canvasCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-    canvasCtx.fillStyle = 'rgba(0,240,255,0.2)'
+    canvasCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},${0.3 + Math.random() * 0.15})`
+    canvasCtx.fill()
+    // Glow
+    canvasCtx.beginPath()
+    canvasCtx.arc(this.x, this.y, this.size * 3.5, 0, Math.PI * 2)
+    canvasCtx.fillStyle = `rgba(${c.r},${c.g},${c.b},0.08)`
     canvasCtx.fill()
   }
 }
@@ -58,7 +93,10 @@ function initCanvas() {
   if (!canvasCtx) return
   resizeCanvas()
   window.addEventListener('resize', resizeCanvas)
-  for (let i = 0; i < 50; i++) particles.push(new CanvasParticle())
+  // 鼠标追踪
+  window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY })
+  window.addEventListener('mouseleave', () => { mouseX = -9999; mouseY = -9999 })
+  for (let i = 0; i < 180; i++) particles.push(new CanvasParticle())
   animateParticles()
 }
 function resizeCanvas() {
@@ -73,12 +111,16 @@ function drawLines() {
       const dx = particles[i].x - particles[j].x
       const dy = particles[i].y - particles[j].y
       const dist = Math.sqrt(dx * dx + dy * dy)
-      if (dist < 150) {
+      if (dist < 200) {
+        const ci = COLORS[particles[i].colorIdx]
+        const cj = COLORS[particles[j].colorIdx]
         canvasCtx.beginPath()
         canvasCtx.moveTo(particles[i].x, particles[i].y)
         canvasCtx.lineTo(particles[j].x, particles[j].y)
-        canvasCtx.strokeStyle = `rgba(0,240,255,${0.08 * (1 - dist / 150)})`
-        canvasCtx.lineWidth = 0.5
+        // 连线颜色取两者混合
+        const alpha = 0.15 * (1 - dist / 200)
+        canvasCtx.strokeStyle = `rgba(${(ci.r + cj.r) / 2},${(ci.g + cj.g) / 2},${(ci.b + cj.b) / 2},${alpha})`
+        canvasCtx.lineWidth = 0.6
         canvasCtx.stroke()
       }
     }
@@ -90,6 +132,89 @@ function animateParticles() {
   particles.forEach(p => { p.update(); p.draw() })
   drawLines()
   animId = requestAnimationFrame(animateParticles)
+}
+
+// ── 浮游几何图形（Canvas） ──
+let geomCanvas: HTMLCanvasElement | null = null
+let geomCtx: CanvasRenderingContext2D | null = null
+let shapes: any[] = []
+let geomAnimId = 0
+
+function initFloatingShapes() {
+  geomCanvas = document.getElementById('geom-canvas') as HTMLCanvasElement
+  if (!geomCanvas) return
+  geomCtx = geomCanvas.getContext('2d')
+  if (!geomCtx) return
+  resizeGeom()
+  window.addEventListener('resize', resizeGeom)
+  for (let i = 0; i < 18; i++) shapes.push(createShape())
+  animateGeom()
+}
+function resizeGeom() {
+  if (!geomCanvas) return
+  geomCanvas.width = window.innerWidth; geomCanvas.height = window.innerHeight
+}
+function createShape() {
+  const types = ['hexagon', 'triangle', 'diamond', 'circle']
+  return {
+    type: types[Math.floor(Math.random() * types.length)],
+    x: Math.random() * window.innerWidth,
+    y: window.innerHeight + 60 + Math.random() * 200,
+    size: 10 + Math.random() * 28,
+    speed: 0.2 + Math.random() * 0.5,
+    rotation: Math.random() * Math.PI * 2,
+    rotSpeed: (Math.random() - 0.5) * 0.01,
+    opacity: 0.15 + Math.random() * 0.15,
+    drift: (Math.random() - 0.5) * 0.15,
+  }
+}
+function drawShape(ctx: CanvasRenderingContext2D, s: any) {
+  const cx = s.x, cy = s.y, r = s.size
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.rotate(s.rotation)
+  ctx.globalAlpha = s.opacity * (0.6 + 0.4 * Math.sin(Date.now() * 0.001 + s.x))
+  ctx.strokeStyle = 'rgba(0,240,255,0.9)'
+  ctx.lineWidth = 0.8
+  ctx.beginPath()
+  if (s.type === 'hexagon') {
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI / 3) * i - Math.PI / 6
+      const method = i === 0 ? 'moveTo' : 'lineTo'
+      ctx[method](Math.cos(a) * r, Math.sin(a) * r)
+    }
+  } else if (s.type === 'triangle') {
+    for (let i = 0; i < 3; i++) {
+      const a = (Math.PI * 2 / 3) * i - Math.PI / 2
+      const method = i === 0 ? 'moveTo' : 'lineTo'
+      ctx[method](Math.cos(a) * r, Math.sin(a) * r)
+    }
+  } else if (s.type === 'diamond') {
+    for (let i = 0; i < 4; i++) {
+      const a = (Math.PI / 2) * i + Math.PI / 4
+      const method = i === 0 ? 'moveTo' : 'lineTo'
+      ctx[method](Math.cos(a) * r, Math.sin(a) * r)
+    }
+  } else if (s.type === 'circle') {
+    ctx.arc(0, 0, r, 0, Math.PI * 2)
+  }
+  ctx.closePath()
+  ctx.stroke()
+  ctx.restore()
+}
+function animateGeom() {
+  if (!geomCtx || !geomCanvas) { geomAnimId = requestAnimationFrame(animateGeom); return }
+  geomCtx.clearRect(0, 0, geomCanvas.width, geomCanvas.height)
+  shapes.forEach(s => {
+    s.y -= s.speed
+    s.x += s.drift
+    s.rotation += s.rotSpeed
+    drawShape(geomCtx!, s)
+  })
+  // 超出顶部回收
+  shapes = shapes.filter(s => s.y > -60)
+  while (shapes.length < 18) shapes.push(createShape())
+  geomAnimId = requestAnimationFrame(animateGeom)
 }
 
 // ── Three.js 3D 等离子球体 ──
@@ -339,6 +464,7 @@ function showForgotPwd() { showToast({ message: '请联系客服重置密码: ad
 onMounted(() => {
   initCanvas()
   initThreeOrb()
+  initFloatingShapes()
   const card = cardRef.value
   if (!card) return
   const onMove = (e: MouseEvent) => {
@@ -371,19 +497,33 @@ onMounted(() => {
 onUnmounted(() => {
   tiltCleanup?.()
   cancelAnimationFrame(animId)
+  cancelAnimationFrame(geomAnimId)
   threeCleanup?.()
 })
 </script>
 
 <template>
   <div class="page">
+    <!-- 背景层（在 .page 内部） -->
+    <div class="aurora-bg">
+      <div class="aurora-blob blob-1"></div>
+      <div class="aurora-blob blob-2"></div>
+      <div class="aurora-blob blob-3"></div>
+    </div>
+    <canvas id="geom-canvas"></canvas>
     <canvas id="bg-canvas"></canvas>
 
     <!-- 左侧品牌区 -->
     <div class="hero-side">
       <div class="hero-grid-lines"></div>
       <div class="hero-brand">
-        <div class="mark">N</div>
+        <svg width="48" height="48" viewBox="0 0 32 32" fill="none" stroke="#00f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+          <polygon points="16 2 28 8 28 24 16 30 4 24 4 8 16 2"/>
+          <line x1="16" y1="2" x2="16" y2="30"/>
+          <line x1="4" y1="8" x2="28" y2="24"/>
+          <line x1="4" y1="24" x2="28" y2="8"/>
+          <circle cx="16" cy="16" r="3" fill="#00f0ff" stroke="none"/>
+        </svg>
         <div class="name">NEXUS</div>
       </div>
       <div class="hero-orb-wrap" id="three-orb-container"></div>
@@ -398,7 +538,13 @@ onUnmounted(() => {
       <div class="login-card" ref="cardRef">
         <div class="card-glow"></div>
         <div class="card-brand">
-          <div class="mark">N</div>
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none" stroke="#00f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+            <polygon points="16 2 28 8 28 24 16 30 4 24 4 8 16 2"/>
+            <line x1="16" y1="2" x2="16" y2="30"/>
+            <line x1="4" y1="8" x2="28" y2="24"/>
+            <line x1="4" y1="24" x2="28" y2="8"/>
+            <circle cx="16" cy="16" r="3" fill="#00f0ff" stroke="none"/>
+          </svg>
           <div class="name">NEXUS</div>
           <div class="tagline">会员登录</div>
         </div>
@@ -479,6 +625,8 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <div class="scanline-overlay"></div>
+    
     <!-- 登录成功覆盖层 -->
     <div class="success" :class="{ show: successShow }">
       <div class="pyramid-loader">
@@ -496,8 +644,61 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* ── 极光/星云背景 ── */
+.aurora-bg {
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none; overflow: hidden;
+}
+.aurora-blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(50px); opacity: 0;
+  animation: auroraFloat 12s ease-in-out infinite;
+}
+.blob-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0,240,255,0.35), transparent 70%);
+  top: -10%; left: -10%;
+  animation-delay: 0s;
+}
+.blob-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(184,41,247,0.30), transparent 70%);
+  bottom: -15%; right: -5%;
+  animation-delay: -4s;
+}
+.blob-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(255,42,138,0.25), transparent 70%);
+  top: 50%; left: 50%;
+  animation-delay: -8s;
+}
+@keyframes auroraFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+  25% { transform: translate(80px, -50px) scale(1.15); opacity: 1; }
+  50% { transform: translate(-40px, 60px) scale(0.85); opacity: 0.7; }
+  75% { transform: translate(50px, 40px) scale(1.1); opacity: 0.9; }
+}
+
+/* ── 扫描线覆盖层 ── */
+.scanline-overlay {
+  position: absolute; inset: 0; z-index: 5;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,240,255,0.06) 2px,
+    rgba(0,240,255,0.06) 4px
+  );
+  animation: scanlineMove 8s linear infinite;
+}
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
 .page {
-  position: relative; z-index: 2;
+  position: relative;
   width: 100%; height: 100vh;
   display: flex;
   background: var(--bg, #050508);
@@ -506,12 +707,13 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-#bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#bg-canvas { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+#geom-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
 /* ===== 左侧品牌区 ===== */
 .hero-side {
   width: 55%; height: 100%;
-  position: relative; z-index: 2;
+  position: relative; z-index: 10;
   display: flex; flex-direction: column;
   justify-content: center; align-items: center;
   padding: 60px;
@@ -575,7 +777,7 @@ onUnmounted(() => {
   width: 45%; height: 100%;
   display: flex; align-items: center; justify-content: center;
   padding: 48px;
-  position: relative; z-index: 2;
+  position: relative; z-index: 10;
 }
 .form-side::before {
   content: '';

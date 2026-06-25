@@ -18,4 +18,7 @@ export const userApi = {
 
   createComment: (data: { orderId: number; goodsId: number; content: string; rating: number; images?: string[] }) =>
     http<void>('/user/comment', data, { method: 'POST' }),
+
+  deactivateAccount: (data: { password: string }) =>
+    http<void>('/user/deactivate', data, { method: 'POST' }),
 }

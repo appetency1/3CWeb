@@ -7,6 +7,10 @@ const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
 
+// 路由转场 key，每次导航递增保证组件重建
+const routeKey = ref(0)
+router.afterEach(() => { routeKey.value++ })
+
 const isDesktop = ref(window.innerWidth >= 768)
 
 function onResize() {
@@ -135,12 +139,16 @@ onUnmounted(() => {
 
   <!-- Desktop Shell -->
   <template v-if="isDesktop">
-    <router-view />
+    <router-view v-slot="{ Component, route }">
+      <Transition name="page" mode="out-in">
+        <component :is="Component" :key="routeKey" />
+      </Transition>
+    </router-view>
   </template>
 
   <!-- Mobile Shell -->
   <template v-else>
-    <div class="app-shell">
+    <div class="app-shell">>
       <router-view />
       <van-tabbar
         :model-value="(['home','category','cart','user'].indexOf(String(route.name)))"
@@ -181,4 +189,104 @@ onUnmounted(() => {
   pointer-events: none;
   z-index: 9999;
 }
+
+
+/* 页面转场动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+
+/* 卡片点击缩放 */
+.desktop-goods-card:active,
+.rc-card:active,
+.order-card:active,
+.address-card:active,
+.add-address-card:active,
+.stat-card:active,
+.goods-card:active {
+  transform: scale(0.97) !important;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.desktop-goods-card,
+.rc-card,
+.order-card,
+.address-card,
+.add-address-card,
+.stat-card,
+.goods-card {
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+}
+
+
+/* 列表交错入场 */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.address-list > .address-card,
+.orders-list > .order-card,
+.desktop-search-results-grid > .desktop-goods-card,
+.goods-grid > .goods-card,
+.related-row > .rc-card {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.address-list > .address-card:nth-child(1),
+.orders-list > .order-card:nth-child(1),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(1),
+.goods-grid > .goods-card:nth-child(1),
+.related-row > .rc-card:nth-child(1) { animation-delay: 0.02s; }
+.address-list > .address-card:nth-child(2),
+.orders-list > .order-card:nth-child(2),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(2),
+.goods-grid > .goods-card:nth-child(2),
+.related-row > .rc-card:nth-child(2) { animation-delay: 0.06s; }
+.address-list > .address-card:nth-child(3),
+.orders-list > .order-card:nth-child(3),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(3),
+.goods-grid > .goods-card:nth-child(3),
+.related-row > .rc-card:nth-child(3) { animation-delay: 0.10s; }
+.address-list > .address-card:nth-child(4),
+.orders-list > .order-card:nth-child(4),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(4),
+.goods-grid > .goods-card:nth-child(4),
+.related-row > .rc-card:nth-child(4) { animation-delay: 0.14s; }
+.address-list > .address-card:nth-child(5),
+.orders-list > .order-card:nth-child(5),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(5),
+.goods-grid > .goods-card:nth-child(5),
+.related-row > .rc-card:nth-child(5) { animation-delay: 0.18s; }
+.address-list > .address-card:nth-child(6),
+.orders-list > .order-card:nth-child(6),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(6),
+.goods-grid > .goods-card:nth-child(6),
+.related-row > .rc-card:nth-child(6) { animation-delay: 0.22s; }
+.address-list > .address-card:nth-child(7),
+.orders-list > .order-card:nth-child(7),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(7),
+.goods-grid > .goods-card:nth-child(7),
+.related-row > .rc-card:nth-child(7) { animation-delay: 0.26s; }
+.address-list > .address-card:nth-child(8),
+.orders-list > .order-card:nth-child(8),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(8),
+.goods-grid > .goods-card:nth-child(8),
+.related-row > .rc-card:nth-child(8) { animation-delay: 0.30s; }
+.address-list > .address-card:nth-child(n+9),
+.orders-list > .order-card:nth-child(n+9),
+.desktop-search-results-grid > .desktop-goods-card:nth-child(n+9),
+.goods-grid > .goods-card:nth-child(n+9),
+.related-row > .rc-card:nth-child(n+9) { animation-delay: 0.34s; }
 </style>

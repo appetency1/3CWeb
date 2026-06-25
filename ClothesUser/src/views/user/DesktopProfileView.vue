@@ -105,6 +105,7 @@ async function onAvatarUpload(e: Event) {
 
 async function save() {
   if (!form.value.nickname.trim()) { showToast('请输入昵称'); return }
+  if (form.value.phone && !/^1[3-9]\d{9}$/.test(form.value.phone)) { showToast('手机号格式不正确'); return }
   saving.value = true
   try {
     await userApi.updateInfo(form.value as any)
@@ -159,15 +160,15 @@ onMounted(loadInfo)
 
           <div class="profile-stats">
             <div class="profile-stat" @click="goOrders">
-              <strong>{{ userStore.userInfo?.orderCount ?? '-' }}</strong>
+              <strong>{{ userStore.userInfo?.orderCount ?? '0' }}</strong>
               <span>订单</span>
             </div>
             <div class="profile-stat" @click="goFavorites">
-              <strong>{{ userStore.userInfo?.favCount ?? '-' }}</strong>
+              <strong>{{ userStore.userInfo?.favCount ?? '0' }}</strong>
               <span>收藏</span>
             </div>
             <div class="profile-stat">
-              <strong>{{ userStore.userInfo?.couponCount ?? '-' }}</strong>
+              <strong>{{ userStore.userInfo?.couponCount ?? '0' }}</strong>
               <span>优惠券</span>
             </div>
           </div>
@@ -233,7 +234,7 @@ onMounted(loadInfo)
               </div>
               <div class="form-group">
                 <label class="form-label">手机号</label>
-                <input v-model="form.phone" class="form-input" placeholder="选填" />
+                <input v-model="form.phone" class="form-input" placeholder="选填" type="tel" />
               </div>
               <div class="form-group">
                 <label class="form-label">邮箱</label>
@@ -327,7 +328,7 @@ onMounted(loadInfo)
   transition: color 0.2s;
   cursor: pointer;
 }
-.breadcrumbs a:hover { color: #c45c4a; }
+.breadcrumbs a:hover { color: #00f0ff; }
 
 /* ── Page Title ── */
 .page-title {
@@ -378,7 +379,7 @@ onMounted(loadInfo)
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 4px solid #fff;
+  border: 4px solid var(--bg-primary, #0a0a0f);
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   position: relative;
   transition: transform 0.3s ease;
@@ -401,7 +402,7 @@ onMounted(loadInfo)
   font-family: 'Cormorant Garamond', serif;
   font-size: 42px;
   font-weight: 600;
-  color: #c45c4a;
+  color: #00f0ff;
 }
 
 .avatar-overlay {
@@ -484,8 +485,8 @@ onMounted(loadInfo)
 }
 
 .menu-item.active {
-  background: #fdf5f3;
-  color: #c45c4a;
+  background: rgba(0,240,255,0.08);
+  color: #00f0ff;
 }
 
 .menu-item svg {
@@ -520,7 +521,7 @@ onMounted(loadInfo)
   content: '';
   width: 4px;
   height: 18px;
-  background: #c45c4a;
+  background: #00f0ff;
   border-radius: 2px;
 }
 
@@ -557,9 +558,9 @@ onMounted(loadInfo)
 }
 
 .form-input::placeholder { color: var(--text-muted); }
-.form-input:hover { border-color: #d0cbc4; }
+.form-input:hover { border-color: var(--accent, #00f0ff); }
 .form-input:focus {
-  border-color: #c45c4a;
+  border-color: #00f0ff;
   box-shadow: 0 0 0 4px #fdf5f3;
 }
 
@@ -589,9 +590,9 @@ onMounted(loadInfo)
 .gender-option svg { width: 18px; height: 18px; flex-shrink: 0; }
 .gender-option:hover { border-color: #d0cbc4; }
 .gender-option.active {
-  border-color: #c45c4a;
-  background: #fdf5f3;
-  color: #c45c4a;
+  border-color: #00f0ff;
+  background: rgba(0,240,255,0.08);
+  color: #00f0ff;
   font-weight: 600;
 }
 
@@ -625,19 +626,19 @@ onMounted(loadInfo)
 }
 
 .btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1.5px solid var(--border);
+  background: var(--bg-secondary, #0f0f18);
+  color: var(--text-primary, #e8e8f0);
+  border: 1.5px solid var(--border, rgba(255,255,255,0.1));
 }
 
 .btn-secondary:hover {
   background: var(--bg-card);
-  border-color: #d0cbc4;
+  border-color: var(--accent, #00f0ff);
 }
 
 .btn-primary {
-  background: var(--bg-dark);
-  color: var(--text-primary);
+  background: var(--bg-dark, #06060a);
+  color: var(--text-primary, #e8e8f0);
   box-shadow: 0 8px 20px rgba(26,26,26,0.15);
 }
 
@@ -739,8 +740,8 @@ onMounted(loadInfo)
 }
 .avatar-option:hover { background: var(--bg-secondary); }
 .avatar-option.selected {
-  border-color: #c45c4a;
-  background: #fdf5f3;
+  border-color: #00f0ff;
+  background: rgba(0,240,255,0.08);
 }
 
 .avatar-option-img {
@@ -787,9 +788,9 @@ onMounted(loadInfo)
   transition: all 0.25s;
 }
 .upload-btn-content:hover {
-  border-color: #c45c4a;
-  color: #c45c4a;
-  background: #fdf5f3;
+  border-color: #00f0ff;
+  color: #00f0ff;
+  background: rgba(0,240,255,0.08);
 }
 
 .upload-hint {

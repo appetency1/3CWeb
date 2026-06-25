@@ -12,12 +12,12 @@ const chatScroll = ref<HTMLElement | null>(null)
 const productPanelOpen = ref(false)
 
 const products = [
-  { id: 1, brand: 'Apple', name: 'iPhone 15 Pro', price: 7999, image: '/assets/products/goods-3-chun-mian-bai-t.jpg' },
-  { id: 2, brand: 'HUAWEI', name: 'MateBook X Pro', price: 9999, image: '/assets/products/goods-2-tiao-wen-polo.jpg' },
-  { id: 3, brand: 'Sony', name: 'WH-1000XM5 降噪耳机', price: 2499, image: '/assets/products/goods-22-fa-shi-sui-hua-qun.jpg' },
-  { id: 4, brand: 'Apple', name: 'iPad Air M2', price: 4799, image: '/assets/products/goods-23-hei-se-xiu-shen-qun.jpg' },
-  { id: 5, brand: 'Samsung', name: 'Galaxy Watch6', price: 2399, image: '/assets/products/goods-42-fu-gu-yun-dong-xie.jpg' },
-  { id: 6, brand: 'DJI', name: 'Osmo Pocket 3', price: 3499, image: '/assets/products/goods-58-jian-yue-hei-se-shou-na-bao.jpg' },
+  { id: 1, brand: 'Apple', name: 'iPhone 15 Pro', price: 7999, image: '/assets/products/goods-apple-iphone15-pro.jpg' },
+  { id: 2, brand: 'HUAWEI', name: 'MateBook X Pro', price: 9999, image: '/assets/products/goods-huawei-matebook-x-pro.jpg' },
+  { id: 3, brand: 'Sony', name: 'WH-1000XM5 降噪耳机', price: 2499, image: '/assets/products/goods-sony-wh-1000xm5.jpg' },
+  { id: 4, brand: 'Apple', name: 'iPad Air M2', price: 4799, image: '/assets/products/goods-apple-ipad-air-m2.jpg' },
+  { id: 5, brand: 'Samsung', name: 'Galaxy Watch6', price: 2399, image: '/assets/products/goods-samsung-watch6-classic.jpg' },
+  { id: 6, brand: 'DJI', name: 'Osmo Pocket 3', price: 3499, image: '/assets/products/goods-dji-osmo-pocket-3.jpg' },
 ]
 
 const quickQuestions = [
@@ -105,7 +105,7 @@ function goHome() { router.push('/') }
 
 onMounted(() => {
   // 初始消息
-  addMessage('assistant', '欢迎来到 MAISON！我是你的专属数码顾问，告诉我你喜欢什么产品，我来帮你推荐～')
+  addMessage('assistant', '欢迎来到 NEXUS！我是你的专属数码顾问，告诉我你喜欢什么产品，我来帮你推荐～')
 })
 </script>
 
@@ -121,7 +121,7 @@ onMounted(() => {
             </svg>
           </button>
           <div class="chat-brand">
-            <div class="chat-brand-name" @click="goHome" style="cursor:pointer">MAISON</div>
+            <div class="chat-brand-name" @click="goHome" style="cursor:pointer">NEXUS</div>
             <div class="chat-brand-divider"></div>
             <div class="chat-brand-tagline">AI 数码顾问</div>
           </div>

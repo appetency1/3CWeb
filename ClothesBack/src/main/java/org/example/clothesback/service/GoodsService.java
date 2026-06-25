@@ -5,6 +5,7 @@ import org.example.clothesback.common.PageResult;
 import org.example.clothesback.common.ResultCode;
 import org.example.clothesback.dao.GoodsDao;
 import org.example.clothesback.dao.SkuDao;
+import org.example.clothesback.dao.SpuDao;
 import org.example.clothesback.dto.GoodsSaveDTO;
 import org.example.clothesback.util.JdbcUtils;
 import org.example.clothesback.vo.V.GoodsDetailVO;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class GoodsService {
     private final GoodsDao goodsDao = new GoodsDao();
     private final SkuDao skuDao = new SkuDao();
+    private final SpuDao spuDao = new SpuDao();
 
     public PageResult<Map<String, Object>> listPublic(Long categoryId, String keyword, String sort, int page, int size) {
         try {
@@ -76,18 +78,33 @@ public class GoodsService {
         validateSaveDto(dto);
         try {
             return JdbcUtils.transactionResult(conn -> {
+                // 1. 插入 goods
                 int n = goodsDao.insert(conn, dto.categoryId(), dto.name().trim(), dto.brand(), dto.cover(),
                     dto.images(), dto.description(), dto.detail(), dto.price(),
                     dto.originalPrice(), dto.stock(), dto.isHot(), dto.isNew());
                 if (n == 0) throw new BizException(500, "新增商品失败");
-                Long newId = JdbcUtils.queryLong(conn, "SELECT LAST_INSERT_ID()");
+                Long newGoodsId = JdbcUtils.queryLong(conn, "SELECT LAST_INSERT_ID()");
+
+                // 2. 自动创建 SPU（名称加"系列"后缀避免同名冲突）
+                String spuName = dto.name().trim().length() > 50
+                    ? dto.name().trim().substring(0, 50) + "..." : dto.name().trim();
+                spuDao.insert(conn, spuName, dto.brand(), dto.cover(),
+                    dto.description(), dto.categoryId(),
+                    dto.isHot() == null ? 0 : dto.isHot(),
+                    dto.isNew() == null ? 0 : dto.isNew());
+                Long newSpuId = JdbcUtils.queryLong(conn, "SELECT LAST_INSERT_ID()");
+
+                // 3. 关联 goods → spu
+                JdbcUtils.update(conn, "UPDATE goods SET spu_id=? WHERE id=?", newSpuId, newGoodsId);
+
+                // 4. 插入 SKU
                 if (dto.skus() != null) {
                     for (var s : dto.skus()) {
-                        skuDao.insert(conn, newId, s.spec(), s.price(), s.stock(), s.image(), s.sort());
+                        skuDao.insert(conn, newGoodsId, s.spec(), s.price(), s.stock(), s.image(), s.sort());
                     }
                 }
-                goodsDao.recomputeStockAndSales(conn, newId);
-                return newId;
+                goodsDao.recomputeStockAndSales(conn, newGoodsId);
+                return newGoodsId;
             });
         } catch (SQLException e) {
             throw new BizException(ResultCode.SERVER_ERROR, "新增失败");

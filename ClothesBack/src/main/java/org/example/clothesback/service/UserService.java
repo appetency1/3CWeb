@@ -129,4 +129,21 @@ public class UserService {
     public void logout(String token) {
         TokenManager.remove(token);
     }
+
+    /** 注销账号：验证密码 → 软删除 */
+    public void deactivateAccount(Long userId, String password) {
+        if (password == null || password.isBlank()) {
+            throw new BizException(400, "请输入密码");
+        }
+        try {
+            Map<String, Object> user = userDao.findById(userId);
+            if (user == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
+            if (!MD5Utils.verify(password, String.valueOf(user.get("password")))) {
+                throw new BizException(400, "密码错误");
+            }
+            userDao.updateStatus(userId, 0);
+        } catch (SQLException e) {
+            throw new BizException(ResultCode.SERVER_ERROR, "注销失败");
+        }
+    }
 }

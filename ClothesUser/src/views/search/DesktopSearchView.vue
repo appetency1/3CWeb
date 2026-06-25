@@ -71,15 +71,6 @@ onMounted(() => {
   <DesktopLayout>
     <div class="desktop-page-title">搜索商品</div>
 
-    <!-- Search Bar -->
-    <div class="desktop-search-bar-large" style="margin-bottom:20px">
-      <input
-        v-model="searchValue"
-        placeholder="输入关键词搜索商品..."
-        @keyup.enter="doSearch"
-      />
-    </div>
-
     <div class="desktop-search-layout">
       <!-- Sidebar: History + Hot -->
       <div class="desktop-search-sidebar">
@@ -132,7 +123,7 @@ onMounted(() => {
               <div class="desktop-goods-body">
                 <p class="desktop-goods-name">{{ item.name }}</p>
                 <div class="desktop-goods-price">
-                  <span class="unit">¥</span>{{ item.price }}
+                  <span class="unit">¥</span>{{ item.minPrice || item.price }}
                   <span v-if="item.originalPrice" class="desktop-goods-original">¥{{ item.originalPrice }}</span>
                 </div>
               </div>
@@ -156,7 +147,7 @@ onMounted(() => {
             <div class="desktop-goods-body">
               <p class="desktop-goods-name">{{ item.name }}</p>
               <div class="desktop-goods-price">
-                <span class="unit">¥</span>{{ item.price }}
+                <span class="unit">¥</span>{{ item.minPrice || item.price }}
                 <span v-if="item.originalPrice" class="desktop-goods-original">¥{{ item.originalPrice }}</span>
               </div>
             </div>
